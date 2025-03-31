@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
-from matplotlib.patches import Arc
-from utils import PITCH_LENGTH, PITCH_WIDTH 
+from matplotlib.patches import Circle, Arc, Rectangle
 
 def draw_pitch(ax=None, field_color='green'):
     """
@@ -12,7 +11,7 @@ def draw_pitch(ax=None, field_color='green'):
     
     # Set pitch background
     if field_color == 'green':
-        ax.set_facecolor('mediumseagreen')
+        ax.set_facecolor('#4CAF50')
         lc = 'whitesmoke'  # line color
         border_color = 'white'
     else:
@@ -29,8 +28,7 @@ def draw_pitch(ax=None, field_color='green'):
     ax.plot([60,60],[0,80], color=lc, linewidth=2)
     
     # Center circle
-    center_circle = plt.Circle((60, 40), 10, color=lc, fill=False, linewidth=2)
-    ax.add_patch(center_circle)
+    ax.add_patch(Circle((60, 40), 10, color=lc, fill=False, linewidth=2))
     
     # Penalty areas and arcs (both sides)
     for x in [0, 120]:
@@ -60,14 +58,12 @@ def draw_pitch(ax=None, field_color='green'):
         )
         ax.add_patch(penalty_arc)
         
-    # --- Draw goals as rectangles ---
+    # Draw goals
     goal_width = 7.32  # in meters (FIFA standard)
     goal_height = 2.44  # in meters (FIFA standard)
-    post_size = 0.6  # visual radius of post markers (optional)
 
     # Goal position parameters
     goal_y1 = 40 - 3.66
-    goal_y2 = 40 + 3.66
 
     # Left goal (draw as simple rectangle)
     left_goal = plt.Rectangle(
@@ -119,9 +115,11 @@ def draw_pitch(ax=None, field_color='green'):
     # Axis config
     ax.set_xlim(-5, 125)  # allow space for goal depth
     ax.set_ylim(85, -5)    # flip y-axis
+    ax.set_aspect('equal')
+    #ax.axis('off')
+
     ax.set_xticks([])
     ax.set_yticks([])
-    for spine in ax.spines.values():
-        spine.set_visible(False)
+
     
     return ax
