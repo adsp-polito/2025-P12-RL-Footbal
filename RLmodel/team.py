@@ -36,7 +36,7 @@ class Team:
             y = role_data["y"] / 80   # normalize y from meters (field height = 80)
             
             # If self.side == "right" mirror the position of the role wrt the x coordinate
-            position = np.array([1.0 - x, y]) if self.side == "right" else np.array([x, y])
+            position = np.array([1.0 - x, 1.0-y]) if self.side == "right" else np.array([x, y])
 
             self.players.append(Player(
                 player_id=i,

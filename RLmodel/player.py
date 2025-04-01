@@ -82,12 +82,47 @@ class Player:
             # Then: scale it by (max_speed / 24) to get the movement per frame (since we simulate 24 FPS)
             # Finally: divide by 120 (field length) to normalize the velocity to the coordinate system [0,1]
             # This ensures that 10 m/s corresponds correctly to field-relative movement per frame
-            self.velocity = (direction / norm) * (self.max_speed / 24) / 120  #
+            self.velocity = (direction / norm) * (self.max_speed / 24) / 120 
         
         else:
             self.velocity = np.zeros(2)
 
+        # Update player position
         self.position += self.velocity
+
+        # Prevent the player from leaving the pitch boundaries (normalized coordinates)
+        self.position = np.clip(self.position, [0.0, 0.0], [1.0, 1.0])
+
+    def pass_to(self, teammate, ball, pass_speed=20):
+        """
+        Executes a pass from this player to a teammate by updating the ball's velocity vector.
+
+        Parameters:
+            - teammate: Player object, the intended recipient of the pass
+            - ball: Ball object, the ball to be passed
+            - pass_speed: float, speed of the pass in meters per second (default: 20 m/s)
+
+        The method computes the normalized direction vector from the passer to the receiver
+        and sets the ball velocity accordingly to simulate a pass.
+        """
+
+        # Compute the difference in x and y positions
+        dx = teammate.position[0] - self.position[0]
+        dy = teammate.position[1] - self.position[1]
+
+        # Compute Euclidean distance between passer and receiver
+        distance = np.hypot(dx, dy)
+
+        # Avoid division by zero (e.g., same position)
+        if distance == 0:
+            return
+
+        # Normalize the direction vector
+        direction = np.array([dx, dy]) / distance
+
+        # Set ball velocity along the direction vector
+        ball.velocity = direction * pass_speed
+        print(ball.velocity)
 
     def get_position(self):
         """
@@ -97,3 +132,5 @@ class Player:
             np.ndarray: A 2D vector representing the player's position [x, y]
         """
         return self.position
+    
+
