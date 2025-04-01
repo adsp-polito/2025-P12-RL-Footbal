@@ -10,17 +10,19 @@ class Player:
         - player_id (int): Unique identifier for the player
         - team_id (int): Identifier for the team the player belongs to (0 or 1)
         - role (str): Positional role of the player (e.g., 'GK', 'CB', 'CM', 'ST')
+        - abbr (str): Abbreviation of the role (e.g., 'CM', 'RB') for visual display
         - position (np.ndarray): Current position of the player on the field [x, y]
         - velocity (np.ndarray): Current velocity vector [vx, vy]
         - max_speed (float): Maximum speed the player can reach (in m/s)
         - has_ball (bool): Whether the player is currently in possession of the ball
     """
 
-    def __init__(self, player_id, team_id, role, init_position):
+    def __init__(self, player_id, team_id, role, init_position, abbr=None):
         # Identifiers and positional role
         self.player_id = player_id
         self.team_id = team_id
         self.role = role
+        self.abbr = abbr if abbr is not None else role[:2]  # fallback if not provided
 
         # Initial and current position on the field
         self.init_position = np.array(init_position, dtype=np.float32)
@@ -46,8 +48,7 @@ class Player:
 
     def step(self, action):
         """
-        Updates the player's state based on the action taken.
-        The same directional logic applies whether or not the player has possession of the ball.
+        Updates the player's state based on the action taken
 
         Args:
             action (int): Discrete action index
@@ -55,31 +56,37 @@ class Player:
                 4 = right, 5 = up-left, 6 = up-right, 
                 7 = down-left, 8 = down-right
         """
-
-        # Map each discrete action to a direction vector
         direction_map = {
-            0: np.array([0.0, 0.0]),       # Stay
-            1: np.array([0.0, 1.0]),       # Up
-            2: np.array([0.0, -1.0]),      # Down
-            3: np.array([-1.0, 0.0]),      # Left
-            4: np.array([1.0, 0.0]),       # Right
-            5: np.array([-1.0, 1.0]),      # Up-Left
-            6: np.array([1.0, 1.0]),       # Up-Right
-            7: np.array([-1.0, -1.0]),     # Down-Left
-            8: np.array([1.0, -1.0])       # Down-Right
+            0: np.array([0.0, 0.0]),
+            1: np.array([0.0, 1.0]),
+            2: np.array([0.0, -1.0]),
+            3: np.array([-1.0, 0.0]),
+            4: np.array([1.0, 0.0]),
+            5: np.array([-1.0, 1.0]),
+            6: np.array([1.0, 1.0]),
+            7: np.array([-1.0, -1.0]),
+            8: np.array([1.0, -1.0])
         }
+        # Get the direction vector corresponding to the selected discrete action (e.g., up, down, left, etc.).
+        # Defaults to stationary if action is invalid.
+        direction = direction_map.get(action, np.array([0.0, 0.0]))  
 
-        # Move according to direction
-        direction = direction_map.get(action, np.array([0.0, 0.0]))
-
-        # Normalize direction and apply movement scaled by max speed and FPS (24)
-        norm = np.linalg.norm(direction)
+        # Compute the magnitude (length) of the direction vector.
+        # This is used to normalize the vector, ensuring uniform speed across directions 
+        # (e.g., diagonals are not faster than vertical/horizontal moves).
+        norm = np.linalg.norm(direction)  
+       
         if norm > 0:
-            self.velocity = (direction / norm) * (self.max_speed / 24) /120 # normalized by pitch length
+
+            # First: normalize the direction vector to ensure unit movement in that direction
+            # Then: scale it by (max_speed / 24) to get the movement per frame (since we simulate 24 FPS)
+            # Finally: divide by 120 (field length) to normalize the velocity to the coordinate system [0,1]
+            # This ensures that 10 m/s corresponds correctly to field-relative movement per frame
+            self.velocity = (direction / norm) * (self.max_speed / 24) / 120  #
+        
         else:
             self.velocity = np.zeros(2)
 
-        # Update player position
         self.position += self.velocity
 
     def get_position(self):

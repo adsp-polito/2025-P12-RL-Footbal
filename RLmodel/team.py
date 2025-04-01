@@ -27,18 +27,22 @@ class Team:
 
         # Build players from role-position data
         for i, role_data in enumerate(self.roles_data):
+
             role = role_data["role"]
+            abbr = role_data["abbr"]
+
+            # x,y in [0,1]
             x = role_data["x"] / 120  # normalize x from meters (field width = 120)
             y = role_data["y"] / 80   # normalize y from meters (field height = 80)
             
-            
-
+            # If self.side == "right" mirror the position of the role wrt the x coordinate
             position = np.array([1.0 - x, y]) if self.side == "right" else np.array([x, y])
 
             self.players.append(Player(
                 player_id=i,
                 team_id=team_id,
                 role=role,
+                abbr=abbr,
                 init_position=position
             ))
 

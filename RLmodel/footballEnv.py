@@ -29,7 +29,7 @@ class FootballEnv(gym.Env):
 
     metadata = {"render_modes": ["human"], "render_fps": 24}
 
-    def __init__(self, render_mode=None, teamAColor='red', teamBColor='blue'):
+    def __init__(self, render_mode=None, teamAColor='red', teamBColor='blue', initial_possessor_id=None):
         super().__init__()
 
         # Field dimensions
@@ -56,8 +56,8 @@ class FootballEnv(gym.Env):
 
         # (Placeholder) Action space:
         # defines the set of possible actions the agent(s) can take
-        # for the moment it defines 11 discrete actions (one per player), each with 8 possible choices
-        self.action_space = gym.spaces.MultiDiscrete([8 for _ in range(11)])
+        # for the moment it defines 11 discrete actions (one per player), each with 9 possible choices
+        self.action_space = gym.spaces.MultiDiscrete([9 for _ in range(11)])
 
         # Rendering options for visual output
         self.render_mode = render_mode
@@ -65,6 +65,15 @@ class FootballEnv(gym.Env):
 
         # Initialize the two teams with customizable colors
         self._init_teams(teamAColor, teamBColor)
+
+        # Determine initial ball possession
+        if initial_possessor_id is not None:
+            # Use the player ID provided as input
+            self.players[initial_possessor_id].has_ball = True
+            self.ball.owner_id = initial_possessor_id
+        else:
+            # Automatically assign ball to the Team A player closest to the ball
+            self._assign_initial_possession()
 
     def _init_teams(self, teamAColor = 'red', teamBColor = 'blue'):
         """Initializes both teams with 11 players each and assigns colors and sides"""
@@ -78,23 +87,26 @@ class FootballEnv(gym.Env):
         super().reset(seed=seed)
         self.current_step = 0
 
-        # Reset ball position and status
+        # Reset ball state
         self.ball.reset()
 
-        # Reset all players to initial conditions
+        # Reset all players
         for player in self.players:
             player.reset()
 
-        # Return the initial observation state of the environment
+        # Assign possession to the appropriate player
+        self._assign_initial_possession()
+
+        # Return initial observation
         observation = self._get_observation()
         return observation, {}
 
     def step(self, actions):
         """
-        Advances the environment by one step using the given actions
+        Advances the environment by one step using the given actions.
 
         Args:
-            actions (list): A list of actions, one per player
+            actions (list): A list of actions, one per player.
 
         Returns:
             - observation: Updated observation after applying actions
@@ -110,10 +122,15 @@ class FootballEnv(gym.Env):
         for i, player in enumerate(self.players):
             player.step(actions[i])
 
-        # Update ball position and dynamics based on physics and interactions
-        self.ball.update()
+        # Update ball position based on possession logic
+        if self.ball.owner_id is not None:
+            # The ball is in possession: follow the owning player
+            self.ball.update_owner(self.players)
+        else:
+            # The ball is free: move based on its velocity
+            self.ball.update_position()
 
-        # Compute placeholder reward and end condition
+        # Placeholder reward and termination condition
         reward = 0
         done = False
 
@@ -146,3 +163,15 @@ class FootballEnv(gym.Env):
         if self.window:
             self.window.close()
             self.window = None
+
+    def _assign_initial_possession(self):
+        """
+        Assigns the ball to the closest player from Team A based on the ball's position.
+        Sets both the player's has_ball flag and the ball's owner_id.
+        """
+        ball_spawn_point = self.ball.get_position()
+        team_A_players = self.players[:11]
+        distances = [np.linalg.norm(p.get_position() - ball_spawn_point) for p in team_A_players]
+        closest_index = np.argmin(distances)
+        self.players[closest_index].has_ball = True
+        self.ball.owner_id = closest_index
