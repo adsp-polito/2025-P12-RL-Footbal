@@ -28,11 +28,11 @@ class Ball:
 
     def reset(self):
         """Reset the ball to the initial state"""
-        self.position = self.init_position.copy()
+        self.position = np.array([0.5, 0.5], dtype=np.float32)
         self.velocity = np.zeros(2, dtype=np.float32)
         self.owner_id = None
 
-    def update_position(self, players=None, fps = 24):
+    def update_position(self, players=None, fps = 24, field_width = 120):
         """
         Updates the ball's position based on its current velocity and applies friction.
         If the ball is owned, it follows the player. Otherwise, it moves according to its velocity.
@@ -49,8 +49,9 @@ class Ball:
             self.position = owner.get_position() + offset
 
         else:
+            
             # Ball moves freely
-            self.position += (self.velocity / fps)  # Move by actual meters per frame
+            self.position += (self.velocity / fps) / field_width  # Move by actual meters per frame
 
             # Apply friction
             if np.linalg.norm(self.velocity) > 0:

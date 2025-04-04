@@ -106,7 +106,7 @@ class Player:
         and sets the ball velocity accordingly to simulate a pass.
         """
 
-        # Compute the difference in x and y positions
+        # Calculate the difference in position between the passer and receiver in absolute coordinates
         dx = teammate.position[0] - self.position[0]
         dy = teammate.position[1] - self.position[1]
 
@@ -122,7 +122,6 @@ class Player:
 
         # Set ball velocity along the direction vector
         ball.velocity = direction * pass_speed
-        print(ball.velocity)
 
     def get_position(self):
         """

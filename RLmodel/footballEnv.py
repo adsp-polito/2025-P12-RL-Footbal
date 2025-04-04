@@ -5,6 +5,8 @@ from RLmodel.player import Player
 from RLmodel.team import Team
 from RLmodel.ball import Ball
 
+DISTANCE_TO_BALL = 0.005  # ~0.60 meters if pitch is 120m wide
+
 class FootballEnv(gym.Env):
     """
     FootballEnv models a football simulation environment tailored for reinforcement learning.
@@ -113,16 +115,22 @@ class FootballEnv(gym.Env):
         """
         self.current_step += 1
         receiver_id = None
+        passer_id = None
 
         # Apply each player's action
         for i, player in enumerate(self.players):
             action = actions[i]
 
             if isinstance(action, tuple) and action[0] == "pass":
-                receiver_id = action[1]
-                passer = player
-
+                
+                # Handle passing action
+                # action[1] is the receiver_id
+                # action[0] is the action type (e.g., "pass")
+                receiver_id = action[1] 
                 receiver = self.players[receiver_id]
+
+                passer = player
+                passer_id = passer.player_id
 
                 passer.pass_to(receiver, self.ball)
                 self.ball.owner_id = None  # Remove ball ownership temporarily
@@ -132,14 +140,29 @@ class FootballEnv(gym.Env):
         # Update ball position
         self.ball.update_position(self.players)
 
-        # Ball is free, assign it ONLY to the intended receiver if close enough
-        if self.ball.owner_id is None and receiver_id is not None:
-            distance_threshold = 0.015  # ~1.8 meters if pitch is 120m wide
-            receiver = self.players[receiver_id]
-            dist = np.linalg.norm(self.ball.get_position() - receiver.get_position())
-            if dist < distance_threshold:
-                self.ball.owner_id = receiver_id
-                print(f"Ball possessed by Player {receiver_id}")
+        # If the ball is free, assign it to the first player close enough (excluding the passer)
+        if self.ball.owner_id is None:
+
+            for player in self.players:
+                if passer_id == player.player_id:
+                    continue  # Skip the passer to avoid instant re-possession
+
+                distance = np.linalg.norm(player.position - self.ball.position)
+                print(f"[DEBUG] Player {player.player_id} distance to ball: {distance:.4f}")
+                if distance < DISTANCE_TO_BALL:
+                    print("[INFO] Player {} is close enough to the ball".format(player.player_id))
+                    self.ball.owner_id = player.player_id
+                    player.has_ball = True
+
+                    # Reset ball possession for all other players
+                    for other_player in self.players:
+                        if other_player.player_id != player.player_id:
+                            other_player.has_ball = False
+
+                    print(f"[INFO] Player {player.player_id} gained ball possession")
+                    break
+                else:
+                    player.has_ball = False
 
         # Check for end of episode conditions
         done, reward, info = self._check_ball_out_of_bounds()

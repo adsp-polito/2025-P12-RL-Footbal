@@ -103,7 +103,8 @@ def animate_simulation(env, num_frames=24, interval_ms=1000/24):
 
         if possessor_id is not None:
             # Define receiver: pass to the next player in the list (cyclic)
-            receiver_id = (possessor_id - 1) % 22
+            # randomly choose a receiver from the other team
+            receiver_id = np.random.choice([i for i in range(22) if i != possessor_id])
 
             # Assign pass action to the possessor
             actions[possessor_id] = ("pass", receiver_id)

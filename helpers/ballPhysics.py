@@ -1,7 +1,7 @@
 
 import numpy as np
 
-def apply_friction(velocity, friction_factor=0.2):
+def apply_friction(velocity, friction_factor=0):
     """
     Applies friction to reduce ball velocity over time.
     
