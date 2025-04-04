@@ -39,7 +39,7 @@ class Team:
             position = np.array([1.0 - x, 1.0-y]) if self.side == "right" else np.array([x, y])
 
             self.players.append(Player(
-                player_id=i,
+                player_id=self.team_id * 11 + i, # unique player ID for each team
                 team_id=team_id,
                 role=role,
                 abbr=abbr,

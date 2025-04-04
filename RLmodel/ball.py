@@ -49,7 +49,7 @@ class Ball:
             self.position = owner.get_position() + offset
 
         else:
-            
+
             # Ball moves freely
             self.position += (self.velocity / fps) / field_width  # Move by actual meters per frame
 

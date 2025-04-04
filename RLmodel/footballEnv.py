@@ -148,9 +148,7 @@ class FootballEnv(gym.Env):
                     continue  # Skip the passer to avoid instant re-possession
 
                 distance = np.linalg.norm(player.position - self.ball.position)
-                print(f"[DEBUG] Player {player.player_id} distance to ball: {distance:.4f}")
                 if distance < DISTANCE_TO_BALL:
-                    print("[INFO] Player {} is close enough to the ball".format(player.player_id))
                     self.ball.owner_id = player.player_id
                     player.has_ball = True
 
@@ -159,7 +157,6 @@ class FootballEnv(gym.Env):
                         if other_player.player_id != player.player_id:
                             other_player.has_ball = False
 
-                    print(f"[INFO] Player {player.player_id} gained ball possession")
                     break
                 else:
                     player.has_ball = False
