@@ -5,7 +5,7 @@ from RLmodel.player import Player
 from RLmodel.team import Team
 from RLmodel.ball import Ball
 
-DISTANCE_TO_BALL = 0.005  # ~0.60 meters if pitch is 120m wide
+DISTANCE_TO_BALL = 0.005  # 0.60 meters if pitch is 120m wide
 
 class FootballEnv(gym.Env):
     """

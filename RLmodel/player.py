@@ -92,36 +92,42 @@ class Player:
 
         # Prevent the player from leaving the pitch boundaries (normalized coordinates)
         self.position = np.clip(self.position, [0.0, 0.0], [1.0, 1.0])
-
-    def pass_to(self, teammate, ball, pass_speed=20):
+        
+    def pass_to(self, teammate, ball, min_speed=5.0, max_speed=35.0, noise_factor=0.05):
         """
-        Executes a pass from this player to a teammate by updating the ball's velocity vector.
-
-        Parameters:
-            - teammate: Player object, the intended recipient of the pass
-            - ball: Ball object, the ball to be passed
-            - pass_speed: float, speed of the pass in meters per second (default: 20 m/s)
-
-        The method computes the normalized direction vector from the passer to the receiver
-        and sets the ball velocity accordingly to simulate a pass.
+        Passes the ball directly to the teammate's current position, without predicting future movement.
+        
+        Args:
+            teammate (Player): Player receiving the pass.
+            ball (Ball): Ball object to update.
+            min_speed (float): Minimum speed for short passes.
+            max_speed (float): Maximum speed for long passes.
+            noise_factor (float): Percentage variation in pass speed.
         """
-
-        # Calculate the difference in position between the passer and receiver in absolute coordinates
+        # Difference in position (current only)
         dx = teammate.position[0] - self.position[0]
         dy = teammate.position[1] - self.position[1]
-
-        # Compute Euclidean distance between passer and receiver
         distance = np.hypot(dx, dy)
 
-        # Avoid division by zero (e.g., same position)
         if distance == 0:
             return
 
-        # Normalize the direction vector
+        # Normalize direction
         direction = np.array([dx, dy]) / distance
 
-        # Set ball velocity along the direction vector
-        ball.velocity = direction * pass_speed
+        # Convert normalized distance to meters
+        distance_m = distance * 120
+        full_range = 75.0
+
+        # Base speed proportional to distance
+        base_speed = min_speed + (max_speed - min_speed) * min(distance_m / full_range, 1.0)
+
+        # Apply variation
+        variation = np.random.uniform(-noise_factor, noise_factor)
+        speed = base_speed * (1 + variation)
+
+        # Apply velocity to ball
+        ball.velocity = direction * speed
 
     def get_position(self):
         """
