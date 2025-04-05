@@ -33,3 +33,30 @@ def apply_friction(velocity, friction_factor=0.001):
         np.ndarray: Updated velocity vector after applying friction
     """
     return velocity * (1 - friction_factor)
+
+# ------------------------------------------------------------------------------
+# Future Extensions:
+#  - Ball spin:
+#       If needed for simulating free kicks, we could incorporate curvature caused
+#       by spin — though likely unnecessary for most tactical AI use cases.
+#
+#   - Bounce dynamics:
+#       Add logic for how the ball interacts with boundaries (e.g., walls, goalposts)
+#       using a coefficient of restitution to simulate elastic collisions.
+#
+#   - Deflection mechanics:
+#       Enable the ball to change trajectory upon player contact based on angle,
+#       speed, and point of impact, useful for modeling blocks or glancing touches.
+#
+#   - Air drag:
+#       Introduce velocity-proportional resistance to simulate ball slowing over
+#       longer distances or under windy conditions (if modeled).
+#
+#   - Rolling resistance:
+#       For extremely fine-grained realism, distinguish between sliding and rolling
+#       phases on different pitch types.
+#
+#   - Magnus effect (spin curve):
+#       If needed for simulating free kicks, we could incorporate curvature caused
+#       by spin — though likely unnecessary for most tactical AI use cases.
+# ------------------------------------------------------------------------------

@@ -1,7 +1,6 @@
-from RLmodel.footballEnv import FootballEnv
+from RLEnvironment.footballEnv import FootballEnv
 from helpers.visuals import simulate_with_slider, animate_simulation
 from helpers.action_logic import ACTIONS
-
 
 # Choose formations
 formation_A = "451"
@@ -20,15 +19,14 @@ env = FootballEnv(
 obs, _ = env.reset()
 
 # Choose action strategy
-strategy = ACTIONS["random_passing"]
+strategy = ACTIONS["random"]
 
 
 # Run full animation
-
 animate_simulation(env, num_frames=24*10, interval_ms=1000/24, action_selector = strategy) # 24 frames * 60 seconds = 1440 frames
 
 # Run slider animation
-#simulate_with_slider(env, num_frames=24*10, action_selector=strategy)
+# simulate_with_slider(env, num_frames=24*10, action_selector=strategy)
 
 # Close environment
 env.close()

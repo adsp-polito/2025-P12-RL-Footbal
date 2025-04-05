@@ -1,5 +1,5 @@
 import numpy as np
-from RLmodel.player import Player
+from RLEnvironment.player import Player
 from lineups.lineupsDict import formations
 
 class Team:
@@ -12,14 +12,16 @@ class Team:
         - color (str): Color for rendering purposes
         - side (str): Field side ('left' or 'right') to mirror positions
         - formation (str): Chosen tactical formation (e.g., '433')
+        - movement_mode (str): 'discrete' or 'continuous' control mode for players
         - players (list): List of Player instances belonging to this team
     """
 
-    def __init__(self, team_id, color, side, formation="433"):
+    def __init__(self, team_id, color, side, formation="433", movement_mode="discrete"):
         self.team_id = team_id
         self.color = color
         self.side = side
         self.formation = formation
+        self.movement_mode = movement_mode
         self.players = []
 
         # Load formation data from dictionary
@@ -27,7 +29,6 @@ class Team:
 
         # Build players from role-position data
         for i, role_data in enumerate(self.roles_data):
-
             role = role_data["role"]
             abbr = role_data["abbr"]
 
@@ -38,12 +39,14 @@ class Team:
             # If self.side == "right" mirror the position of the role wrt the x coordinate
             position = np.array([1.0 - x, 1.0-y]) if self.side == "right" else np.array([x, y])
 
+            # Create a Player instance for each role defined in the formation
             self.players.append(Player(
-                player_id=self.team_id * 11 + i, # unique player ID for each team
+                player_id=self.team_id * 11 + i,  # unique player ID for each team
                 team_id=team_id,
                 role=role,
                 abbr=abbr,
-                init_position=position
+                init_position=position,
+                movement_mode=self.movement_mode
             ))
 
     def _load_formation_data(self):

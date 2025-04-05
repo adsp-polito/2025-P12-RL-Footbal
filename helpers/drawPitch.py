@@ -3,10 +3,17 @@ from matplotlib.patches import Circle, Arc, Rectangle
 
 def draw_pitch(ax=None, field_color='green'):
     """
-    Draw a 120 x 80 football pitch including realistic goalposts.
-    (0,0) is top-left, (120,80) is bottom-right.
+    Draw a 120x80 meters football pitch
+
+    Parameters:
+        - ax (matplotlib.axes.Axes, optional): The axis to draw the pitch on. If None, a new figure and axis are created
+        - field_color (str): Background color of the pitch. Defaults to 'green'
+
+    Returns:
+        - matplotlib.axes.Axes: The axis with the football pitch drawn on it
     """
     if ax is None:
+        # Create a new figure and axis if none is provided
         fig, ax = plt.subplots(figsize=(12, 8))
     
     # Set pitch background
@@ -14,6 +21,13 @@ def draw_pitch(ax=None, field_color='green'):
         ax.set_facecolor('#4CAF50')
         lc = 'whitesmoke'  # line color
         border_color = 'white'
+        
+        # Draw alternating green stripes to simulate pitch mowing pattern
+        stripe_width = 10
+        for i in range(0, 120, stripe_width):
+            stripe_color = '#43A047' if (i // stripe_width) % 2 == 0 else '#4CAF50'
+            ax.add_patch(Rectangle((i, 0), stripe_width, 80, color=stripe_color, zorder=0))
+        
     else:
         lc = 'black'
         border_color = 'white'
@@ -116,7 +130,6 @@ def draw_pitch(ax=None, field_color='green'):
     ax.set_xlim(-5, 125)  # allow space for goal depth
     ax.set_ylim(85, -5)    # flip y-axis
     ax.set_aspect('equal')
-    #ax.axis('off')
 
     ax.set_xticks([])
     ax.set_yticks([])
