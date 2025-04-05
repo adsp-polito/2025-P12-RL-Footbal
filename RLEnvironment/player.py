@@ -23,22 +23,19 @@ class Player:
         self.player_id = player_id
         self.team_id = team_id
         self.role = role
-        self.abbr = abbr if abbr is not None else role[:2]  # fallback if not provided
+        
+        # Fallback if abbreviation is not provided
+        self.abbr = abbr if abbr is not None else role[:2]
 
-        # Initial and current position on the field
+        # Initialize position and current position on the field
         self.init_position = np.array(init_position, dtype=np.float32)
         self.position = np.array(init_position, dtype=np.float32)
 
-        # Velocity vector (vx, vy)
+        # Initialize velocity vector (vx, vy)
         self.velocity = np.zeros(2, dtype=np.float32)
 
-        # Maximum allowed speed (10 m/s equivalent to 36 km/h)
+        # Maximum allowed speed (10 m/s equivalent to 36 km/h) and movement mode
         self.max_speed = 10.0
-
-        # Possession state
-        self.has_ball = False
-        
-        # Movement mode
         self.movement_mode = movement_mode  # either 'discrete' or 'continuous'
 
     def reset(self):
@@ -58,6 +55,7 @@ class Player:
             action (int or list): Discrete action index or continuous movement vector
         """
         if self.movement_mode == "discrete":
+            # Map discrete actions to direction vectors
             direction_map = {
                 0: np.array([0.0, 0.0]),
                 1: np.array([0.0, 1.0]),
@@ -87,7 +85,7 @@ class Player:
         else:
             self.velocity = np.zeros(2)
 
-        # Update player position
+        # Update player position based on current velocity
         self.position += self.velocity
         
     def pass_to_id(self, receiver_id, all_players, ball, min_speed=5.0, max_speed=35.0, noise_factor=0.05):
@@ -103,6 +101,7 @@ class Player:
             max_speed (float): Maximum speed to apply to the ball
             noise_factor (float): Random variation factor for pass realism
         """
+        # Calculate distance to the teammate
         teammate = all_players[receiver_id]
         dx = teammate.position[0] - self.position[0]
         dy = teammate.position[1] - self.position[1]
@@ -111,6 +110,7 @@ class Player:
         if distance == 0:
             return
 
+        # Calculate speed based on distance and add noise for realism
         direction = np.array([dx, dy]) / distance
         distance_m = distance * 120
         full_range = 75.0
@@ -118,7 +118,11 @@ class Player:
         variation = np.random.uniform(-noise_factor, noise_factor)
         speed = base_speed * (1 + variation)
 
+        # Assign direction to the ball's velocity for the pass
         ball.velocity = direction * speed
+        
+        # Track the player who initiated the pass for reward evaluation
+        ball.just_passed_by = self.player_id
 
     def get_position(self):
         """

@@ -129,7 +129,12 @@ def animate_simulation(env, num_frames=240, interval_ms=1000/24, action_selector
 
     # Function to update the plot for each frame
     def update(frame):
-        actions = action_selector(env, frame) if action_selector else [0] * 22  # Get actions for current frame
+        # Support strategies that either accept (env) or (env, frame)
+        try:
+            actions = action_selector(env, frame) if action_selector else [0] * 22  # Get actions for current frame
+        except TypeError:
+            actions = action_selector(env) if action_selector else [0] * 22
+        
         env.step(actions)  # Step the environment with selected actions
 
         # Get current player positions, ball position, and owner ID
@@ -174,7 +179,12 @@ def simulate_with_slider(env, num_frames=240, action_selector=None):
     for frame in range(1, num_frames + 1):
 
         # Get actions for the current frame
-        actions = action_selector(env, frame) if action_selector else [0] * 22  
+        # Allow compatibility with strategies that accept one or two arguments
+        try:
+            actions = action_selector(env, frame) if action_selector else [0] * 22  
+        except TypeError:
+            actions = action_selector(env) if action_selector else [0] * 22
+            
         env.step(actions)  
 
         # Save state for this frame

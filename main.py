@@ -1,6 +1,6 @@
 from RLEnvironment.footballEnv import FootballEnv
 from helpers.visuals import simulate_with_slider, animate_simulation
-from helpers.action_logic import ACTIONS
+from helpers.action_strategies import random_strategy
 
 # Choose formations
 formation_A = "451"
@@ -15,11 +15,12 @@ env = FootballEnv(
     teamBFormation=formation_B
 )
 
-# Reset the environment
+# Reset the environment to get the initial observation
 obs, _ = env.reset()
 
 # Choose action strategy
-strategy = ACTIONS["random"]
+# Set the action strategy (e.g., random movement + pass/shoot)
+strategy = random_strategy
 
 
 # Run full animation

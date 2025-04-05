@@ -5,7 +5,7 @@ from RLEnvironment.player import Player
 from RLEnvironment.team import Team
 from RLEnvironment.ball import Ball
 
-DISTANCE_TO_BALL = 0.01  # 1.20 meters if pitch is 120m wide
+DISTANCE_TO_BALL = 0.005  # 0.60 meters if pitch is 120m wide
 
 class FootballEnv(gym.Env):
     """
@@ -60,7 +60,10 @@ class FootballEnv(gym.Env):
         self.current_step = 0  
 
         # Define observation and action spaces
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(22, 10), dtype=np.float32)  
+        # Each player provides (x, y, vx, vy, has_ball) → 22 × 5 = 110
+        # Ball provides (x, y, vx, vy, is_free) → 5
+        # Total = 115
+        self.observation_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(115,), dtype=np.float32)
         self.action_space = gym.spaces.MultiDiscrete([10 for _ in range(11)]) 
 
         # Rendering options
@@ -213,38 +216,102 @@ class FootballEnv(gym.Env):
                     break 
 
     def _evaluate_step(self):
-        """Evaluates the current step for rewards and done conditions"""
-        
-        total_reward = 0 
+        """
+        Evaluates the current step for rewards and done conditions.
+        Returns:
+            - done (bool): Whether the episode should end
+            - total_reward (float): Accumulated reward for the step
+            - info (dict): Additional debug info
+        """
+        total_reward = 0
+        info = {}
 
-        # List to track players that are out of bounds
-        players_out = []  
-
-        # Penalize players that exit the field boundaries
+        # Track players that went out of bounds
+        players_out = []
         for player in self.players:
-            if player.is_out_of_bounds():  
-                total_reward -= 1  
-                players_out.append(player.player_id)  
+            if player.is_out_of_bounds():
+                total_reward -= 1
+                players_out.append(player.player_id)
 
-        # Penalize if the ball is out of bounds
-        ball_done, ball_reward, ball_info = self._check_ball_out_of_bounds()  
-        total_reward += ball_reward  
+        info["players_out"] = players_out
 
-        # Compile info dictionary with players out and ball info
-        info = {"players_out": players_out}  
-        info.update(ball_info) 
+        # Penalize if ball is out
+        ball_done, ball_reward, ball_info = self._check_ball_out_of_bounds()
+        total_reward += ball_reward
+        info.update(ball_info)
 
-        return ball_done, total_reward, info  
+        # Reward for successful pass
+        if hasattr(self.ball, "just_passed_by") and self.ball.just_passed_by is not None:
+            last_passer = self.ball.just_passed_by
+            if self.ball.owner_id is not None and self.ball.owner_id != last_passer:
+                total_reward += 0.5
+                info["pass_success"] = True
+            else:
+                total_reward -= 0.2
+                info["pass_failed"] = True
+            self.ball.just_passed_by = None
+
+        # Reward or penalty for change of possession (tackle or lost control)
+        if hasattr(self, "last_owner_id"):
+            if self.ball.owner_id != self.last_owner_id:
+                if self.ball.owner_id is not None:
+                    total_reward += 0.3  # tackle succeeded
+                    info["tackle_success"] = True
+                else:
+                    total_reward -= 0.3  # possession lost
+                    info["lost_possession"] = True
+
+        # Check for goal (right side goal area)
+        x_ball, y_ball = self.ball.position
+        if x_ball >= 1.0 and 0.3 <= y_ball <= 0.7:
+            total_reward += 5.0
+            info["goal_scored"] = True
+            return True, total_reward, info
+
+        # Save last owner for next step comparison
+        self.last_owner_id = self.ball.owner_id
+
+        return ball_done, total_reward, info 
 
     def _get_observation(self):
         """
-        Returns the current observation of the environment.
+        Builds a flattened observation vector for the entire environment.
 
-        To be implemented: should return positions, velocities, and statuses
-        of all players and the ball as a structured array.
+        Each player contributes:
+            - x, y: normalized position
+            - vx, vy: current velocity (delta position over 1 frame)
+            - has_ball: 1 if the player possesses the ball, else 0
+
+        The ball contributes:
+            - x, y: position
+            - vx, vy: velocity
+            - is_free: 1 if no player possesses the ball
+
+        Returns:
+            - obs (np.ndarray): Flattened observation of shape (115,)
         """
-        raise NotImplementedError("Observation function not yet implemented.")  # Raise error if not implemented
 
+        player_features = []
+
+        # Extract features from each player
+        for player in self.players:
+            x, y = player.position
+            vx, vy = player.velocity
+            has_ball = 1.0 if player.has_ball else 0.0
+            player_features.extend([x, y, vx, vy, has_ball])
+
+        # Extract ball features
+        x_ball, y_ball = self.ball.position
+        vx_ball, vy_ball = self.ball.velocity
+        is_free = 1.0 if self.ball.owner_id is None else 0.0
+        ball_features = [x_ball, y_ball, vx_ball, vy_ball, is_free]
+
+        # Concatenate all features and return as flat numpy array 
+        # The observation shape is (22 players * 5 features + 1 ball * 5 features = 115)
+        obs = np.array(player_features + ball_features, dtype=np.float32)
+
+        return obs
+    
     def render(self):
         """
         Renders the current environment frame.

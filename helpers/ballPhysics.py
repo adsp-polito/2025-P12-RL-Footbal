@@ -21,7 +21,7 @@ import numpy as np
 #   - This provides a much smoother and more realistic deceleration
 #     over multiple seconds of simulation.
 # ------------------------------------------------------------------------------
-def apply_friction(velocity, friction_factor=0.001):
+def apply_friction(velocity, friction_factor=0.0015):
     """
     Applies friction to reduce ball velocity over time.
 
