@@ -64,7 +64,7 @@ class FootballEnv(gym.Env):
         # Ball provides (x, y, vx, vy, is_free) → 5
         # Total = 115
         self.observation_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(115,), dtype=np.float32)
-        self.action_space = gym.spaces.MultiDiscrete([10 for _ in range(11)]) 
+        self.action_space = gym.spaces.Discrete(12)  # 12 discrete actions for each player 
 
         # Rendering options
         self.render_mode = render_mode  
@@ -112,7 +112,7 @@ class FootballEnv(gym.Env):
         # Get the current observation of the environment
         observation = self._get_observation()  
 
-        return observation, {}  
+        return observation, {}
 
     def step(self, actions):
         """
@@ -153,6 +153,7 @@ class FootballEnv(gym.Env):
         Applies the actions of each player. Each action is a tuple:
         (action_type, optional_data), e.g., ("move", direction) or ("pass", receiver_id)
         """
+
         # Loop through each player and their corresponding action
         for i, player in enumerate(self.players):
             
@@ -188,7 +189,9 @@ class FootballEnv(gym.Env):
                 elif action_type == "tackle":
                     target = next((p for p in self.players if p.has_ball), None)  # Find the player with the ball
                     if target is not None and not player.has_ball:  # Only allow tackling if the player does not have the ball
-                        player.tackle(self.ball, target)  
+                        # Check if the player is from the opposing team
+                        if player.team_id != target.team_id:  # Check if they are on opposite teams
+                            player.tackle(self.ball, target)  # Perform tackle
 
                 else:
                     raise ValueError(f"Unknown action type: {action_type}")  # Raise an error for unknown action types

@@ -161,14 +161,14 @@ class Player:
         direction = direction / norm
         ball.velocity = direction * speed
 
-    def tackle(self, ball, target_player, tackle_radius=0.02):
+    def tackle(self, ball, target_player, tackle_radius=0.01): 
         """
         Attempts to steal the ball from another player if within a defined radius.
         
         Args:
             - ball (Ball): Ball object in play.
             - target_player (Player): The player currently possessing the ball.
-            - tackle_radius (float): Maximum distance to attempt a successful tackle.
+            - tackle_radius (float): Maximum distance to attempt a successful tackle (0.01 ≈ 1.20 m).
         
         Returns:
             - bool: True if the tackle was successful and possession was taken.
