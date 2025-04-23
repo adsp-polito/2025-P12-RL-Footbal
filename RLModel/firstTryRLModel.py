@@ -29,7 +29,7 @@ epsilon_min = 0.05            # Minimum epsilon threshold
 
 episodes = 5000               # Total training episodes
 max_fps = 480                 # Maximum timesteps per episode
-render_every = 100            # Render interval (episodes)
+render_every = 1000            # Render interval (episodes)
 
 # === Grid dimensions based on cell size ===
 GRID_WIDTH = (X_MAX - X_MIN) // CELL_SIZE
