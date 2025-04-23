@@ -25,10 +25,10 @@ strategy = pass_strategy
 
 
 # Run full animation
-animate_simulation(env, num_frames=24*10, interval_ms=1000/24, action_selector = strategy) # 24 frames * 60 seconds = 1440 frames
+# animate_simulation(env, num_frames=24*10, interval_ms=1000/24, action_selector = strategy) # 24 frames * 60 seconds = 1440 frames
 
 # Run slider animation
-# simulate_with_slider(env, num_frames=24*10, action_selector=strategy)
+simulate_with_slider(env, num_frames=24*10, action_selector=strategy)
 
 # Close environment
 env.close()
