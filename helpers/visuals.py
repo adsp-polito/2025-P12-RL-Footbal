@@ -1,228 +1,106 @@
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-from matplotlib.patches import Circle
-from matplotlib.widgets import Slider, Button
-import numpy as np
-from helpers.drawPitch import draw_pitch
+import matplotlib.animation as animation
+from RLEnvironment.pitch import draw_half_pitch, FIELD_WIDTH, FIELD_HEIGHT
+from matplotlib.patches import Circle, Patch
+from matplotlib.lines import Line2D
 
-# Create a yellow highlight ring to indicate the current ball possessor
-def highlight_possessor(ax):
+
+# =============================================================================
+# Coordinate System & Normalization
+# -----------------------------------------------------------------------------
+# This visualization module renders the football pitch using real-world
+# dimensions in meters (e.g., 120x80). However, entities like players and
+# the ball use normalized coordinates in the range [0, 1].
+#
+# This design choice allows the simulation and RL environment to operate
+# on normalized values (which are model-friendly), while keeping the rendering
+# faithful to the real field layout.
+#
+# As a result, when rendering entities (e.g., players, ball), their normalized
+# coordinates must be denormalized by multiplying by FIELD_WIDTH and FIELD_HEIGHT.
+#
+# Example:
+#   x_normalized = 0.5 → x_position_on_pitch = 0.5 * 120 = 60
+#
+# This ensures consistent rendering and accurate placement on the physical pitch.
+# =============================================================================
+
+# Render a single state
+def render_state(state, ax=None, show_grid=False, show_cell_ids=False, stripes=False):
     """
-    Creates and returns a visual ring to highlight the player currently in possession of the ball
+    Renders a single football state on the offensive half-pitch.
 
-    Args:
-        - ax (matplotlib.axes): Axis where the pitch and elements are drawn
+    Parameters:
+        - state (dict): Contains 'player', 'ball', and optionally 'opponents'.
+            Example:
+                state = {
+                    'player': Player instance,
+                    'ball': Ball instance,
+                    'opponents': list of Player instances (optional)
+                }
+        - ax (matplotlib.axes.Axes, optional): Axis to draw on. If None, a new one is created.
+        - show_grid (bool): Whether to overlay a debug grid.
+        - show_cell_ids (bool): Whether to show cell indices for RL debugging.
+        - stripes (bool): Whether to draw pitch stripes.
 
     Returns:
-        - Circle: A yellow circle that will be repositioned around the ball possessor each frame
+        - matplotlib.axes.Axes: The axis with the rendered state.
     """
-    circle = Circle((-10, -10), radius=1.0, edgecolor='yellow', facecolor='none', linewidth=6, zorder=4)
-    ax.add_patch(circle)
-    return circle
+    ax = draw_half_pitch(ax=ax, show_grid=show_grid, show_cell_ids=show_cell_ids, stripes=stripes)
 
-# Set up the initial pitch and visual elements for simulation (players, ball, labels)
-def setup_pitch(env):
+   # Draw attacker (blue)
+    if 'player' in state and state['player']:
+        x, y = state['player'].get_position()
+        x *= FIELD_WIDTH
+        y *= FIELD_HEIGHT
+        ax.add_patch(Circle((x, y), radius=1.0, color='dodgerblue', ec='black', lw=1, zorder=3))
+
+    # Draw ball (white)
+    if 'ball' in state and state['ball']:
+        x, y = state['ball'].get_position()
+        x *= FIELD_WIDTH
+        y *= FIELD_HEIGHT
+        ax.add_patch(Circle((x, y), radius=0.5, color='white', ec='black', lw=1, zorder=3))
+
+    # Draw defenders (red)
+    opponents = state.get('opponents', [])
+    if opponents:
+        for defender in opponents:
+            x, y = defender.get_position()
+            x *= FIELD_WIDTH
+            y *= FIELD_HEIGHT
+            ax.add_patch(Circle((x, y), radius=1.0, color='crimson', ec='black', lw=1, zorder=3))
+
+    return ax
+
+# Render episode as animation
+def render_episode(states, save_path=None, fps=24, show_grid=False, show_cell_ids=False):
     """
-    Initializes the pitch, players, ball, labels and title for the visual environment
+    Creates and optionally saves an animation from a list of game states.
 
-    Args:
-        - env (FootballEnv): The football environment containing players, teams, and the ball
+    Parameters:
+        - states (list of dict): Sequence of environment states (one per timestep)
+        - save_path (str or None): Path to save the animation (e.g., 'out.mp4' or 'out.gif')
+        - fps (int): Frames per second for the animation
+        - show_grid (bool): Whether to overlay the debug grid on each frame
+        - show_cell_ids (bool): Whether to show grid cell indices
 
     Returns:
-        Tuple containing:
-            - fig, ax: Matplotlib figure and axis
-            - player_dots: List of graphical player markers
-            - role_labels: List of text labels for player roles/abbreviations
-            - ball_circle: Circle patch representing the ball
-            - highlight_circle: Circle to highlight the ball possessor
-            - possessor_id_labels: List of text labels placed on player dots
-            - title: Title object to display time/frame info
+        - matplotlib.animation.FuncAnimation object
     """
-    # Create a new figure and axis for the pitch
-    fig, ax = plt.subplots(figsize=(12, 8))  
-    draw_pitch(ax) 
+    fig, ax = plt.subplots(figsize=(6, 8))
+     
+    def update(frame_idx):
+        ax.clear()
+        render_state(states[frame_idx], ax=ax, show_grid=show_grid, show_cell_ids=show_cell_ids)
+        ax.set_title(f"Frame {frame_idx+1}/{len(states)}", fontsize=16, fontweight='bold', color='black')
 
-    # Set team colors based on the teams
-    team_colors = [env.teams[0].color] * 11 + [env.teams[1].color] * 11  
-    player_dots, role_labels, possessor_id_labels = [], [], []  # Initialize lists for players and labels
+    anim = animation.FuncAnimation(fig, update, frames=len(states), interval=1000/fps, repeat=False)
 
-    # Create player markers and labels
-    for i, player in enumerate(env.players):
-        pos = player.get_position() * np.array([120, 80])  
-        dot, = ax.plot(pos[0], pos[1], 'o', markersize=10, color=team_colors[i], markeredgecolor="black", zorder=5)  
-        
-        # Create role label
-        label = ax.text(pos[0], pos[1] - 2, getattr(player, 'abbr', player.role[:2]),  
-                        ha='center', va='center', fontsize=8, color='black', fontweight='bold', zorder=6)
-        
-        # Create player ID label
-        pid_label = ax.text(pos[0], pos[1], str(i), ha='center', va='center', fontsize=6, color='white', fontweight='bold', zorder=7) 
-        
-        # Add player dot and labels to lists
-        player_dots.append(dot) 
-        role_labels.append(label)  
-        possessor_id_labels.append(pid_label)
+    if save_path:
+        if save_path.endswith(".gif"):
+            anim.save(save_path, writer='pillow', fps=fps)
+        elif save_path.endswith(".mp4"):
+            anim.save(save_path, writer='ffmpeg', fps=fps)
 
-    # Create ball circle and set its position
-    ball_pos = env.ball.get_position() * np.array([120, 80])  
-    ball_circle = Circle(ball_pos, radius=0.65, facecolor='white', edgecolor='black', linewidth=1.5, zorder=5) 
-    ax.add_patch(ball_circle)  
-
-    # Create highlight circle for ball possessor
-    highlight_circle = highlight_possessor(ax) 
-
-    # Create title for the plot
-    title = ax.set_title("", fontsize=18, fontweight="bold", color='black', pad=15)  
-
-    return fig, ax, player_dots, role_labels, ball_circle, highlight_circle, possessor_id_labels, title
-
-# Update the entire visual scene at a specific simulation frame
-def update_frame_visuals(env, frame_data, player_dots, role_labels, 
-                         ball_circle, highlight_circle, possessor_id_labels, 
-                         title, num_frames):
-    """
-    Updates all visual elements on the pitch for a specific frame
-
-    Args:
-        - env (FootballEnv): The football environment.
-        - frame_data (dict): Contains player positions, ball position, possessor ID, and frame number.
-        - player_dots (list): List of matplotlib plot markers representing players.
-        - role_labels (list): List of role/abbr text labels.
-        - ball_circle (Circle): The ball graphical object.
-        - highlight_circle (Circle): The yellow ring around the ball possessor.
-        - possessor_id_labels (list): List of player ID text labels positioned on top of player dots.
-        - title (matplotlib.text.Text): Title object for displaying frame info.
-        - num_frames (int): Total number of frames in the simulation.
-    """
-    # Extract player positions, ball position, and owner ID from frame data
-    players = frame_data["players"]  
-    ball = frame_data["ball"]  
-    owner_id = frame_data["owner"]  
-
-    # Update player positions and labels
-    for i, pos in enumerate(players):
-        pos_scaled = pos * np.array([120, 80])  # Scale player position
-        player_dots[i].set_data(pos_scaled[0], pos_scaled[1])  
-        role_labels[i].set_position((pos_scaled[0], pos_scaled[1] - 2))  
-        role_labels[i].set_text(getattr(env.players[i], 'abbr', env.players[i].role[:2]))  
-        possessor_id_labels[i].set_position((pos_scaled[0], pos_scaled[1]))
-
-    # Update ball position
-    ball_scaled = ball * np.array([120, 80])  # Scale ball position
-    ball_circle.set_center(ball_scaled) 
-
-    # Update highlight circle position based on ball owner
-    if owner_id is not None:
-        owner_pos = players[owner_id] * np.array([120, 80])  
-        highlight_circle.set_center(owner_pos) 
-    else:
-        highlight_circle.set_center((-10, -10))  # Move highlight circle off-screen if no owner
-
-    # Update title with frame information
-    title.set_text(f"Frame {frame_data['frame']} / {num_frames} — Time {frame_data['frame'] / 24:.2f} s")  # Update title with frame info
-
-# Animate the simulation (continuous playback)
-def animate_simulation(env, num_frames=240, interval_ms=1000/24, action_selector=None):
-    
-    # Set up the pitch
-    fig, _, player_dots, role_labels, ball_circle, highlight_circle, possessor_id_labels, title = setup_pitch(env)  
-
-    # Function to update the plot for each frame
-    def update(frame):
-        # Support strategies that either accept (env) or (env, frame)
-        try:
-            actions = action_selector(env, frame) if action_selector else [0] * 22  # Get actions for current frame
-        except TypeError:
-            actions = action_selector(env) if action_selector else [0] * 22
-        
-        env.step(actions)  # Step the environment with selected actions
-
-        # Get current player positions, ball position, and owner ID
-        frame_data = {
-            "players": [p.get_position().copy() for p in env.players],  
-            "ball": env.ball.get_position().copy(),  
-            "owner": env.ball.owner_id, 
-            "frame": frame + 1  
-        }
-
-        # Update player positions, ball position, and title
-        update_frame_visuals(env, frame_data, player_dots, role_labels, ball_circle, highlight_circle, possessor_id_labels, title, num_frames)
-        return player_dots + [ball_circle, highlight_circle, title] + role_labels + possessor_id_labels 
-
-    # Set up the animation
-    _ = FuncAnimation(fig, update, frames=num_frames, interval=interval_ms, blit=False, repeat=False) 
-    plt.show()  
-
-# Visualize the simulation using a slider to move frame-by-frame (interactive mode)
-def simulate_with_slider(env, num_frames=240, action_selector=None):
-    """
-    Visualizes the simulation using a slider to move frame-by-frame
-    Args:
-        - env (FootballEnv): The football environment.
-        - num_frames (int): Total number of frames in the simulation.
-        - action_selector (function): Function to select actions for each frame.
-    Returns:
-        - None
-    """ 
-    # Initialize the pitch and visual elements
-    saved_states = []  
-
-    # Save initial state
-    saved_states.append({
-        "players": [p.get_position().copy() for p in env.players],  
-        "ball": env.ball.get_position().copy(), 
-        "owner": env.ball.owner_id,  
-        "frame": 0
-    })
-
-    # Simulate the environment for the specified number of frames
-    for frame in range(1, num_frames + 1):
-
-        # Get actions for the current frame
-        # Allow compatibility with strategies that accept one or two arguments
-        try:
-            actions = action_selector(env, frame) if action_selector else [0] * 22  
-        except TypeError:
-            actions = action_selector(env) if action_selector else [0] * 22
-            
-        env.step(actions)  
-
-        # Save state for this frame
-        saved_states.append({
-            "players": [p.get_position().copy() for p in env.players],  
-            "ball": env.ball.get_position().copy(), 
-            "owner": env.ball.owner_id,  
-            "frame": frame  
-        })
-
-    # Set up the pitch and visual elements
-    _, _, player_dots, role_labels, ball_circle, highlight_circle, possessor_id_labels, title = setup_pitch(env)  
-    plt.subplots_adjust(bottom=0.22)  #
-
-    # Create a slider for frame selection
-    ax_slider = plt.axes([0.2, 0.08, 0.6, 0.03]) 
-    slider = Slider(ax_slider, 'Frame', 0, num_frames, valinit=0, valstep=1)  
-
-    # Create a button to reset the slider
-    ax_reset = plt.axes([0.85, 0.02, 0.1, 0.05])  
-    reset_button = Button(ax_reset, 'Reset')
-
-    # Update the plot based on the slider value
-    def update_slider(val):
-        # Get the current frame from the slider
-        frame = int(val)
-        update_frame_visuals(env, saved_states[frame], player_dots, role_labels, ball_circle, highlight_circle, possessor_id_labels, title, num_frames)  # Update visuals for selected frame
-
-    # Reset the slider to frame 0
-    def on_reset(event):
-        slider.set_val(0)  
-
-    # Connect the slider and button to their respective functions
-    slider.on_changed(update_slider)  
-    reset_button.on_clicked(on_reset)
-
-    # Set the initial frame to 0
-    update_slider(0)  
-
-    # Display the plot
-    plt.show()  
+    return anim
