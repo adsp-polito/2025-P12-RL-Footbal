@@ -19,9 +19,9 @@ PITCH_HEIGHT = Y_MAX - Y_MIN
 
 # Goal specs (in absolute coordinates)
 GOAL_WIDTH = 7.32
-GOAL_X_MIN = 119  # 1 meter before end of official pitch (still within field)
-GOAL_Y_MIN = 40 - GOAL_WIDTH / 2
-GOAL_Y_MAX = 40 + GOAL_WIDTH / 2
+GOAL_X_MIN = 120  
+GOAL_Y_MIN = (Y_MAX+Y_MIN)//2 - GOAL_WIDTH / 2    # Y_MAX + Y_MIN = 80 because y starts at -5 and end at 85 (85+(-5)=80)
+GOAL_Y_MAX = (Y_MAX+Y_MIN)//2 + GOAL_WIDTH / 2
 
 class OffensiveScenarioEnv(gym.Env):
     """
@@ -59,7 +59,7 @@ class OffensiveScenarioEnv(gym.Env):
         #start_y = np.random.uniform(-5, 85)  # meters
 
         # Initial Position 
-        start_x = 60
+        start_x = 65
         start_y = 40
 
         # Safety check: ensure the start point is within the extended pitch limits
@@ -105,27 +105,31 @@ class OffensiveScenarioEnv(gym.Env):
         info = {}
 
         # Terminal conditions
-        # Out of bounds
-        if abs_x < X_MIN or abs_x > X_MAX or abs_y < Y_MIN or abs_y > Y_MAX:
+        # Out of bounds (If x < 60 or x > 130, y < 0 or y > 80)
+        if abs_x < PITCH_WIDTH//2 or abs_x > PITCH_WIDTH or abs_y < 0 or abs_y > PITCH_HEIGHT:
             reward = -10.0
             self.done = True
             info["out_of_bounds"] = True
 
         # Goal scored
-        elif abs_x >= GOAL_X_MIN and GOAL_Y_MIN <= abs_y <= GOAL_Y_MAX:
+        elif abs_x >= GOAL_X_MIN and GOAL_Y_MIN < abs_y < GOAL_Y_MAX:
             reward = 5.0
             self.done = True
             info["goal"] = True
 
-        # Proximity to goal
+        # Proximity to goal
         else:
-            # Distance-based reward shaping
-            goal_center = np.array([GOAL_X_MIN, (GOAL_Y_MIN + GOAL_Y_MAX) / 2])
+            # Distance-based reward shaping (scaled to stay << 1.0)
+            goal_center = np.array([GOAL_X_MIN, (Y_MAX + Y_MIN) / 2])
             ball_pos = np.array([abs_x, abs_y])
             dist_to_goal = np.linalg.norm(ball_pos - goal_center)
 
+            # Compute max possible distance from goal
             max_distance = np.linalg.norm(np.array([X_MIN, Y_MIN]) - goal_center)
-            proximity_reward = 1.0 - (dist_to_goal / max_distance)
+
+            # Reward ∈ [0, proximity_scale]
+            proximity_scale = 0.2  # Max shaping reward if right at goal center
+            proximity_reward = proximity_scale * (1.0 - (dist_to_goal / max_distance))
             proximity_reward = max(proximity_reward, 0.0)
 
             reward = proximity_reward
