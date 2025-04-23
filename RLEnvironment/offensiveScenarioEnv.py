@@ -53,8 +53,14 @@ class OffensiveScenarioEnv(gym.Env):
 
         # Choose a fixed starting point (in absolute field coordinates)
         # The extended pitch spans from x ∈ [55, 130], y ∈ [-5, 85] in meters
-        start_x = 62.5  # meters (within the extended half field)
-        start_y = 42.5  # meters (center vertically)
+
+        # random position within the extended half field
+        #start_x = np.random.uniform(55, 130)  # meters
+        #start_y = np.random.uniform(-5, 85)  # meters
+
+        # Initial Position 
+        start_x = 60
+        start_y = 40
 
         # Safety check: ensure the start point is within the extended pitch limits
         if not (55 <= start_x <= 130) or not (-5 <= start_y <= 85):
@@ -76,6 +82,7 @@ class OffensiveScenarioEnv(gym.Env):
         return self._get_obs(), {}
 
     def step(self, action):
+        # Check if the episode is done
         if self.done:
             return self._get_obs(), 0.0, True, False, {}
 
@@ -88,29 +95,41 @@ class OffensiveScenarioEnv(gym.Env):
             offset = self.player.get_ball_offset()
             self.ball.set_position(self.player.get_position() + offset)
 
-        # Convert from normalized to absolute coordinates
+        # Convert normalized to absolute coordinates
         px, py = self.ball.get_position()
         abs_x = px * PITCH_WIDTH + X_MIN
         abs_y = py * PITCH_HEIGHT + Y_MIN
 
+        # Initialize reward and info
         reward = 0.0
         info = {}
 
+        # Terminal conditions
+        # Out of bounds
         if abs_x < X_MIN or abs_x > X_MAX or abs_y < Y_MIN or abs_y > Y_MAX:
-            reward = -1.0
+            reward = -10.0
             self.done = True
             info["out_of_bounds"] = True
 
+        # Goal scored
         elif abs_x >= GOAL_X_MIN and GOAL_Y_MIN <= abs_y <= GOAL_Y_MAX:
-            reward = 1.0
+            reward = 5.0
             self.done = True
             info["goal"] = True
 
+        # Proximity to goal
         else:
-            # Shaped reward (from middle of field at 60m)
-            progress = (abs_x - 60) / (120 - 60)
-            reward = max(progress, 0)
-            info["progress_reward"] = reward
+            # Distance-based reward shaping
+            goal_center = np.array([GOAL_X_MIN, (GOAL_Y_MIN + GOAL_Y_MAX) / 2])
+            ball_pos = np.array([abs_x, abs_y])
+            dist_to_goal = np.linalg.norm(ball_pos - goal_center)
+
+            max_distance = np.linalg.norm(np.array([X_MIN, Y_MIN]) - goal_center)
+            proximity_reward = 1.0 - (dist_to_goal / max_distance)
+            proximity_reward = max(proximity_reward, 0.0)
+
+            reward = proximity_reward
+            info["proximity_reward"] = reward
 
         return self._get_obs(), reward, self.done, False, info
 

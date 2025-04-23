@@ -1,28 +1,34 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from RLEnvironment.pitch import draw_half_pitch, FIELD_WIDTH, FIELD_HEIGHT
-from matplotlib.patches import Circle, Patch
-from matplotlib.lines import Line2D
-
+from matplotlib.patches import Circle
 
 # =============================================================================
 # Coordinate System & Normalization
 # -----------------------------------------------------------------------------
-# This visualization module renders the football pitch using real-world
-# dimensions in meters (e.g., 120x80). However, entities like players and
-# the ball use normalized coordinates in the range [0, 1].
+# The environment operates on a normalized coordinate system [0, 1] × [0, 1],
+# while the pitch visualization uses absolute physical units in meters.
 #
-# This design choice allows the simulation and RL environment to operate
-# on normalized values (which are model-friendly), while keeping the rendering
-# faithful to the real field layout.
+# The physical field space includes a padded area around the official pitch
+# to accommodate edge cases and grid alignment:
+#   - Horizontal range (X): [X_MIN, X_MAX] (e.g., [-5, 65] or [55, 125])
+#   - Vertical range   (Y): [Y_MIN, Y_MAX] (e.g., [-5, 85])
 #
-# As a result, when rendering entities (e.g., players, ball), their normalized
-# coordinates must be denormalized by multiplying by FIELD_WIDTH and FIELD_HEIGHT.
+# This design allows:
+#   - A learning-friendly normalized space for RL agents.
+#   - Accurate and flexible rendering with grid overlays and real dimensions.
+#
+# All entity positions (players, ball) are stored in normalized units and
+# must be denormalized before rendering:
+#   - x_absolute = x_normalized * PITCH_WIDTH + X_MIN
+#   - y_absolute = y_normalized * PITCH_HEIGHT + Y_MIN
 #
 # Example:
-#   x_normalized = 0.5 → x_position_on_pitch = 0.5 * 120 = 60
+#   x_normalized = 0.5, PITCH_WIDTH = 70, X_MIN = -5 →
+#   x_absolute = 0.5 * 70 + (-5) = 30 meters (center of the official pitch)
 #
-# This ensures consistent rendering and accurate placement on the physical pitch.
+# This ensures consistent and interpretable placement of entities across both
+# the simulation and the rendered visualization.
 # =============================================================================
 
 # Render a single state
