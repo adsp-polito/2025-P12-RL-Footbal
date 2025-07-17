@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 # Add project root to sys.path so RLEnvironment can be imported
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from RLEnvironment.offensiveScenarioEnv import OffensiveScenarioEnv
-from RLEnvironment.player import Player
-from RLEnvironment.ball import Ball
+from env.offensiveScenarioEnv import OffensiveScenarioEnv
+from players.player import Player
+from env.ball import Ball
 from helpers.visuals import render_episode
 
 # === AGENT POLICY ===

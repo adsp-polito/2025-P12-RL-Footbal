@@ -1,5 +1,5 @@
 import numpy as np
-from RLEnvironment.pitch import CELL_SIZE
+from env.pitch import CELL_SIZE
 
 # === GLOBAL NORMALIZATION CONSTANTS (same as environment) ===
 X_MIN = -5

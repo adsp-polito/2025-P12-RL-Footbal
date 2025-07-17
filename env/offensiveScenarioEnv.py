@@ -1,10 +1,10 @@
 import gymnasium as gym
 import numpy as np
 
-from RLEnvironment.player import Player
-from RLEnvironment.ball import Ball
+from players.player import Player
+from env.ball import Ball
 from helpers.visuals import render_state
-from RLEnvironment.pitch import CELL_SIZE
+from env.pitch import CELL_SIZE
 
 # Rendering settings
 FPS = 24

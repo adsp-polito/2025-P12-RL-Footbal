@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from RLEnvironment.pitch import draw_half_pitch, FIELD_WIDTH, FIELD_HEIGHT
+from env.pitch import draw_half_pitch, FIELD_WIDTH, FIELD_HEIGHT
 from matplotlib.patches import Circle
 
 # COORDINATE SYSTEMS AND NORMALIZATION
