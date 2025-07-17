@@ -1,39 +1,44 @@
 import numpy as np
 
-# === Normalization parameters ===
-# Field space: X ∈ [-5, 125], Y ∈ [-5, 85] → Normalized [0,1] x [0,1]
-X_MIN = -5
-Y_MIN = -5
-PITCH_WIDTH = 130   # From -5 to 125
-PITCH_HEIGHT = 90   # From -5 to 85
+# Normalization parameters
+X_MIN, Y_MIN = -5, -5
+X_MAX, Y_MAX = 125, 85
+PITCH_WIDTH = X_MAX - X_MIN   # 130 meters
+PITCH_HEIGHT = Y_MAX - Y_MIN  # 90 meters
 
 class Ball:
     """
     A class representing the football in a simplified environment.
-    Position is stored in normalized space ([0,1] × [0,1]), relative to the extended field area:
+
+    The ball's position is stored in normalized space ([0, 1] x [0, 1]),
+    relative to the extended field dimensions with margins:
     X ∈ [-5, 125], Y ∈ [-5, 85] meters.
 
-    The ball can be moved, reset, or checked for boundary violations.
+    Methods allow resetting, moving, and checking the ball's state.
     """
 
     def __init__(self):
-        # Center of the actual pitch in absolute meters: (60/2 = 30, 80/2 = 40)
-        # Adjust to absolute reference frame then normalize
-        abs_cx = 30 + abs(X_MIN)
+        """
+        Initializes the ball at the center of the pitch (normalized) and sets no owner.
+        """
+        # Absolute center of the pitch in meters (adjusted for extended bounds)
+        abs_cx = 60 + abs(X_MIN)
         abs_cy = 40 + abs(Y_MIN)
+
+        # Normalize to [0, 1]
         cx = abs_cx / PITCH_WIDTH
         cy = abs_cy / PITCH_HEIGHT
         self.init_position = np.array([cx, cy], dtype=np.float32)
 
-        # Current position (normalized)
+        # Current normalized position
         self.position = self.init_position.copy()
 
-        # ID of the player currently in possession
+        # ID of the player currently in possession (None if free)
         self.owner_id = None
 
     def reset(self):
         """
-        Resets the ball to the center of the pitch (normalized) and clears possession.
+        Resets the ball to the initial center position (normalized) and clears possession.
         """
         self.position = self.init_position.copy()
         self.owner_id = None
@@ -42,8 +47,8 @@ class Ball:
         """
         Sets the ball's position manually.
 
-        Args:
-            - new_pos (tuple): New (x, y) position in normalized space
+        Parameters:
+            new_pos (tuple or list): New (x, y) position in normalized space [0, 1].
         """
         self.position = np.array(new_pos, dtype=np.float32)
 
@@ -52,16 +57,16 @@ class Ball:
         Returns the current normalized position of the ball.
 
         Returns:
-            - np.ndarray: Ball position as (x, y)
+            np.ndarray: Current ball position as (x, y).
         """
         return self.position
 
     def is_out_of_bounds(self):
         """
-        Checks if the ball is outside the normalized range [0, 1] × [0, 1].
+        Checks whether the ball is outside the valid normalized [0, 1] pitch area.
 
         Returns:
-            - bool: True if ball has exited the pitch area
+            bool: True if the ball is out of bounds, False otherwise.
         """
         x, y = self.position
         return not (0.0 <= x <= 1.0 and 0.0 <= y <= 1.0)

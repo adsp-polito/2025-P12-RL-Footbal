@@ -49,6 +49,10 @@ CENTER_Y = FIELD_HEIGHT // 2
 CELL_SIZE = 5  # meters (e.g., 5x5m, or 1x1m for fine resolution)
 STRIPE_WIDTH = 5
 
+# Fields Margins (for a 120x80 pitch)
+X_MIN, Y_MIN = -5, -5
+X_MAX, Y_MAX = 125, 85
+
 # Fields Proportions (for a 120x80 pitch)
 PENALTY_AREA_DEPTH = 18           # 18 meters depth
 PENALTY_AREA_HEIGHT = 44          # from y=18 to y=62 (62-18 = 44 meters)
@@ -157,18 +161,28 @@ def draw_half_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids
     y_min = -5
     y_max = 85
 
-    # Set pitch background
+    # Set background color
     if field_color == 'green':
         ax.set_facecolor('#4CAF50')
-        lc = 'whitesmoke'
-        border_color = 'white'
-        if stripes:
-            for i in range(HALF_FIELD_X, FIELD_WIDTH, STRIPE_WIDTH):
-                stripe_color = '#43A047' if ((i - HALF_FIELD_X) // STRIPE_WIDTH) % 2 == 0 else '#4CAF50'
-                ax.add_patch(Rectangle((i, 0), STRIPE_WIDTH, FIELD_HEIGHT, color=stripe_color, zorder=0))
     else:
-        lc = 'black'
-        border_color = 'white'
+        ax.set_facecolor(field_color)
+
+    lc = 'whitesmoke'
+    border_color = 'white'
+
+    # Draw stripes only if green field is selected
+    if field_color == 'green' and stripes:
+        for i in range(0, FIELD_WIDTH, STRIPE_WIDTH):
+            stripe_color = '#43A047' if (i // STRIPE_WIDTH) % 2 == 0 else '#4CAF50'
+            ax.add_patch(
+                Rectangle(
+                    (i, 0),
+                    STRIPE_WIDTH,
+                    FIELD_HEIGHT,
+                    color=stripe_color,
+                    zorder=0
+                )
+            )
 
     # Outer pitch boundaries
     ax.plot([HALF_FIELD_X, HALF_FIELD_X], [0, FIELD_HEIGHT], color=border_color, linewidth=3)
@@ -232,7 +246,7 @@ def draw_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids=Fals
         fig, ax = plt.subplots(figsize=(12, 8))
 
     # Derived limits for full pitch
-    x_min = -CELL_SIZE                    # -5
+    x_min = -CELL_SIZE                   # -5
     x_max = FIELD_WIDTH + CELL_SIZE      # 125
     y_min = -CELL_SIZE                   # -5
     y_max = FIELD_HEIGHT + CELL_SIZE     # 85
@@ -240,15 +254,26 @@ def draw_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids=Fals
     # Set background color
     if field_color == 'green':
         ax.set_facecolor('#4CAF50')
-        lc = 'whitesmoke'
-        border_color = 'white'
-        if stripes:
-            for i in range(0, FIELD_WIDTH, STRIPE_WIDTH):
-                stripe_color = '#43A047' if (i // STRIPE_WIDTH) % 2 == 0 else '#4CAF50'
-                ax.add_patch(Rectangle((i, 0), STRIPE_WIDTH, FIELD_HEIGHT, color=stripe_color, zorder=0))
     else:
-        lc = 'black'
-        border_color = 'white'
+        ax.set_facecolor(field_color)
+
+    lc = 'whitesmoke'
+    border_color = 'white'
+
+    # Draw stripes only if green field is selected
+    if field_color == 'green' and stripes:
+        for i in range(0, FIELD_WIDTH, STRIPE_WIDTH):
+            stripe_color = '#43A047' if (i // STRIPE_WIDTH) % 2 == 0 else '#4CAF50'
+            ax.add_patch(
+                Rectangle(
+                    (i, 0),
+                    STRIPE_WIDTH,
+                    FIELD_HEIGHT,
+                    color=stripe_color,
+                    zorder=0
+                )
+            )
+
 
     # Field boundary
     ax.plot([0, 0], [0, FIELD_HEIGHT], color=border_color, linewidth=3)

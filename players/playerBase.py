@@ -10,7 +10,7 @@ FPS = 24
 
 PLAYER_SPEED_M_S = 5.0  # Constant speed in meters per second
 
-class Player:
+class BasePlayer:
     """
     A player class for use in simplified football environments.
     The player moves smoothly from one grid cell center to another using discrete actions.

@@ -1,7 +1,7 @@
 import gymnasium as gym
 import numpy as np
 
-from players.player import Player
+from players.playerBase import Player
 from env.ball import Ball
 from helpers.visuals import render_state
 from env.pitch import CELL_SIZE

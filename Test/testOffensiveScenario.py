@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from env.offensiveScenarioEnv import OffensiveScenarioEnv
-from players.player import Player
+from players.playerBase import Player
 from env.ball import Ball
 from helpers.visuals import render_episode
 

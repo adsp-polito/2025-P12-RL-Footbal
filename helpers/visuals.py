@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from env.pitch import draw_half_pitch, FIELD_WIDTH, FIELD_HEIGHT
+from env.pitch import draw_half_pitch, draw_pitch, FIELD_WIDTH, FIELD_HEIGHT, X_MIN, Y_MIN, X_MAX, Y_MAX
 from matplotlib.patches import Circle
 
 # COORDINATE SYSTEMS AND NORMALIZATION
@@ -30,9 +30,9 @@ from matplotlib.patches import Circle
 # the simulation and the rendered visualization.
 
 # Render a single state
-def render_state(state, ax=None, show_grid=False, show_cell_ids=False, stripes=False):
+def render_state(state, ax=None, show_grid=False, show_cell_ids=False, stripes=False, full_pitch=False):
     """
-    Renders a single football state on the offensive half-pitch.
+    Renders a single football state on the pitch.
 
     Parameters:
         - state (dict): Contains 'player', 'ball', and optionally 'opponents'.
@@ -46,39 +46,56 @@ def render_state(state, ax=None, show_grid=False, show_cell_ids=False, stripes=F
         - show_grid (bool): Whether to overlay a debug grid.
         - show_cell_ids (bool): Whether to show cell indices for RL debugging.
         - stripes (bool): Whether to draw pitch stripes.
+        - full_pitch (bool): If True, draws the full pitch; otherwise, draws half-pitch.
 
     Returns:
         - matplotlib.axes.Axes: The axis with the rendered state.
     """
-    ax = draw_half_pitch(ax=ax, show_grid=show_grid, show_cell_ids=show_cell_ids, stripes=stripes)
+    if full_pitch:
+        ax = draw_pitch(ax=ax, show_grid=show_grid, show_cell_ids=show_cell_ids, stripes=stripes)
+    else:
+        ax = draw_half_pitch(ax=ax, show_grid=show_grid, show_cell_ids=show_cell_ids, stripes=stripes)
 
-   # Draw attacker (blue)
+    # Draw attacker (blue)
     if 'player' in state and state['player']:
         x, y = state['player'].get_position()
-        x *= FIELD_WIDTH
-        y *= FIELD_HEIGHT
-        ax.add_patch(Circle((x, y), radius=1.0, color='dodgerblue', ec='black', lw=1, zorder=3))
+        x = x * (X_MAX - X_MIN) + X_MIN
+        y = y * (Y_MAX - Y_MIN) + Y_MIN
+        
+        ax.add_patch(Circle((x, y), radius=1.0, color='crimson', ec='black', lw=1, zorder=5))
 
     # Draw ball (white)
     if 'ball' in state and state['ball']:
         x, y = state['ball'].get_position()
-        x *= FIELD_WIDTH
-        y *= FIELD_HEIGHT
-        ax.add_patch(Circle((x, y), radius=0.5, color='white', ec='black', lw=1, zorder=3))
+        x = x * (X_MAX - X_MIN) + X_MIN
+        y = y * (Y_MAX - Y_MIN) + Y_MIN
 
+        ax.add_patch(Circle((x, y), radius=0.5, color='white', ec='black', lw=1, zorder=5))
+    
     # Draw defenders (red)
     opponents = state.get('opponents', [])
     if opponents:
         for defender in opponents:
             x, y = defender.get_position()
-            x *= FIELD_WIDTH
-            y *= FIELD_HEIGHT
-            ax.add_patch(Circle((x, y), radius=1.0, color='crimson', ec='black', lw=1, zorder=3))
+            x = x * (X_MAX - X_MIN) + X_MIN
+            y = y * (Y_MAX - Y_MIN) + Y_MIN
+
+            # Determine color based on role
+            role = defender.get_role()
+
+            if role == "DEF":
+                color = 'dodgerblue'
+            elif role == "GK":
+                color = 'darkorange'
+            else:
+                color = 'grey'  # fallback if needed
+
+            ax.add_patch(Circle((x, y), radius=1.0, color=color, ec='black', lw=1, zorder=5))
 
     return ax
 
-# Render episode as animation
-def render_episode(states, save_path=None, fps=24, show_grid=False, show_cell_ids=False):
+# Render an episode as an animation
+def render_episode(states, save_path=None, fps=24, show_grid=False, show_cell_ids=False, full_pitch=False):
     """
     Creates and optionally saves an animation from a list of game states.
 
@@ -88,6 +105,7 @@ def render_episode(states, save_path=None, fps=24, show_grid=False, show_cell_id
         - fps (int): Frames per second for the animation
         - show_grid (bool): Whether to overlay the debug grid on each frame
         - show_cell_ids (bool): Whether to show grid cell indices
+        - full_pitch (bool): If True, draws the full pitch; otherwise, draws half-pitch.
 
     Returns:
         - matplotlib.animation.FuncAnimation object
@@ -96,7 +114,13 @@ def render_episode(states, save_path=None, fps=24, show_grid=False, show_cell_id
      
     def update(frame_idx):
         ax.clear()
-        render_state(states[frame_idx], ax=ax, show_grid=show_grid, show_cell_ids=show_cell_ids)
+        render_state(
+            states[frame_idx],
+            ax=ax,
+            show_grid=show_grid,
+            show_cell_ids=show_cell_ids,
+            full_pitch=full_pitch
+        )
         ax.set_title(f"Frame {frame_idx+1}/{len(states)}", fontsize=16, fontweight='bold', color='black')
 
     anim = animation.FuncAnimation(fig, update, frames=len(states), interval=1000/fps, repeat=False)
