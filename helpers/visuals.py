@@ -3,9 +3,8 @@ import matplotlib.animation as animation
 from RLEnvironment.pitch import draw_half_pitch, FIELD_WIDTH, FIELD_HEIGHT
 from matplotlib.patches import Circle
 
-# =============================================================================
-# Coordinate System & Normalization
-# -----------------------------------------------------------------------------
+# COORDINATE SYSTEMS AND NORMALIZATION
+
 # The environment operates on a normalized coordinate system [0, 1] × [0, 1],
 # while the pitch visualization uses absolute physical units in meters.
 #
@@ -29,7 +28,6 @@ from matplotlib.patches import Circle
 #
 # This ensures consistent and interpretable placement of entities across both
 # the simulation and the rendered visualization.
-# =============================================================================
 
 # Render a single state
 def render_state(state, ax=None, show_grid=False, show_cell_ids=False, stripes=False):

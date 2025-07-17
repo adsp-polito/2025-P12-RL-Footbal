@@ -1,41 +1,45 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Arc, Rectangle
 
-# === GRID INFO (used for RL) ===
+# === GRID INFORMATION (USED FOR RL) ===
 # The pitch is overlaid with a 5x5m cell grid for RL training, visual debugging, and reward shaping.
-#
+
 # → Full pitch grid:
-#     - Area: 130m (x) × 90m (y) = extended full pitch with 5m margin
-#     - N_COLS_FULL = 130 / 5 = 26
-#     - N_ROWS = 90 / 5 = 18
-#     - → Total cells: 26 × 18 = 468
-#
+#     - Area: 130m (x) × 90m (y) = full pitch with 5m margin on all sides
+#     - N_COLS_FULL = 130 / 5 = 26 columns
+#     - N_ROWS = 90 / 5 = 18 rows
+#     - Total cells: 26 × 18 = 468
+
 # → Half pitch grid:
-#     - Area: 70m (x) × 90m (y) = extended half pitch with 5m margin
-#     - N_COLS_HALF = 70 / 5 = 14
-#     - N_ROWS = 90 / 5 = 18
-#     - → Total cells: 14 × 18 = 252
+#     - Area: 70m (x) × 90m (y) = half pitch with 5m margin on all sides
+#     - N_COLS_HALF = 70 / 5 = 14 columns
+#     - N_ROWS = 90 / 5 = 18 rows
+#     - Total cells: 14 × 18 = 252
 
 # === Z-ORDER LAYERS EXPLANATION ===
 # Z-order defines the drawing priority (higher values appear on top)
 # We use the following convention to control rendering layers:
 
+# Z-ORDER LAYERS EXPLANATION
+# Z-order defines the drawing priority (higher values appear on top).
+# The following convention is used to control rendering layers:
+
 # zorder = 0 → Field background stripes and goals (base layer)
-# zorder = 1 → Debug grid lines (optional for RL debugging)
+# zorder = 1 → Debug grid lines (optional, for RL debugging)
 # zorder = 2 → Static pitch elements:
 #              - Field boundaries
 #              - Penalty areas and goal areas
 #              - Center line and circle
 #              - Penalty arcs and corner arcs
 #              - Text labels for cell indices (debugging)
-#              These are not explicitly defined with zorder unless needed, as matplotlib defaults place them between z=1 and z=3
-# zorder = 3 → Dynamic elements (always visible on top):
+#              These are usually drawn without explicitly setting zorder, as matplotlib defaults place them between z=1 and z=3.
+# zorder = 3 → Dynamic elements (always drawn on top):
 #              - Attacking player (blue)
 #              - Defenders (red)
 #              - Ball (white)
 
-# Most matplotlib drawing functions (like ax.plot, ax.add_patch) default to zorder=2
-# We make it explicit where needed to ensure consistent rendering layers
+# Most matplotlib drawing functions (e.g., ax.plot, ax.add_patch) default to zorder=2.
+# We make it explicit where needed to ensure consistent rendering layers.
 
 # Global field dimensions
 FIELD_WIDTH = 120
@@ -44,6 +48,90 @@ HALF_FIELD_X = FIELD_WIDTH // 2
 CENTER_Y = FIELD_HEIGHT // 2
 CELL_SIZE = 5  # meters (e.g., 5x5m, or 1x1m for fine resolution)
 STRIPE_WIDTH = 5
+
+# Fields Proportions (for a 120x80 pitch)
+PENALTY_AREA_DEPTH = 18           # 18 meters depth
+PENALTY_AREA_HEIGHT = 44          # from y=18 to y=62 (62-18 = 44 meters)
+GOAL_AREA_DEPTH = 6               # 6 meters depth
+GOAL_AREA_HEIGHT = 20             # from y=30 to y=50 (50-30 = 20 meters)
+PENALTY_SPOT_X_RIGHT = 109        # x position for right side
+PENALTY_SPOT_X_LEFT = 11          # x position for left side
+CENTER_CIRCLE_RADIUS = 10         # 10 meters radius
+GOAL_HEIGHT = 7.32                # 7.32 meters (standard)
+GOAL_DEPTH = 2.44                 # 2.44 meters depth
+
+def draw_penalty_area(ax, side='right', lc='white'):
+    """
+    Function to draw the penalty area, goal area, penalty spot and penalty arc on the specified side of the pitch.
+    
+    Args:
+        ax (matplotlib.axes.Axes): The axis to draw on.
+        side (str): 'right' or 'left' to specify which side of the pitch.
+        lc (str): Line color for the penalty area, goal area, and penalty spot.
+    
+    Returns:
+        None
+    """
+    direction = 1 if side == 'right' else -1
+    x_base = FIELD_WIDTH if side == 'right' else 0
+
+    # Calculate x positions for penalty area and goal area depth
+    penalty_x = x_base - direction * PENALTY_AREA_DEPTH
+    goal_x = x_base - direction * GOAL_AREA_DEPTH
+
+    # Calculate y positions for penalty area and goal area height
+    y1_pen = (FIELD_HEIGHT - PENALTY_AREA_HEIGHT) / 2
+    y2_pen = (FIELD_HEIGHT + PENALTY_AREA_HEIGHT) / 2
+    y1_goal = (FIELD_HEIGHT - GOAL_AREA_HEIGHT) / 2
+    y2_goal = (FIELD_HEIGHT + GOAL_AREA_HEIGHT) / 2
+
+    # Draw penalty area rectangle
+    ax.plot([x_base, penalty_x], [y1_pen, y1_pen], color=lc, linewidth=2, zorder=2)
+    ax.plot([penalty_x, penalty_x], [y1_pen, y2_pen], color=lc, linewidth=2, zorder=2)
+    ax.plot([x_base, penalty_x], [y2_pen, y2_pen], color=lc, linewidth=2, zorder=2)
+
+    # Draw goal area rectangle
+    ax.plot([x_base, goal_x], [y1_goal, y1_goal], color=lc, linewidth=2, zorder=2)
+    ax.plot([goal_x, goal_x], [y1_goal, y2_goal], color=lc, linewidth=2, zorder=2)
+    ax.plot([x_base, goal_x], [y2_goal, y2_goal], color=lc, linewidth=2, zorder=2)
+
+    # Compute penalty spot and arc center
+    if side == 'right':
+        penalty_spot_x = PENALTY_SPOT_X_RIGHT
+        arc_center_x = penalty_spot_x - 1.8  # Slight offset toward the goal line
+        arc_angle = 180
+    else:
+        penalty_spot_x = PENALTY_SPOT_X_LEFT
+        arc_center_x = penalty_spot_x + 1.8  # Slight offset toward the goal line
+        arc_angle = 0
+
+    # Draw penalty spot
+    ax.plot([penalty_spot_x], [CENTER_Y], marker='o', markersize=5, color=lc, zorder=2)
+
+    # Draw penalty arc
+    arc = Arc(
+        (arc_center_x, CENTER_Y), 
+        20, 20, angle=arc_angle, 
+        theta1=301, theta2=59, 
+        color=lc, linewidth=2, zorder=2
+    )
+    ax.add_patch(arc)
+
+def draw_goal(ax, side='right', lc='white'):
+    """ Function to draw the goal on the specified side of the pitch.
+    Args:
+        ax (matplotlib.axes.Axes): The axis to draw on.
+        side (str): 'right' or 'left' to specify which side of the pitch
+        lc (str): Line color for the goal.
+    Returns:
+        None
+    """
+    # Goal rectangle
+    x_goal = FIELD_WIDTH if side == 'right' else 0
+    direction = 1 if side == 'right' else -1
+    goal_y1 = CENTER_Y - GOAL_HEIGHT / 2
+    ax.add_patch(Rectangle((x_goal, goal_y1), direction * GOAL_DEPTH, GOAL_HEIGHT, linewidth=2, edgecolor=lc, facecolor='none', zorder=0))
+
 
 # Draw the offensive half of the pitch
 def draw_half_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids=False, stripes=False):
@@ -91,19 +179,9 @@ def draw_half_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids
     # Center arc
     ax.add_patch(Arc((HALF_FIELD_X, CENTER_Y), 20, 20, angle=0, theta1=270, theta2=90, color=lc, linewidth=2))
 
-    # Penalty and goal areas
-    ax.plot([FIELD_WIDTH, 102], [18, 18], color=lc, linewidth=2)
-    ax.plot([102, 102], [18, 62], color=lc, linewidth=2)
-    ax.plot([102, FIELD_WIDTH], [62, 62], color=lc, linewidth=2)
-    ax.plot([FIELD_WIDTH, 114], [30, 30], color=lc, linewidth=2)
-    ax.plot([114, 114], [30, 50], color=lc, linewidth=2)
-    ax.plot([114, FIELD_WIDTH], [50, 50], color=lc, linewidth=2)
-    ax.plot([109], [CENTER_Y], marker='o', markersize=5, color=lc)
-    ax.add_patch(Arc((108.2, CENTER_Y), 20, 20, angle=180, theta1=308, theta2=52, color=lc, linewidth=2))
-
-    # Goal
-    goal_y1 = CENTER_Y - 3.66
-    ax.add_patch(Rectangle((FIELD_WIDTH, goal_y1), 2.44, 7.32, linewidth=2, edgecolor=lc, facecolor='none', zorder=0))
+    # Draw penalty area, goal area and goal on the right side
+    draw_penalty_area(ax, side='right', lc=lc)
+    draw_goal(ax, side='right', lc=lc)
 
     # Corner arcs
     for (x, y), angle in zip([(FIELD_WIDTH, 0), (FIELD_WIDTH, FIELD_HEIGHT)], [90, 180]):
@@ -183,28 +261,10 @@ def draw_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids=Fals
     ax.add_patch(Circle((HALF_FIELD_X, CENTER_Y), 10, color=lc, fill=False, linewidth=2))
 
     # Penalty and goal areas (both sides)
-    for x in [0, FIELD_WIDTH]:
-        penalty_x = 18 if x == 0 else 102
-        goal_x = 6 if x == 0 else 114
-        penalty_spot = 11 if x == 0 else 109
-        arc_center = (12, CENTER_Y) if x == 0 else (108.2, CENTER_Y)
-        arc_angle = 0 if x == 0 else 180
-
-        ax.plot([x, penalty_x], [18, 18], color=lc, linewidth=2)
-        ax.plot([penalty_x, penalty_x], [18, 62], color=lc, linewidth=2)
-        ax.plot([x, penalty_x], [62, 62], color=lc, linewidth=2)
-
-        ax.plot([x, goal_x], [30, 30], color=lc, linewidth=2)
-        ax.plot([goal_x, goal_x], [30, 50], color=lc, linewidth=2)
-        ax.plot([x, goal_x], [50, 50], color=lc, linewidth=2)
-
-        ax.plot([penalty_spot], [CENTER_Y], marker='o', markersize=5, color=lc)
-        ax.add_patch(Arc(arc_center, 20, 20, angle=arc_angle, theta1=308, theta2=52, color=lc, linewidth=2))
-
-    # Goals
-    goal_y1 = CENTER_Y - 3.66
-    ax.add_patch(Rectangle((0, goal_y1), -2.44, 7.32, linewidth=2, edgecolor=lc, facecolor='none', zorder=0))
-    ax.add_patch(Rectangle((FIELD_WIDTH, goal_y1), 2.44, 7.32, linewidth=2, edgecolor=lc, facecolor='none', zorder=0))
+    draw_penalty_area(ax, side='left', lc=lc)
+    draw_goal(ax, side='left', lc=lc)
+    draw_penalty_area(ax, side='right', lc=lc)
+    draw_goal(ax, side='right', lc=lc)
 
     # Corner arcs
     corners = [(0, 0), (FIELD_WIDTH, 0), (0, FIELD_HEIGHT), (FIELD_WIDTH, FIELD_HEIGHT)]

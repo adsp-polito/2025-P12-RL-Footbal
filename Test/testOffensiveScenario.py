@@ -54,7 +54,7 @@ def run_episode_with_render():
             "opponents": []
         })
 
-    anim = render_episode(states, show_grid=True, show_cell_ids=False)
+    anim = render_episode(states, show_grid=True, show_cell_ids=True)
     plt.show()
     env.close()
 

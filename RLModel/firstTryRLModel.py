@@ -109,8 +109,6 @@ for ep in trange(episodes, desc="Training"):
     epsilon = max(epsilon * epsilon_decay, epsilon_min)
 
     # === Episode Visualization ===
-    # === Episode Visualization ===
-    # === Episode Visualization ===
     if ep % render_every == 0:
         print(f"\nEpisode {ep}: Total reward = {total_reward:.3f}")
 
