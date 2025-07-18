@@ -10,13 +10,7 @@ from env.ball import Ball
 from helpers.visuals import render_episode
 from env.pitch import X_MIN, Y_MIN, X_MAX, Y_MAX
 import numpy as np
-
-
-def normalize_to_field(x, y):
-    x_norm = (x - X_MIN) / (X_MAX - X_MIN)
-    y_norm = (y - Y_MIN) / (Y_MAX - Y_MIN)
-    return x_norm, y_norm
-
+from helpers.helperFunctions import normalize, distance
 
 # Create players and ball
 attacker = PlayerAttacker()
@@ -25,21 +19,31 @@ goalkeeper = PlayerGoalkeeper()
 ball = Ball()
 
 # Set initial positions (normalized)
-attacker.reset_position(*normalize_to_field(60, 40))    # Center field
-defender.reset_position(*normalize_to_field(100, 40))    # Further behind
-goalkeeper.reset_position(*normalize_to_field(120, 40))   # In goal center
-ball.position = normalize_to_field(60, 40)
+attacker.reset_position(*normalize(60, 40))    # Center field
+defender.reset_position(*normalize(100, 40))    # Further behind
+goalkeeper.reset_position(*normalize(120, 40))   # In goal center
+ball.position = normalize(60, 40)
 
 
 # Store states frame-by-frame
 states = []
 
-for frame in range(48):
-    # Attacker moves towards right (the goal)
-    attacker.move([0.05, 0], 0.05)
+for frame in range(120):
 
-    # Defender accelerates faster to reach the attacker
-    defender.move([-0.08, 0], 0.05)
+    # Attacker moves randomly towards the goal
+    direction_x = np.random.uniform(0.1, 0.1)  # Small horizontal movement
+    direction_y = np.random.uniform(-0.1, 0.1)  # Small vertical movement
+    attacker.move([direction_x, direction_y], 0.05)
+
+    # Defender accelerates towards the attacker
+    if distance(attacker.get_position(), defender.get_position()) > 0.01:
+        defender.move(
+            np.array(attacker.get_position()) - np.array(defender.get_position()),
+            0.02
+        )
+    else:
+        # If close enough, just maintain position
+        defender.move([0, 0], 0.05)
 
     # Goalkeeper random small movement (pseudo-random, realistic)
     direction_x = np.random.uniform(-0.1, 0.1)

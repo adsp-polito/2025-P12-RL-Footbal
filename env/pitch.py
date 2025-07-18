@@ -57,7 +57,7 @@ X_MAX, Y_MAX = 125, 85
 PENALTY_AREA_DEPTH = 18           # 18 meters depth
 PENALTY_AREA_HEIGHT = 44          # from y=18 to y=62 (62-18 = 44 meters)
 GOAL_AREA_DEPTH = 6               # 6 meters depth
-GOAL_AREA_HEIGHT = 20             # from y=30 to y=50 (50-30 = 20 meters)
+GOAL_AREA_HEIGHT = 20             # from y=30 to y=50 (50-30 = 20 meters) or y = 35 to y = 45 if we consider the additional 5m margin
 PENALTY_SPOT_X_RIGHT = 109        # x position for right side
 PENALTY_SPOT_X_LEFT = 11          # x position for left side
 CENTER_CIRCLE_RADIUS = 10         # 10 meters radius

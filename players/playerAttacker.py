@@ -13,15 +13,15 @@ class PlayerAttacker:
         # Reset player position to the starting point
         self.position = [start_x, start_y]
 
-    def move(self, direction, speed):
-        # Combine player's intrinsic speed with input speed
-        effective_speed = speed * self.speed
 
-        self.position[0] += direction[0] * effective_speed
-        self.position[1] += direction[1] * effective_speed
-
+    def move(self, delta_position):
+        # Move the player by a delta position, ensuring it stays within bounds
+        self.position[0] += delta_position[0]
+        self.position[1] += delta_position[1]
+        
         self.position[0] = max(0.0, min(1.0, self.position[0]))
         self.position[1] = max(0.0, min(1.0, self.position[1]))
+
 
 
     def get_position(self):
