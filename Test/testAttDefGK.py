@@ -10,7 +10,7 @@ from env.ball import Ball
 from helpers.visuals import render_episode
 from env.pitch import X_MIN, Y_MIN, X_MAX, Y_MAX
 import numpy as np
-from helpers.helperFunctions import normalize, distance
+from helpers.helperFunctions import normalize
 
 # Create players and ball
 attacker = PlayerAttacker()
@@ -20,10 +20,15 @@ ball = Ball()
 
 # Set initial positions (normalized)
 attacker.reset_position(*normalize(60, 40))    # Center field
-defender.reset_position(*normalize(100, 40))    # Further behind
-goalkeeper.reset_position(*normalize(120, 40))   # In goal center
+defender.reset_position(*normalize(100, 40))   # Further behind
+goalkeeper.reset_position(*normalize(120, 40)) # In goal center
 ball.position = normalize(60, 40)
 
+time_per_step = 1 / 24
+
+attacker_max_speed = 10.0
+defender_max_speed = 10.0
+goalkeeper_max_speed = 10.0
 
 # Store states frame-by-frame
 states = []
@@ -31,27 +36,43 @@ states = []
 for frame in range(120):
 
     # Attacker moves randomly towards the goal
-    direction_x = np.random.uniform(0.1, 0.1)  # Small horizontal movement
-    direction_y = np.random.uniform(-0.1, 0.1)  # Small vertical movement
-    attacker.move([direction_x, direction_y], 0.05)
+    direction_x = np.random.uniform(1, 1)
+    direction_y = np.random.uniform(-1, 1)
 
-    # Defender accelerates towards the attacker
-    if distance(attacker.get_position(), defender.get_position()) > 0.01:
-        defender.move(
-            np.array(attacker.get_position()) - np.array(defender.get_position()),
-            0.02
-        )
+    speedATT = attacker.speed * attacker_max_speed * time_per_step
+
+    dx = direction_x * speedATT / (X_MAX - X_MIN)
+    dy = direction_y * speedATT / (Y_MAX - Y_MIN)
+
+    attacker.move([dx, dy])
+
+    # Defender moves towards the attacker
+    att_pos = np.array(attacker.get_position())
+    def_pos = np.array(defender.get_position())
+    direction = att_pos - def_pos
+    distance_to_att = np.linalg.norm(direction)
+
+    if distance_to_att > 0.01:
+        direction = direction / distance_to_att
+
+        speedDEF = defender.speed * defender_max_speed * time_per_step
+        dx = direction[0] * speedDEF / (X_MAX - X_MIN)
+        dy = direction[1] * speedDEF / (Y_MAX - Y_MIN)
+        defender.move([dx, dy])
     else:
-        # If close enough, just maintain position
-        defender.move([0, 0], 0.05)
+        defender.move([0, 0])
 
-    # Goalkeeper random small movement (pseudo-random, realistic)
-    direction_x = np.random.uniform(-0.1, 0.1)
-    direction_y = np.random.uniform(-0.1, 0.1)
-    goalkeeper.move([direction_x, direction_y], 0.02)
+    # Goalkeeper small pseudo-random movement
+    direction_x = np.random.uniform(-1, 1)
+    direction_y = np.random.uniform(-1, 1)
 
+    speedGK = goalkeeper.speed * goalkeeper_max_speed * time_per_step
 
-    # Ball follows the attacker
+    dx = direction_x * speedGK / (X_MAX - X_MIN)
+    dy = direction_y * speedGK / (Y_MAX - Y_MIN)
+    goalkeeper.move([dx, dy], 0.02)
+
+    # Ball follows attacker
     ball.position = (attacker.get_position()[0] + 0.01, attacker.get_position()[1])
 
     # Copy attacker
@@ -92,7 +113,6 @@ for frame in range(120):
         "opponents": [defender_copy, goalkeeper_copy]
     })
 
-
 # Render
-anim = render_episode(states, fps=24, show_grid=False, show_cell_ids=False, full_pitch=True)
+anim = render_episode(states, fps=24, show_grid=True, show_cell_ids=True, full_pitch=True)
 plt.show()

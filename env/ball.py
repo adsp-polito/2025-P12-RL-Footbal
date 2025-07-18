@@ -70,3 +70,8 @@ class Ball:
         """
         x, y = self.position
         return not (0.0 <= x <= 1.0 and 0.0 <= y <= 1.0)
+    
+    def copy(self):
+        new_ball = Ball()
+        new_ball.position = np.array(self.position)  # ensure it's copied as array, not tuple
+        return new_ball

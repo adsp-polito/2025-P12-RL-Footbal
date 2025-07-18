@@ -36,3 +36,14 @@ class PlayerDefender:
     def get_role(self):
         # Return the player's role as a string
         return "DEF"
+    
+    def copy(self):
+        new_player = PlayerDefender(
+            tackling=self.tackling,
+            marking=self.marking,
+            anticipation=self.anticipation,
+            speed=self.speed
+        )
+        new_player.position = self.position.copy()
+        return new_player
+

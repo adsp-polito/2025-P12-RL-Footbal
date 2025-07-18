@@ -22,8 +22,6 @@ class PlayerAttacker:
         self.position[0] = max(0.0, min(1.0, self.position[0]))
         self.position[1] = max(0.0, min(1.0, self.position[1]))
 
-
-
     def get_position(self):
         # Return the current player position as a tuple (x, y)
         return tuple(self.position)
@@ -39,3 +37,13 @@ class PlayerAttacker:
     def get_role(self):
         # Return the player's role as a string
         return "ATT"
+    
+    def copy(self):
+        new_player = PlayerAttacker(
+            shooting=self.shooting,
+            passing=self.passing,
+            dribbling=self.dribbling,
+            speed=self.speed
+        )
+        new_player.position = self.position.copy()
+        return new_player

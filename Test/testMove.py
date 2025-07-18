@@ -4,7 +4,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import numpy as np
 import matplotlib.pyplot as plt
-from env.offensiveScenarioMove import OffensiveScenarioMove
+from env.offensiveScenarioMoveSingleAgent import OffensiveScenarioMoveSingleAgent
 from players.playerAttacker import PlayerAttacker
 from players.playerDefender import PlayerDefender
 from env.ball import Ball
@@ -12,7 +12,7 @@ from helpers.visuals import render_episode
 
 
 # Create environment
-env = OffensiveScenarioMove()
+env = OffensiveScenarioMoveSingleAgent()
 obs, info = env.reset()
 
 states = []
