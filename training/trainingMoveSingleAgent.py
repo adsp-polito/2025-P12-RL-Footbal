@@ -50,6 +50,8 @@ def evaluate_and_render(model, env, save_path=None):
             "ball": ball_copy,
             "opponents": [defender_copy]
         })
+    
+
 
     # If a path is specified, save the animation
     if save_path:
@@ -81,19 +83,19 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24, eval_every_
     print(f"Total timesteps (approx): {total_timesteps}, Steps per episode: {max_steps_per_episode}")
 
     # Create environment and model
-    env = Monitor(OffensiveScenarioMoveSingleAgent())
+    env = Monitor(OffensiveScenarioMoveSingleAgent(max_steps=max_steps_per_episode))
     model = PPO(
         "MlpPolicy",
         env,
         verbose=0,
         device="cpu",
         seed=42,
-        n_steps=240,  # Match max_steps
+        n_steps=fps*seconds_per_episode,  # Match max_steps
         batch_size=64,
         gamma=0.99,
         gae_lambda=0.95,
         learning_rate=1e-3,
-        ent_coef=0.5,  # Encourage exploration
+        ent_coef=0.01,  # Encourage exploration
     )
 
 
@@ -108,12 +110,12 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24, eval_every_
         if (episode + 1) % eval_every_episodes == 0:
             reward = evaluate_and_render(
                 model,
-                OffensiveScenarioMoveSingleAgent(),
+                OffensiveScenarioMoveSingleAgent(max_steps=max_steps_per_episode),
                 save_path=f"training/renders/singleAgentMove/episode_{episode + 1}.mp4"
             )
             rewards.append(reward)
             episodes_list.append(episode + 1)
-            print(f"[Episode {episode + 1}] Eval reward: {reward:.2f}")
+            print(f"[Episode {episode + 1}] Eval reward: {reward:.4f}")
 
     # Save final model
     model.save("training/models/single_agent_move_model")
@@ -126,7 +128,7 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24, eval_every_
     plt.ylabel("Reward (Final of Evaluation Episode)")
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("training/renders/training_progress.png")
+    plt.savefig("training/renders/singleAgentMove/single_agent_training_progress.png")
     plt.show()
 
 
@@ -134,8 +136,8 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24, eval_every_
 # Execute training if run directly
 if __name__ == "__main__":
     train_and_monitor(
-        episodes=10000,
-        seconds_per_episode=10,
+        episodes=20000,
+        seconds_per_episode=10,  # 10 seconds per episode
         fps=24,
         eval_every_episodes=2000
     )

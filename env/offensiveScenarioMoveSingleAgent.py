@@ -44,7 +44,7 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
 
     metadata = {"render_modes": ["human"]}
 
-    def __init__(self):
+    def __init__(self, max_steps=240):
         super().__init__()
 
         # Action space: attacker moves in x and y, continuous control
@@ -62,7 +62,7 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         self.has_possession = True
         self.done = False
         self.steps = 0
-        self.max_steps = 240  # 24 FPS ~10 seconds
+        self.max_steps = max_steps  # standard 24 FPS * 10 seconds
 
         # Simulation Parameters
         self.time_per_step = 1 / 24
@@ -179,7 +179,7 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         The defender steals the ball if they are close enough and have a chance to tackle.
         """
         # Define a threshold for tackling based on the distance to the ball
-        threshold = 0.25 / np.sqrt((X_MAX - X_MIN) * (Y_MAX - Y_MIN)) # Normalized distance threshold (0.25 meters)
+        threshold = 0.5 / np.sqrt((X_MAX - X_MIN) * (Y_MAX - Y_MIN)) # Normalized distance threshold (1 meter)
         if distance(self.defender.get_position(), self.ball.position) < threshold:
             if np.random.rand() < self.defender.tackling:
                 self.has_possession = False
@@ -192,23 +192,11 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         Reward shaping using columns (X) and alignment on Y towards goal center.
         Encourages moving rightward and staying close to center corridor (Y).
         """
-
+        reward = 0.0
+        
         att_x, att_y = self.attacker.get_position()
         x_m = att_x * (X_MAX - X_MIN) + X_MIN
         y_m = att_y * (Y_MAX - Y_MIN) + Y_MIN
-
-        # Terminal conditions
-        if self._is_out_of_bounds(x_m, y_m):
-            self.done = True
-            reward = -5.0
-            self._log_step("Out of bounds", reward)
-            return reward
-
-        if self._is_goal(x_m, y_m):
-            self.done = True
-            reward = 10.0
-            self._log_step("Goal scored", reward)
-            return reward
 
         # X Progression Reward
         current_column = int(x_m // 5)
@@ -216,12 +204,12 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         if not hasattr(self, "last_column"):
             self.last_column = current_column
 
-        reward = -0.01  # Base time penalty to encourage movement
+        reward -= 0.5  # Base time penalty to encourage movement
 
         if current_column > self.last_column:
-            reward += 0.2  # Progress reward
+            reward += 1  # Progress reward
         elif current_column < self.last_column:
-            reward -= 0.1  # Slight penalty backwards
+            reward -= 1  # Penalty backwards
 
         # Y Alignment Reward
         # Reward higher if closer to center_y (middle of pitch)
@@ -229,14 +217,25 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         y_distance = abs(y_m - center_y)
         max_offset = (Y_MAX - Y_MIN) / 2  # Half pitch height
         normalized_alignment = 1 - (y_distance / max_offset)  # 1 = center, 0 = edge
-        reward += normalized_alignment * 0.1  # Small bonus for alignment center
+        reward += normalized_alignment * 0.5  # Small bonus for alignment center
 
         # Update last column
         self.last_column = current_column
 
+        # Terminal conditions
+        if self._is_out_of_bounds(x_m, y_m):
+            self.done = True
+            reward -= 3.5
+            self._log_step("Out of bounds", reward)
+            return reward
+
+        if self._is_goal(x_m, y_m):
+            self.done = True
+            reward += 5.0
+            self._log_step("Goal scored", reward)
+            return reward
+
         return reward
-
-
 
     def _is_out_of_bounds(self, x, y):
         """
