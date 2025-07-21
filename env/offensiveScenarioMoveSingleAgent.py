@@ -8,7 +8,7 @@ import numpy as np
 from players.playerAttacker import PlayerAttacker
 from players.playerDefender import PlayerDefender
 from env.ball import Ball
-from env.pitch import X_MIN, X_MAX, Y_MIN, Y_MAX, FIELD_HEIGHT, CENTER_Y, GOAL_HEIGHT, FIELD_WIDTH
+from env.pitch import X_MIN, X_MAX, Y_MIN, Y_MAX, FIELD_HEIGHT, CENTER_Y, GOAL_HEIGHT, FIELD_WIDTH, CELL_SIZE
 from helpers.helperFunctions import normalize, distance
 
 # Coordinate System Design:
@@ -64,6 +64,10 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         self.steps = 0
         self.max_steps = max_steps  # standard 24 FPS * 10 seconds
 
+        # Grid parameters for reward shaping (CELL_SIZE is in meters from pitch.py)
+        self.num_cells_x = int((X_MAX - X_MIN) / CELL_SIZE)
+        self.num_cells_y = int((Y_MAX - Y_MIN) / CELL_SIZE)
+
         # Simulation Parameters
         self.time_per_step = 1 / 24
         self.attacker_max_speed = 10.0  # m/s ~ 36 km/h
@@ -98,14 +102,33 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
     def step(self, action):
         """Execute one environment step: attacker moves, ball follows, defender pursues"""
 
-        # Attacker movement
-        self._move_attacker(action)
+        # Attacker movement using OOP encapsulation
+        self.attacker.move_with_action(
+            action=action,
+            time_per_step=self.time_per_step,
+            x_range=X_MAX - X_MIN,
+            y_range=Y_MAX - Y_MIN
+        )
 
         # Ball offset in attacker's direction (dribbling)
         self._update_ball_position(action)
 
-        # Defender movement towards attacker
-        self._move_defender()
+        # Defender moves automatically towards attacker using OOP encapsulation
+        att_x, att_y = self.attacker.get_position()
+        def_x, def_y = self.defender.get_position()
+        direction = np.array([att_x - def_x, att_y - def_y])
+        distance_to_attacker = np.linalg.norm(direction)
+        if distance_to_attacker != 0:
+            direction /= distance_to_attacker
+        else:
+            direction = np.array([0.0, 0.0])
+
+        self.defender.move_with_action(
+            direction,
+            time_per_step=self.time_per_step,
+            x_range=X_MAX - X_MIN,
+            y_range=Y_MAX - Y_MIN
+        )
 
         # Possession check
         if self._check_possession_loss():
@@ -126,17 +149,6 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
 
         return self._get_obs(), reward, self.done, False, {}
 
-    def _move_attacker(self, action):
-        """
-        Move the attacker based on the action.
-        The action is a vector in the range [-1, 1] for both x and
-        y directions, scaled by the attacker's speed.
-        """
-        speed = self.attacker.speed * self.attacker_max_speed
-        dx = action[0] * speed * self.time_per_step / (X_MAX - X_MIN)
-        dy = action[1] * speed * self.time_per_step / (Y_MAX - Y_MIN)
-        self.attacker.move([dx, dy])
-
     def _update_ball_position(self, action):
         """
         Update the ball position based on the attacker's movement with a slight offset.
@@ -153,26 +165,7 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
             self.ball.position = (ball_x, ball_y)
         else:
             self.ball.position = (self.attacker.position[0] + 0.01, self.attacker.position[1])
-
-    def _move_defender(self):
-        """
-        Move the defender towards the attacker
-        """
-        att_x, att_y = self.attacker.get_position()
-        def_x, def_y = self.defender.get_position()
-        direction = np.array([att_x - def_x, att_y - def_y])
-        distance_to_attacker = np.linalg.norm(direction)
-        speed = self.defender.speed * self.defender_max_speed
-        step_x = speed * self.time_per_step / (X_MAX - X_MIN)
-        step_y = speed * self.time_per_step / (Y_MAX - Y_MIN)
-        if distance_to_attacker != 0:
-            direction /= distance_to_attacker
-            dx = direction[0] * step_x
-            dy = direction[1] * step_y
-        else:
-            dx, dy = 0.0, 0.0
-        self.defender.move([dx, dy])
-
+            
     def _check_possession_loss(self):
         """
         Check if the defender has stolen the ball from the attacker.
@@ -186,43 +179,45 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
                 self.done = True
                 return True
         return False
+    
+    def _get_position_reward(self, x, y):
+        """
+        Compute a reward based on the attacker's position on the pitch in meters.
+        Reward is higher closer to the opponent's goal (x -> 125) and slightly favors central y positions.
+        """
+
+        # Normalize x and y to [0, 1] according to real field dimensions
+        x_norm = (x - X_MIN) / (X_MAX - X_MIN)
+        y_norm = (y - Y_MIN) / (Y_MAX - Y_MIN)
+
+        # Reward increases linearly with x (progression towards opponent's goal)
+        x_reward = -0.5 + 1.0 * x_norm  # From -0.5 (X_MIN) to +0.5 (X_MAX)
+
+        # Slight penalty for lateral positions: y=0.5 is central, sides get a small penalty
+        y_penalty = -0.15 * abs(y_norm - 0.5) * 2  # Max -0.15 at edges, 0 at center
+
+        return x_reward + y_penalty
+
 
     def _compute_reward(self):
         """
-        Reward shaping using columns (X) and alignment on Y towards goal center.
-        Encourages moving rightward and staying close to center corridor (Y).
+        Reward shaping based solely on smooth positional reward (x, y) over the pitch.
+        Encourages progression towards opponent's goal and allows realistic lateral movement.
         """
         reward = 0.0
-        
+
+        # Get attacker's position in meters (denormalized)
         att_x, att_y = self.attacker.get_position()
         x_m = att_x * (X_MAX - X_MIN) + X_MIN
         y_m = att_y * (Y_MAX - Y_MIN) + Y_MIN
 
-        # X Progression Reward
-        current_column = int(x_m // 5)
+        # Base time penalty to encourage movement
+        reward -= 0.1
 
-        if not hasattr(self, "last_column"):
-            self.last_column = current_column
+        # Position-based reward shaping (x progression and y positioning)
+        reward += self._get_position_reward(x_m, y_m)
 
-        reward -= 0.5  # Base time penalty to encourage movement
-
-        if current_column > self.last_column:
-            reward += 1  # Progress reward
-        elif current_column < self.last_column:
-            reward -= 1  # Penalty backwards
-
-        # Y Alignment Reward
-        # Reward higher if closer to center_y (middle of pitch)
-        center_y = (Y_MAX + Y_MIN) / 2
-        y_distance = abs(y_m - center_y)
-        max_offset = (Y_MAX - Y_MIN) / 2  # Half pitch height
-        normalized_alignment = 1 - (y_distance / max_offset)  # 1 = center, 0 = edge
-        reward += normalized_alignment * 0.5  # Small bonus for alignment center
-
-        # Update last column
-        self.last_column = current_column
-
-        # Terminal conditions
+        # Terminal conditions: out of bounds or goal
         if self._is_out_of_bounds(x_m, y_m):
             self.done = True
             reward -= 3.5
@@ -236,6 +231,7 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
             return reward
 
         return reward
+
 
     def _is_out_of_bounds(self, x, y):
         """

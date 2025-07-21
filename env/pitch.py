@@ -24,7 +24,7 @@ from matplotlib.patches import Circle, Arc, Rectangle
 # Z-order defines the drawing priority (higher values appear on top).
 # The following convention is used to control rendering layers:
 
-# zorder = 0 → Field background stripes and goals (base layer)
+# zorder = 0 → Field background stripes (base layer)
 # zorder = 1 → Debug grid lines (optional, for RL debugging)
 # zorder = 2 → Static pitch elements:
 #              - Field boundaries
@@ -46,7 +46,7 @@ FIELD_WIDTH = 120
 FIELD_HEIGHT = 80
 HALF_FIELD_X = FIELD_WIDTH // 2
 CENTER_Y = FIELD_HEIGHT // 2
-CELL_SIZE = 5  # meters (e.g., 5x5m, or 1x1m for fine resolution)
+CELL_SIZE = 1  # meters (e.g., 5x5m, or 1x1m for fine resolution)
 STRIPE_WIDTH = 5
 
 # Fields Margins (for a 120x80 pitch)
@@ -134,34 +134,42 @@ def draw_goal(ax, side='right', lc='white'):
     x_goal = FIELD_WIDTH if side == 'right' else 0
     direction = 1 if side == 'right' else -1
     goal_y1 = CENTER_Y - GOAL_HEIGHT / 2
-    ax.add_patch(Rectangle((x_goal, goal_y1), direction * GOAL_DEPTH, GOAL_HEIGHT, linewidth=2, edgecolor=lc, facecolor='none', zorder=0))
+    ax.add_patch(Rectangle((x_goal, goal_y1), direction * GOAL_DEPTH, GOAL_HEIGHT, linewidth=2, edgecolor=lc, facecolor='none', zorder=2))
 
 
 # Draw the offensive half of the pitch
-def draw_half_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids=False, stripes=False):
+def draw_half_pitch(
+    ax=None,
+    field_color='green',
+    stripes=False,
+    show_grid=False,
+    show_heatmap=False,
+    show_rewards=False,
+    env=None
+):
     """
-    Draw the offensive half of a 120x80 meters football pitch with 5m padding.
+    Draw the offensive half of a 120x80m football pitch with 5m margin.
+    Optionally overlay reward shaping grid with grid lines, heatmap or reward values.
 
     Parameters:
         - ax (matplotlib.axes.Axes, optional): Axis to draw the pitch on.
         - field_color (str): Pitch background color.
-        - show_grid (bool): Whether to show debug grid.
-        - show_cell_ids (bool): Whether to show grid cell indices.
         - stripes (bool): Whether to draw alternating mowing stripes.
+        - show_grid (bool): Draws grid lines on the field.
+        - show_heatmap (bool): Fills cells with colors based on reward.
+        - show_rewards (bool): Writes reward values inside each cell.
+        - env (OffensiveScenarioMoveSingleAgent, optional): The environment for computing reward.
 
     Returns:
-        - matplotlib.axes.Axes: The axis with the half pitch drawn on it.
+        - matplotlib.axes.Axes: The axis with the rendered half-pitch.
     """
     if ax is None:
         fig, ax = plt.subplots(figsize=(6, 8))
 
-    # Derived fixed margins
-    x_min = 55
-    x_max = 125
-    y_min = -5
-    y_max = 85
+    x_min, x_max = 55, 125
+    y_min, y_max = -5, 85
 
-    # Set background color
+    # Background color
     if field_color == 'green':
         ax.set_facecolor('#4CAF50')
     else:
@@ -170,21 +178,13 @@ def draw_half_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids
     lc = 'whitesmoke'
     border_color = 'white'
 
-    # Draw stripes only if green field is selected
+    # Mowing stripes (optional)
     if field_color == 'green' and stripes:
         for i in range(0, FIELD_WIDTH, STRIPE_WIDTH):
             stripe_color = '#43A047' if (i // STRIPE_WIDTH) % 2 == 0 else '#4CAF50'
-            ax.add_patch(
-                Rectangle(
-                    (i, 0),
-                    STRIPE_WIDTH,
-                    FIELD_HEIGHT,
-                    color=stripe_color,
-                    zorder=0
-                )
-            )
+            ax.add_patch(Rectangle((i, 0), STRIPE_WIDTH, FIELD_HEIGHT, color=stripe_color, zorder=0))
 
-    # Outer pitch boundaries
+    # Half-pitch boundaries
     ax.plot([HALF_FIELD_X, HALF_FIELD_X], [0, FIELD_HEIGHT], color=border_color, linewidth=3)
     ax.plot([FIELD_WIDTH, FIELD_WIDTH], [0, FIELD_HEIGHT], color=border_color, linewidth=3)
     ax.plot([HALF_FIELD_X, FIELD_WIDTH], [0, 0], color=border_color, linewidth=3)
@@ -193,32 +193,70 @@ def draw_half_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids
     # Center arc
     ax.add_patch(Arc((HALF_FIELD_X, CENTER_Y), 20, 20, angle=0, theta1=270, theta2=90, color=lc, linewidth=2))
 
-    # Draw penalty area, goal area and goal on the right side
+    # Penalty area and goal
     draw_penalty_area(ax, side='right', lc=lc)
     draw_goal(ax, side='right', lc=lc)
 
-    # Corner arcs
+    # Corner arcs (right side only)
     for (x, y), angle in zip([(FIELD_WIDTH, 0), (FIELD_WIDTH, FIELD_HEIGHT)], [90, 180]):
         ax.add_patch(Arc((x, y), 4, 4, angle=angle, theta1=0, theta2=90, color=lc, linewidth=2))
 
-    # Optional debug grid
-    if show_grid:
-        for x in range(x_min, x_max + 1, CELL_SIZE):
-            ax.plot([x, x], [y_min, y_max], color='black', linestyle='-', alpha=0.2, linewidth=0.5, zorder=1)
-        for y in range(y_min, y_max + 1, CELL_SIZE):
-            ax.plot([x_min, x_max], [y, y], color='black', linestyle='-', alpha=0.2, linewidth=0.5, zorder=1)
+    # Optional reward grid (grid, heatmap, numbers)
+    if env is not None:
+        num_cells_x = env.num_cells_x
+        num_cells_y = env.num_cells_y
+        cell_width = CELL_SIZE
+        cell_height = CELL_SIZE
 
-    # Optional cell IDs
-    if show_cell_ids:
-        idx = 0
-        for gx in range(x_min, x_max, CELL_SIZE):
-            for gy in range(y_min, y_max, CELL_SIZE):
-                cx = gx + CELL_SIZE / 2
-                cy = gy + CELL_SIZE / 2
-                ax.text(cx, cy, str(idx), fontsize=6, color='black', ha='center', va='center', alpha=0.4, zorder=2)
-                idx += 1
+        for i in range(num_cells_x):
+            for j in range(num_cells_y):
+                x0 = X_MIN + i * cell_width
+                y0 = Y_MIN + j * cell_height
+                x_center = x0 + cell_width / 2
+                y_center = y0 + cell_height / 2
+                reward = env._get_position_reward(x_center, y_center)
 
-    # Axis configuration
+                normalized_reward = (reward + 0.5) / 1.0  # [-0.5, 0.5] → [0, 1]
+                color = plt.cm.coolwarm(normalized_reward)
+
+
+                # Heatmap
+                if show_heatmap:
+                    rect = Rectangle(
+                        (x0, y0),
+                        cell_width,
+                        cell_height,
+                        facecolor=color,
+                        edgecolor='black' if show_grid else 'none',
+                        linewidth=0.4,
+                        alpha=0.6,
+                        zorder=1
+                    )
+                    ax.add_patch(rect)
+
+                # Grid (lines only if heatmap edges not shown)
+                if show_grid and not show_heatmap:
+                    ax.plot([x0, x0 + cell_width], [y0, y0], color='black', linewidth=0.4, zorder=1)
+                    ax.plot([x0, x0 + cell_width], [y0 + cell_height, y0 + cell_height], color='black', linewidth=0.4, zorder=1)
+                    ax.plot([x0, x0], [y0, y0 + cell_height], color='black', linewidth=0.4, zorder=1)
+                    ax.plot([x0 + cell_width, x0 + cell_width], [y0, y0 + cell_height], color='black', linewidth=0.4, zorder=1)
+
+                # Rewards (numbers)
+                if show_rewards:
+                    font_size = CELL_SIZE * 0.8 # Dynamic font size for clarity
+                    ax.text(
+                        x_center,
+                        y_center,
+                        f"{reward:.2f}",
+                        ha='center',
+                        va='center',
+                        fontsize=font_size,
+                        color='black',
+                        alpha=0.6,
+                        zorder=2
+                    )
+
+    # Final plot adjustments
     ax.set_xlim(x_min, x_max)
     ax.set_ylim(y_max, y_min)
     ax.set_aspect('equal')
@@ -227,31 +265,40 @@ def draw_half_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids
 
     return ax
 
-# Draw the full pitch
-def draw_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids=False, stripes=False):
+
+
+def draw_pitch(
+    ax=None,
+    field_color='green',
+    stripes=False,
+    show_grid=False,
+    show_heatmap=False,
+    show_rewards=False,
+    env=None
+):
     """
-    Draw a 120x80 meters football pitch with 5m outer buffer for debugging.
+    Draw the full 120x80m football pitch with 5m margin and optional RL overlays.
 
     Parameters:
-        - ax (matplotlib.axes.Axes, optional): Axis to draw on
-        - field_color (str): Background color of the pitch
-        - show_grid (bool): Whether to draw the debug grid
-        - show_cell_ids (bool): Whether to number grid cells
-        - stripes (bool): Show alternating mowing stripes
+        - ax (matplotlib.axes.Axes, optional): Axis to draw the pitch on.
+        - field_color (str): Background color of the pitch.
+        - stripes (bool): Whether to draw alternating mowing stripes.
+        - show_grid (bool): Draws only the black grid lines (cells borders).
+        - show_heatmap (bool): Fills cells with color based on reward value.
+        - show_rewards (bool): Displays reward value as numbers in the cells.
+        - env (OffensiveScenarioMoveSingleAgent, optional): Environment for accessing grid reward.
 
     Returns:
-        - matplotlib.axes.Axes: The axis with the full pitch rendered
+        - ax (matplotlib.axes.Axes): Axis with the completed pitch drawing.
     """
     if ax is None:
         fig, ax = plt.subplots(figsize=(12, 8))
 
-    # Derived limits for full pitch
-    x_min = -CELL_SIZE                   # -5
-    x_max = FIELD_WIDTH + CELL_SIZE      # 125
-    y_min = -CELL_SIZE                   # -5
-    y_max = FIELD_HEIGHT + CELL_SIZE     # 85
+    # Set field boundaries with margins
+    x_min, x_max = X_MIN, X_MAX
+    y_min, y_max = Y_MIN, Y_MAX
 
-    # Set background color
+    # Background color
     if field_color == 'green':
         ax.set_facecolor('#4CAF50')
     else:
@@ -260,30 +307,24 @@ def draw_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids=Fals
     lc = 'whitesmoke'
     border_color = 'white'
 
-    # Draw stripes only if green field is selected
+    # Optional mowing stripes
     if field_color == 'green' and stripes:
         for i in range(0, FIELD_WIDTH, STRIPE_WIDTH):
             stripe_color = '#43A047' if (i // STRIPE_WIDTH) % 2 == 0 else '#4CAF50'
-            ax.add_patch(
-                Rectangle(
-                    (i, 0),
-                    STRIPE_WIDTH,
-                    FIELD_HEIGHT,
-                    color=stripe_color,
-                    zorder=0
-                )
-            )
+            ax.add_patch(Rectangle(
+                (i, 0), STRIPE_WIDTH, FIELD_HEIGHT,
+                color=stripe_color, zorder=0
+            ))
 
-
-    # Field boundary
+    # Draw outer pitch boundaries
     ax.plot([0, 0], [0, FIELD_HEIGHT], color=border_color, linewidth=3)
     ax.plot([FIELD_WIDTH, FIELD_WIDTH], [0, FIELD_HEIGHT], color=border_color, linewidth=3)
     ax.plot([0, FIELD_WIDTH], [0, 0], color=border_color, linewidth=3)
     ax.plot([0, FIELD_WIDTH], [FIELD_HEIGHT, FIELD_HEIGHT], color=border_color, linewidth=3)
 
     # Center line and circle
-    ax.plot([HALF_FIELD_X, HALF_FIELD_X], [0, FIELD_HEIGHT], color=lc, linewidth=2)
-    ax.add_patch(Circle((HALF_FIELD_X, CENTER_Y), 10, color=lc, fill=False, linewidth=2))
+    ax.plot([HALF_FIELD_X, HALF_FIELD_X], [0, FIELD_HEIGHT], color=lc, linewidth=2, zorder=2)
+    ax.add_patch(Circle((HALF_FIELD_X, CENTER_Y), 10, color=lc, fill=False, linewidth=2, zorder=2))
 
     # Penalty and goal areas (both sides)
     draw_penalty_area(ax, side='left', lc=lc)
@@ -295,27 +336,64 @@ def draw_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids=Fals
     corners = [(0, 0), (FIELD_WIDTH, 0), (0, FIELD_HEIGHT), (FIELD_WIDTH, FIELD_HEIGHT)]
     angles = [0, 90, 270, 180]
     for (x, y), angle in zip(corners, angles):
-        arc = Arc((x, y), 4, 4, angle=angle, theta1=0, theta2=90, color=lc, linewidth=2)
+        arc = Arc((x, y), 4, 4, angle=angle, theta1=0, theta2=90, color=lc, linewidth=2, zorder=2)
         ax.add_patch(arc)
 
-    # Debug grid (optional)
-    if show_grid:
-        for x in range(x_min, x_max + 1, CELL_SIZE):
-            ax.plot([x, x], [y_min, y_max], color='black', linestyle='-', alpha=0.2, linewidth=0.5, zorder=1)
-        for y in range(y_min, y_max + 1, CELL_SIZE):
-            ax.plot([x_min, x_max], [y, y], color='black', linestyle='-', alpha=0.2, linewidth=0.5, zorder=1)
+    # Draw grid / heatmap / reward only if env is provided
+    if env is not None:
+        num_cells_x = env.num_cells_x
+        num_cells_y = env.num_cells_y
+        cell_width = CELL_SIZE
+        cell_height = CELL_SIZE
 
-    # Cell indices (optional)
-    if show_cell_ids:
-        idx = 0
-        for gx in range(x_min, x_max, CELL_SIZE):
-            for gy in range(y_min, y_max, CELL_SIZE):
-                cx = gx + CELL_SIZE / 2
-                cy = gy + CELL_SIZE / 2
-                ax.text(cx, cy, str(idx), fontsize=6, color='black', ha='center', va='center', alpha=0.4, zorder=2)
-                idx += 1
+        for i in range(num_cells_x):
+            for j in range(num_cells_y):
+                x0 = X_MIN + i * cell_width
+                y0 = Y_MIN + j * cell_height
+                x_center = x0 + cell_width / 2
+                y_center = y0 + cell_height / 2
+                reward = env._get_position_reward(x_center, y_center)
 
-    # Axis setup
+                normalized_reward = (reward + 0.5) / 1.0  # [-0.5, 0.5] → [0, 1]
+                color = plt.cm.coolwarm(normalized_reward)
+
+                # Heatmap: filled colored cells
+                if show_heatmap:
+                    rect = Rectangle(
+                        (x0, y0),
+                        cell_width,
+                        cell_height,
+                        facecolor=color,
+                        edgecolor='black' if show_grid else 'none',
+                        linewidth=0.4,
+                        alpha=0.6,
+                        zorder=1
+                    )
+                    ax.add_patch(rect)
+
+                # Grid: draw lines if not already done via heatmap edges
+                if show_grid and not show_heatmap:
+                    ax.plot([x0, x0 + cell_width], [y0, y0], color='black', linewidth=0.4, zorder=1)
+                    ax.plot([x0, x0 + cell_width], [y0 + cell_height, y0 + cell_height], color='black', linewidth=0.4, zorder=1)
+                    ax.plot([x0, x0], [y0, y0 + cell_height], color='black', linewidth=0.4, zorder=1)
+                    ax.plot([x0 + cell_width, x0 + cell_width], [y0, y0 + cell_height], color='black', linewidth=0.4, zorder=1)
+
+                # Rewards: annotate reward value inside the cell
+                if show_rewards:
+                    font_size = CELL_SIZE * 0.8  # Dynamic font size for clarity
+                    ax.text(
+                        x_center,
+                        y_center,
+                        f"{reward:.2f}",
+                        ha='center',
+                        va='center',
+                        fontsize=font_size,
+                        color='black',
+                        alpha=0.6,
+                        zorder=2
+                    )
+
+    # Final axis formatting
     ax.set_xlim(x_min, x_max)
     ax.set_ylim(y_max, y_min)
     ax.set_aspect('equal')
@@ -323,3 +401,4 @@ def draw_pitch(ax=None, field_color='green', show_grid=False, show_cell_ids=Fals
     ax.set_yticks([])
 
     return ax
+

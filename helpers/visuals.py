@@ -30,97 +30,137 @@ from matplotlib.patches import Circle
 # the simulation and the rendered visualization.
 
 # Render a single state
-def render_state(state, ax=None, show_grid=False, show_cell_ids=False, stripes=False, full_pitch=False):
+def render_state(state, ax=None, stripes=False, full_pitch=False,
+                 show_grid=False, show_heatmap=False, show_rewards=False, env=None):
     """
     Renders a single football state on the pitch.
 
     Parameters:
         - state (dict): Contains 'player', 'ball', and optionally 'opponents'.
-            Example:
-                state = {
-                    'player': Player instance,
-                    'ball': Ball instance,
-                    'opponents': list of Player instances (optional)
-                }
-        - ax (matplotlib.axes.Axes, optional): Axis to draw on. If None, a new one is created.
-        - show_grid (bool): Whether to overlay a debug grid.
-        - show_cell_ids (bool): Whether to show cell indices for RL debugging.
+        - ax (matplotlib.axes.Axes, optional): Axis to draw on. If None, creates a new figure.
         - stripes (bool): Whether to draw pitch stripes.
-        - full_pitch (bool): If True, draws the full pitch; otherwise, draws half-pitch.
+        - full_pitch (bool): If True, draws the full pitch; otherwise, half-pitch.
+        - show_grid (bool): Draws grid lines on the field.
+        - show_heatmap (bool): Fills cells with colors based on reward.
+        - show_rewards (bool): Writes reward numbers in the center of each cell.
+        - env (OffensiveScenarioMoveSingleAgent, optional): The environment used to compute the grid rewards.
 
     Returns:
         - matplotlib.axes.Axes: The axis with the rendered state.
     """
-    if full_pitch:
-        ax = draw_pitch(ax=ax, show_grid=show_grid, show_cell_ids=show_cell_ids, stripes=stripes)
-    else:
-        ax = draw_half_pitch(ax=ax, show_grid=show_grid, show_cell_ids=show_cell_ids, stripes=stripes)
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(8, 6))
 
-    # Draw attacker (blue)
+    # Draw static pitch with the desired options
+    if full_pitch:
+        ax = draw_pitch(ax=ax, stripes=stripes,
+                        show_grid=show_grid,
+                        show_heatmap=show_heatmap,
+                        show_rewards=show_rewards,
+                        env=env)
+    else:
+        ax = draw_half_pitch(ax=ax, stripes=stripes,
+                             show_grid=show_grid,
+                             show_heatmap=show_heatmap,
+                             show_rewards=show_rewards,
+                             env=env)
+
+    # Draw attacker (red circle)
     if 'player' in state and state['player']:
         x, y = state['player'].get_position()
         x = x * (X_MAX - X_MIN) + X_MIN
         y = y * (Y_MAX - Y_MIN) + Y_MIN
-        
         ax.add_patch(Circle((x, y), radius=1.0, color='crimson', ec='black', lw=1, zorder=5))
 
-    # Draw ball (white)
+    # Draw ball (white circle)
     if 'ball' in state and state['ball']:
         x, y = state['ball'].get_position()
         x = x * (X_MAX - X_MIN) + X_MIN
         y = y * (Y_MAX - Y_MIN) + Y_MIN
-
         ax.add_patch(Circle((x, y), radius=0.5, color='white', ec='black', lw=1, zorder=5))
-    
-    # Draw defenders (red)
+
+    # Draw defenders (roles with colors)
     opponents = state.get('opponents', [])
     if opponents:
         for defender in opponents:
             x, y = defender.get_position()
             x = x * (X_MAX - X_MIN) + X_MIN
             y = y * (Y_MAX - Y_MIN) + Y_MIN
-
-            # Determine color based on role
             role = defender.get_role()
-
-            if role == "DEF":
-                color = 'dodgerblue'
-            elif role == "GK":
-                color = 'darkorange'
-            else:
-                color = 'grey'  # fallback if needed
-
+            color = 'dodgerblue' if role == "DEF" else 'darkorange' if role == "GK" else 'grey'
             ax.add_patch(Circle((x, y), radius=1.0, color=color, ec='black', lw=1, zorder=5))
 
     return ax
 
-# Render an episode as an animation
-def render_episode(states, save_path=None, fps=24, show_grid=False, show_cell_ids=False, full_pitch=False):
+# Render an episode as an animation
+def render_episode(states, save_path=None, fps=24, stripes=False, full_pitch=False,
+                   show_grid=False, show_heatmap=False, show_rewards=False, env=None):
     """
-    Creates and optionally saves an animation from a list of game states.
-
+    Renders an episode as an animation.
     Parameters:
-        - states (list of dict): Sequence of environment states (one per timestep)
-        - save_path (str or None): Path to save the animation (e.g., 'out.mp4' or 'out.gif')
-        - fps (int): Frames per second for the animation
-        - show_grid (bool): Whether to overlay the debug grid on each frame
-        - show_cell_ids (bool): Whether to show grid cell indices
+        - states (list): List of state dictionaries containing 'player', 'ball', and '
+            opponents'.
+        - save_path (str, optional): Path to save the animation file.
+        - fps (int): Frames per second for the animation.
+        - stripes (bool): Whether to draw pitch stripes.
         - full_pitch (bool): If True, draws the full pitch; otherwise, draws half-pitch.
-
+        - show_grid (bool): If True, overlays the grid on the pitch.
+        - show_heatmap (bool): If True, fills cells with colors.
+        - show_rewards (bool): If True, annotates reward values inside the cells.
+        - env (OffensiveScenarioMoveSingleAgent, optional): Environment instance for grid drawing.
     Returns:
-        - matplotlib.animation.FuncAnimation object
+        - matplotlib.animation.FuncAnimation: The animation object.
     """
+
+    # Create a figure and axis for the animation
     fig, ax = plt.subplots(figsize=(6, 8))
-     
+
+    # Draw static pitch elements
+    if full_pitch:
+        draw_pitch(ax=ax, stripes=stripes, show_grid=show_grid, show_heatmap=show_heatmap, show_rewards=show_rewards, env=env)
+    else:
+        draw_half_pitch(ax=ax, stripes=stripes, show_grid=show_grid, show_heatmap=show_heatmap, show_rewards=show_rewards, env=env)
+
+    dynamic_patches = []
+
     def update(frame_idx):
-        ax.clear()
-        render_state(
-            states[frame_idx],
-            ax=ax,
-            show_grid=show_grid,
-            show_cell_ids=show_cell_ids,
-            full_pitch=full_pitch
-        )
+        # Remove previous dynamic patches
+        for patch in dynamic_patches:
+            patch.remove()
+        dynamic_patches.clear()
+
+        state = states[frame_idx]
+
+        # Attacker
+        if 'player' in state and state['player']:
+            x, y = state['player'].get_position()
+            x = x * (X_MAX - X_MIN) + X_MIN
+            y = y * (Y_MAX - Y_MIN) + Y_MIN
+            circle = Circle((x, y), radius=1.0, color='crimson', ec='black', lw=1, zorder=5)
+            ax.add_patch(circle)
+            dynamic_patches.append(circle)
+
+        # Ball
+        if 'ball' in state and state['ball']:
+            x, y = state['ball'].get_position()
+            x = x * (X_MAX - X_MIN) + X_MIN
+            y = y * (Y_MAX - Y_MIN) + Y_MIN
+            circle = Circle((x, y), radius=0.5, color='white', ec='black', lw=1, zorder=5)
+            ax.add_patch(circle)
+            dynamic_patches.append(circle)
+
+        # Defenders
+        opponents = state.get('opponents', [])
+        for defender in opponents:
+            x, y = defender.get_position()
+            x = x * (X_MAX - X_MIN) + X_MIN
+            y = y * (Y_MAX - Y_MIN) + Y_MIN
+            role = defender.get_role()
+            color = 'dodgerblue' if role == "DEF" else 'darkorange' if role == "GK" else 'grey'
+            circle = Circle((x, y), radius=1.0, color=color, ec='black', lw=1, zorder=5)
+            ax.add_patch(circle)
+            dynamic_patches.append(circle)
+
         ax.set_title(f"Frame {frame_idx+1}/{len(states)}", fontsize=16, fontweight='bold', color='black')
 
     anim = animation.FuncAnimation(fig, update, frames=len(states), interval=1000/fps, repeat=False)

@@ -11,6 +11,7 @@ from helpers.visuals import render_episode
 from env.pitch import X_MIN, Y_MIN, X_MAX, Y_MAX
 import numpy as np
 from helpers.helperFunctions import normalize
+from time import time
 
 # Create players and ball
 attacker = PlayerAttacker()
@@ -18,35 +19,30 @@ defender = PlayerDefender()
 goalkeeper = PlayerGoalkeeper()
 ball = Ball()
 
-# Set initial positions (normalized)
+# Set initial positions (normalized coordinates)
 attacker.reset_position(*normalize(60, 40))    # Center field
 defender.reset_position(*normalize(100, 40))   # Further behind
 goalkeeper.reset_position(*normalize(120, 40)) # In goal center
 ball.position = normalize(60, 40)
 
-time_per_step = 1 / 24
-
-attacker_max_speed = 10.0
-defender_max_speed = 10.0
-goalkeeper_max_speed = 10.0
+# Simulation settings
+time_per_step = 1 / 24  # 24 FPS
+x_range = X_MAX - X_MIN
+y_range = Y_MAX - Y_MIN
 
 # Store states frame-by-frame
 states = []
 
-for frame in range(120):
+for frame in range(240):
 
     # Attacker moves randomly towards the goal
-    direction_x = np.random.uniform(1, 1)
-    direction_y = np.random.uniform(-1, 1)
+    action_att = np.array([
+        np.random.uniform(1, 1),   # Always towards the opponent's goal (right)
+        np.random.uniform(-1, 1)   # Random lateral movement
+    ])
+    attacker.move_with_action(action_att, time_per_step, x_range, y_range)
 
-    speedATT = attacker.speed * attacker_max_speed * time_per_step
-
-    dx = direction_x * speedATT / (X_MAX - X_MIN)
-    dy = direction_y * speedATT / (Y_MAX - Y_MIN)
-
-    attacker.move([dx, dy])
-
-    # Defender moves towards the attacker
+    # Defender moves towards the attacker (basic pursuit behavior)
     att_pos = np.array(attacker.get_position())
     def_pos = np.array(defender.get_position())
     direction = att_pos - def_pos
@@ -54,65 +50,49 @@ for frame in range(120):
 
     if distance_to_att > 0.01:
         direction = direction / distance_to_att
-
-        speedDEF = defender.speed * defender_max_speed * time_per_step
-        dx = direction[0] * speedDEF / (X_MAX - X_MIN)
-        dy = direction[1] * speedDEF / (Y_MAX - Y_MIN)
-        defender.move([dx, dy])
     else:
-        defender.move([0, 0])
+        direction = np.array([0.0, 0.0])
 
-    # Goalkeeper small pseudo-random movement
-    direction_x = np.random.uniform(-1, 1)
-    direction_y = np.random.uniform(-1, 1)
+    defender.move_with_action(direction, time_per_step, x_range, y_range)
 
-    speedGK = goalkeeper.speed * goalkeeper_max_speed * time_per_step
+    # Goalkeeper pseudo-random small movement (noise simulation)
+    action_gk = np.array([
+        np.random.uniform(-1, 1),
+        np.random.uniform(-1, 1)
+    ])
+    goalkeeper.move_with_action(action_gk, time_per_step, x_range, y_range)
 
-    dx = direction_x * speedGK / (X_MAX - X_MIN)
-    dy = direction_y * speedGK / (Y_MAX - Y_MIN)
-    goalkeeper.move([dx, dy], 0.02)
-
-    # Ball follows attacker
+    # Ball follows attacker (basic dribbling offset)
     ball.position = (attacker.get_position()[0] + 0.01, attacker.get_position()[1])
 
-    # Copy attacker
-    attacker_copy = PlayerAttacker(
-        shooting=attacker.shooting,
-        passing=attacker.passing,
-        dribbling=attacker.dribbling,
-        speed=attacker.speed
-    )
-    attacker_copy.reset_position(*attacker.get_position())
+    # Deep copy of current state for rendering (players and ball)
+    attacker_copy = attacker.copy()
+    defender_copy = defender.copy()
+    goalkeeper_copy = goalkeeper.copy()
 
-    # Copy defender
-    defender_copy = PlayerDefender(
-        tackling=defender.tackling,
-        marking=defender.marking,
-        anticipation=defender.anticipation,
-        speed=defender.speed
-    )
-    defender_copy.reset_position(*defender.get_position())
-
-    # Copy goalkeeper
-    goalkeeper_copy = PlayerGoalkeeper(
-        reflexes=goalkeeper.reflexes,
-        diving=goalkeeper.diving,
-        positioning=goalkeeper.positioning,
-        speed=goalkeeper.speed
-    )
-    goalkeeper_copy.reset_position(*goalkeeper.get_position())
-
-    # Copy ball
     ball_copy = Ball()
     ball_copy.position = ball.position
 
-    # Save state
+    # Save current state
     states.append({
         "player": attacker_copy,
         "ball": ball_copy,
         "opponents": [defender_copy, goalkeeper_copy]
     })
 
-# Render
-anim = render_episode(states, fps=24, show_grid=True, show_cell_ids=True, full_pitch=True)
-plt.show()
+
+time_start = time()
+print("Rendering episode...")
+
+# Render the full episode
+anim = render_episode(states, 
+                      fps=24, 
+                      full_pitch=True,
+                      show_grid=False,
+                      show_heatmap=False,
+                      show_rewards=False,
+                      save_path="video/testAttDefGK.mp4")
+
+time_end = time()
+print("Rendering complete. Animations saved in the 'video' directory.")
+print(f"Rendering took {time_end - time_start:.2f} seconds.")

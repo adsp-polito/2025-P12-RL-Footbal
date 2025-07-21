@@ -1,35 +1,63 @@
 class PlayerGoalkeeper:
-    def __init__(self, reflexes=0.5, diving=0.5, positioning=0.5, speed=0.5):
-        # Technical attributes, normalized between 0 and 1
+    def __init__(self, reflexes=0.5, diving=0.5, positioning=0.5, speed=0.5, max_speed=10.0):
+        """
+        Initialize a goalkeeper with technical and physical attributes.
+
+        Args:
+            reflexes (float): Reflexes skill [0, 1]
+            diving (float): Diving skill [0, 1]
+            positioning (float): Positioning skill [0, 1]
+            speed (float): Current speed factor [0, 1]
+            max_speed (float): Maximum speed in m/s (real-world units)
+        """
         self.reflexes = reflexes
         self.diving = diving
         self.positioning = positioning
         self.speed = speed
+        self.max_speed = max_speed
 
-        # Player position on the field, normalized coordinates [0, 1]
+        # Position in normalized coordinates [0, 1]
         self.position = [0.0, 0.0]
 
     def reset_position(self, start_x=0.0, start_y=0.0):
-        # Reset player position to the starting point
+        """
+        Reset goalkeeper position to specific starting point.
+        Coordinates are normalized in [0, 1].
+        """
         self.position = [start_x, start_y]
 
-    def move(self, direction, speed):
-        # Combine player's intrinsic speed with input speed
-        effective_speed = speed * self.speed
-
-        self.position[0] += direction[0] * effective_speed
-        self.position[1] += direction[1] * effective_speed
-
-        # Clamp position within the field limits [0, 1]
+    def move(self, delta_position):
+        """
+        Move the player by a delta in normalized coordinates.
+        Used for simple manual updates (resetting, repositioning, debugging).
+        It does NOT compute any speed or physics.
+        """
+        self.position[0] += delta_position[0]
+        self.position[1] += delta_position[1]
         self.position[0] = max(0.0, min(1.0, self.position[0]))
         self.position[1] = max(0.0, min(1.0, self.position[1]))
 
+    def move_with_action(self, action, time_per_step, x_range, y_range):
+        """
+        Move the goalkeeper based on an action and physical constraints.
+        This method is used during simulation.
+
+        Args:
+            action (np.array): Action in [-1, 1] for x and y directions.
+            time_per_step (float): Time duration of one step (seconds).
+            x_range (float): Physical field width (meters).
+            y_range (float): Physical field height (meters).
+        """
+        dx = action[0] * self.speed * self.max_speed * time_per_step / x_range
+        dy = action[1] * self.speed * self.max_speed * time_per_step / y_range
+        self.move([dx, dy])
+
     def get_position(self):
-        # Return the current player position as a tuple (x, y)
+        """Return current goalkeeper position as (x, y), normalized in [0, 1]."""
         return tuple(self.position)
 
     def get_parameters(self):
-        # Return the technical parameters as a dictionary
+        """Return goalkeeper's technical attributes as dictionary (for logs, debug, stats)."""
         return {
             "reflexes": self.reflexes,
             "diving": self.diving,
@@ -37,5 +65,20 @@ class PlayerGoalkeeper:
         }
 
     def get_role(self):
-        # Return the player's role as a string
+        """Return role name as string for rendering or role-based logic."""
         return "GK"
+
+    def copy(self):
+        """
+        Create a deep copy of the goalkeeper instance.
+        This is used to store the current state during rendering.
+        """
+        new_player = PlayerGoalkeeper(
+            reflexes=self.reflexes,
+            diving=self.diving,
+            positioning=self.positioning,
+            speed=self.speed,
+            max_speed=self.max_speed
+        )
+        new_player.position = self.position.copy()
+        return new_player
