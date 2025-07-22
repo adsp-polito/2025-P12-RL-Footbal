@@ -22,7 +22,6 @@ from stable_baselines3.common.monitor import Monitor
 from env.scenarios.offensiveScenarioMoveSingleAgent import OffensiveScenarioMoveSingleAgent
 from helpers.visuals import render_episode
 from env.objects.pitch import Pitch
-from time import time
 
 
 def ensure_dirs():
@@ -38,6 +37,8 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0,
                         show_rewards=False, full_pitch=True):
     """
     Evaluate a trained model on a single episode and optionally render it as a video.
+
+    Rewards per frame are collected only if save_path is provided to save memory.
 
     Args:
         model: Trained PPO agent.
@@ -56,7 +57,8 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0,
     obs, _ = env.reset()
     done = False
     states = []
-    cumulative_reward = 0.0  # Accumulate total reward over the episode
+    rewards_per_frame = [] if save_path else None  # Collect rewards only if saving
+    cumulative_reward = 0.0
 
     while not done:
         action, _ = model.predict(obs)
@@ -74,11 +76,12 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0,
             "opponents": [defender_copy]
         })
 
+        if save_path:
+            rewards_per_frame.append(reward)
+
     if save_path:
         render_episode(
             states,
-            internal_min_reward=env.internal_min_reward,
-            internal_max_reward=env.internal_max_reward,
             pitch=pitch,
             save_path=save_path,
             fps=24,
@@ -86,7 +89,9 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0,
             show_grid=show_grid,
             show_heatmap=show_heatmap,
             show_rewards=show_rewards,
-            reward_grid=env.reward_grid
+            reward_grid=env.reward_grid,
+            rewards_per_frame=rewards_per_frame,
+            show_info=True
         )
         print(f"[Episode {episode + 1}] Evaluation cumulative reward: {cumulative_reward:.4f}")
 
@@ -94,7 +99,8 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0,
 
 
 def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
-                      eval_every_episodes=100, show_grid=False, show_heatmap=False, show_rewards=False):
+                      eval_every_episodes=100, show_grid=False,
+                      show_heatmap=False, show_rewards=False):
     """
     Train a PPO agent on the OffensiveScenarioMove environment.
     Save videos and collect evaluation rewards every 'eval_every_episodes' episodes for plotting.
@@ -132,7 +138,7 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
         verbose=0,
         device="cpu",
         seed=42,
-        n_steps=fps * seconds_per_episode,
+        n_steps=max_steps_per_episode,
         batch_size=64,
         gamma=0.99,
         gae_lambda=0.95,
@@ -148,8 +154,8 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
         # Train for one full episode worth of timesteps
         model.learn(total_timesteps=max_steps_per_episode, reset_num_timesteps=False)
 
-        # Evaluate and save video periodically, also at the first episode
-        if episode == 0 or (episode + 1) % eval_every_episodes == 0:
+        # Evaluate and save video periodically, including the first episode
+        if (episode + 1) % eval_every_episodes == 0 or episode == 0:
             save_render = f"training/renders/singleAgentMove/episode_{episode + 1}.mp4"
             cumulative_reward = evaluate_and_render(
                 model,
@@ -174,9 +180,9 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
     # Plot evaluation rewards over time
     plt.figure(figsize=(10, 4))
     plt.plot(eval_episodes, eval_rewards, marker='o', linestyle='-')
-    plt.title(f"Cumulative Reward every {eval_every_episodes} Episodes")
-    plt.xlabel("Episodes")
-    plt.ylabel("Cumulative Rewards")
+    plt.title(f"Cumulative Reward every {eval_every_episodes} Episodes", fontsize=16, fontweight='bold')
+    plt.xlabel("Episodes", fontsize=14, fontweight='bold')
+    plt.ylabel("Cumulative Rewards", fontsize=14, fontweight='bold')
     plt.grid(True)
     plt.tight_layout()
     plt.savefig("training/renders/singleAgentMove/single_agent_training_progress.png")

@@ -19,6 +19,7 @@ obs, info = env.reset()
 
 # Collect states for rendering later
 states = []
+rewards = []
 
 done = False
 while not done:
@@ -38,6 +39,9 @@ while not done:
         "opponents": [defender_copy]
     })
 
+    # Store rewards for each frame for rendering
+    rewards.append(reward)
+
 # Ensure output directory exists for saving animation
 os.makedirs('test/videoTest', exist_ok=True)
 
@@ -55,7 +59,9 @@ anim = render_episode(
     show_heatmap=True,
     show_rewards=False,
     reward_grid=env.reward_grid,
-    save_path="test/videoTest/testMove.mp4"
+    save_path="test/videoTest/testMove.mp4",
+    rewards_per_frame=rewards,
+    show_info=True
 )
 
 time_end = time()
