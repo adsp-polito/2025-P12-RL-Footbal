@@ -2,14 +2,14 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+os.environ["GYM_DISABLE_ATARI"] = "1"
 import gymnasium
 from gymnasium import spaces
 import numpy as np
 from players.playerAttacker import PlayerAttacker
 from players.playerDefender import PlayerDefender
 from env.objects.ball import Ball
-from env.objects.pitch import X_MIN, X_MAX, Y_MIN, Y_MAX, FIELD_HEIGHT, CENTER_Y, GOAL_HEIGHT, FIELD_WIDTH, CELL_SIZE
-from helpers.helperFunctions import normalize, distance
+from helpers.helperFunctions import normalize
 
 # Coordinate System Design:
 #
@@ -44,8 +44,12 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
 
     metadata = {"render_modes": ["human"]}
 
-    def __init__(self, max_steps=240, fps=24):
+    def __init__(self, pitch, max_steps=240, fps=24):
+
         super().__init__()
+
+        # Pitch object for rendering and coordinate normalization
+        self.pitch = pitch
 
         # Action space: attacker moves in x and y, continuous control
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
@@ -65,8 +69,9 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         self.max_steps = max_steps  # standard 24 FPS * 10 seconds
 
         # Grid parameters for reward shaping (CELL_SIZE is in meters from pitch.py)
-        self.num_cells_x = int((X_MAX - X_MIN) / CELL_SIZE)
-        self.num_cells_y = int((Y_MAX - Y_MIN) / CELL_SIZE)
+        self.num_cells_x = self.pitch.num_cells_x
+        self.num_cells_y = self.pitch.num_cells_y
+        self.cell_size = self.pitch.CELL_SIZE
 
         # Simulation Parameters
         self.time_per_step = 1 / fps  # Time per step in seconds
@@ -94,7 +99,7 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         
         # Initialize current column (using real-world meters)
         att_x, _ = self.attacker.get_position()
-        x_m = att_x * (X_MAX - X_MIN) + X_MIN
+        x_m = att_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
         self.last_column = int(x_m // 5)
 
         return self._get_obs(), {}
@@ -107,8 +112,8 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         self.attacker.move_with_action(
             action=action,
             time_per_step=self.time_per_step,
-            x_range=X_MAX - X_MIN,
-            y_range=Y_MAX - Y_MIN
+            x_range=self.pitch.X_MAX - self.pitch.X_MIN,
+            y_range=self.pitch.Y_MAX - self.pitch.Y_MIN
         )
 
         # Ball follows attacker (dribbling)
@@ -126,8 +131,8 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         self.defender.move_with_action(
             direction,
             time_per_step=self.time_per_step,
-            x_range=X_MAX - X_MIN,
-            y_range=Y_MAX - Y_MIN
+            x_range=self.pitch.X_MAX - self.pitch.X_MIN,
+            y_range=self.pitch.Y_MAX - self.pitch.Y_MIN
         )
 
         # Compute cumulative reward (including possession loss, bounds, etc.)
@@ -168,10 +173,10 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         """
         # Get real positions in meters
         def_x, def_y = self.defender.get_position()
-        def_x = def_x * (X_MAX - X_MIN) + X_MIN
-        def_y = def_y * (Y_MAX - Y_MIN) + Y_MIN
-        ball_x = self.ball.position[0] * (X_MAX - X_MIN) + X_MIN
-        ball_y = self.ball.position[1] * (Y_MAX - Y_MIN) + Y_MIN
+        def_x = def_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
+        def_y = def_y * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
+        ball_x = self.ball.position[0] * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
+        ball_y = self.ball.position[1] * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
 
         threshold = 0.5  # meters
         if np.sqrt((def_x - ball_x) ** 2 + (def_y - ball_y) ** 2) < threshold:
@@ -184,35 +189,55 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
     def _build_reward_grid(self):
         """
         Builds the reward grid based on pitch dimensions and stores it.
-        Out of bounds cells are assigned strong negative rewards.
+        Out-of-bounds cells are assigned strong negative rewards.
+        Cells directly in front of the goal (within goal depth and goal height) receive a high positive reward.
         """
         grid = np.zeros((self.num_cells_x, self.num_cells_y))
+
+        # Define the exact bounds of the goal area in front of the goal line
+        goal_x_min = self.pitch.FIELD_WIDTH  # Goal line start (e.g., 120m)
+        goal_x_max = self.pitch.FIELD_WIDTH + self.pitch.GOAL_DEPTH  # Goal depth (e.g., 122.44m)
+        goal_y_min = self.pitch.CENTER_Y - self.pitch.GOAL_HEIGHT / 2
+        goal_y_max = self.pitch.CENTER_Y + self.pitch.GOAL_HEIGHT / 2
 
         for i in range(self.num_cells_x):
             for j in range(self.num_cells_y):
 
                 # Calculate the center of the cell in meters
-                cell_x = X_MIN + (i + 0.5) * CELL_SIZE
-                cell_y = Y_MIN + (j + 0.5) * CELL_SIZE
+                cell_x = self.pitch.X_MIN + (i + 0.5) * self.cell_size
+                cell_y = self.pitch.Y_MIN + (j + 0.5) * self.cell_size
 
-                # Check if the cell is out of bounds or in the goal area
-                GOAL_MIN_Y = CENTER_Y - GOAL_HEIGHT / 2
-                GOAL_MAX_Y = CENTER_Y + GOAL_HEIGHT / 2
-                is_out = (cell_x < 0 or cell_x > FIELD_WIDTH or cell_y < 0 or cell_y > FIELD_HEIGHT)
-                is_goal_area = (cell_x > FIELD_WIDTH and GOAL_MIN_Y <= cell_y <= GOAL_MAX_Y)
+                # Check if the cell is out of pitch bounds (excluding goal area)
+                is_out = (
+                    cell_x < 0 or 
+                    cell_x > self.pitch.FIELD_WIDTH or 
+                    cell_y < 0 or 
+                    cell_y > self.pitch.FIELD_HEIGHT
+                )
 
-                # Assign rewards based on position
+                # Check if the cell is inside the goal area in front of the goal line
+                is_goal_area = (
+                    goal_x_min <= cell_x <= goal_x_max and
+                    goal_y_min <= cell_y <= goal_y_max
+                )
+
+                # Assign rewards based on cell position
                 if is_out and not is_goal_area:
-                    grid[i, j] = -5.0
+                    grid[i, j] = -5.0  # Strong penalty for out-of-bounds cells
+                elif is_goal_area:
+                    grid[i, j] = 5.0   # High reward for cells inside the goal area
                 else:
-                    x_norm = (cell_x - X_MIN) / (X_MAX - X_MIN)
-                    y_norm = (cell_y - Y_MIN) / (Y_MAX - Y_MIN)
+                    # Base reward: linear progression towards opponent's goal (x axis)
+                    # and lateral penalty for being away from center (y axis)
+                    x_norm = (cell_x - self.pitch.X_MIN) / (self.pitch.X_MAX - self.pitch.X_MIN)
+                    y_norm = (cell_y - self.pitch.Y_MIN) / (self.pitch.Y_MAX - self.pitch.Y_MIN)
                     x_reward = -0.5 + 1.0 * x_norm
                     y_penalty = -0.15 * abs(y_norm - 0.5) * 2
                     grid[i, j] = x_reward + y_penalty
 
-        # Store the grid for later use
+        # Store the reward grid for later use
         self.reward_grid = grid
+
 
 
     def _get_position_reward(self, x, y):
@@ -223,8 +248,8 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         if self.reward_grid is None:
             self._build_reward_grid()
 
-        cell_x = int((x - X_MIN) / CELL_SIZE)
-        cell_y = int((y - Y_MIN) / CELL_SIZE)
+        cell_x = int((x - self.pitch.X_MIN) / self.cell_size)
+        cell_y = int((y - self.pitch.Y_MIN) / self.cell_size)
 
         cell_x = np.clip(cell_x, 0, self.num_cells_x - 1)
         cell_y = np.clip(cell_y, 0, self.num_cells_y - 1)
@@ -242,8 +267,8 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
 
         # Convert attacker's position from normalized [0, 1] to meters
         att_x, att_y = self.attacker.get_position()
-        x_m = att_x * (X_MAX - X_MIN) + X_MIN
-        y_m = att_y * (Y_MAX - Y_MIN) + Y_MIN
+        x_m = att_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
+        y_m = att_y * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
 
         # Apply small time penalty to encourage active movement
         reward -= 0.1
@@ -279,9 +304,9 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         """
         Check if the ball is in the net
         """
-        GOAL_MIN_Y = CENTER_Y - GOAL_HEIGHT / 2
-        GOAL_MAX_Y = CENTER_Y + GOAL_HEIGHT / 2
-        return x > FIELD_WIDTH and GOAL_MIN_Y <= y <= GOAL_MAX_Y
+        GOAL_MIN_Y = self.pitch.CENTER_Y - self.pitch.GOAL_HEIGHT / 2
+        GOAL_MAX_Y = self.pitch.CENTER_Y + self.pitch.GOAL_HEIGHT / 2
+        return x > self.pitch.FIELD_WIDTH and GOAL_MIN_Y <= y <= GOAL_MAX_Y
 
     def _get_obs(self):
         """
@@ -307,12 +332,12 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         def_x, def_y = self.defender.get_position()
 
         # Note: X_MIN, X_MAX, Y_MIN, Y_MAX are defined in pitch
-        att_x_m = att_x * (X_MAX - X_MIN) + X_MIN
-        att_y_m = att_y * (Y_MAX - Y_MIN) + Y_MIN
-        def_x_m = def_x * (X_MAX - X_MIN) + X_MIN
-        def_y_m = def_y * (Y_MAX - Y_MIN) + Y_MIN
-        ball_x_m = self.ball.position[0] * (X_MAX - X_MIN) + X_MIN
-        ball_y_m = self.ball.position[1] * (Y_MAX - Y_MIN) + Y_MIN
+        att_x_m = att_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
+        att_y_m = att_y * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
+        def_x_m = def_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
+        def_y_m = def_y * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
+        ball_x_m = self.ball.position[0] * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
+        ball_y_m = self.ball.position[1] * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
 
         # print(f"STEP {self.steps:3} | ATTACKER: ({att_x_m:.2f}, {att_y_m:.2f}) | DEFENDER: ({def_x_m:.2f}, {def_y_m:.2f}) | BALL: ({ball_x_m:.2f}, {ball_y_m:.2f}) | {status} | REWARD: {reward:.4f}")
 
