@@ -11,7 +11,6 @@ for package in required_packages:
     except ImportError:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
-
 # Add project root to sys.path for relative imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -21,44 +20,48 @@ import matplotlib.pyplot as plt
 from tqdm import trange
 from stable_baselines3 import PPO
 from stable_baselines3.common.monitor import Monitor
-from env.offensiveScenarioMoveSingleAgent import OffensiveScenarioMoveSingleAgent
+from env.scenarios.offensiveScenarioMoveSingleAgent import OffensiveScenarioMoveSingleAgent
 from helpers.visuals import render_episode
 
 
-# Ensure output directories exist for saving renders and models
 def ensure_dirs():
+    """
+    Ensure necessary directories for saving outputs exist.
+    """
     os.makedirs("training/renders/singleAgentMove", exist_ok=True)
     os.makedirs("training/models", exist_ok=True)
 
 
 def evaluate_and_render(model, env, save_path=None, episode=0,
-                        show_grid=False, show_heatmap=False, show_rewards=False, full_pitch=True):
+                        show_grid=False, show_heatmap=False,
+                        show_rewards=False, full_pitch=True):
     """
-    Runs a single evaluation episode and optionally saves it as a video.
+    Evaluate a trained model on a single episode and optionally render it as a video.
 
     Args:
         model: Trained PPO agent.
         env: Evaluation environment instance.
-        save_path (str): File path for saving the animation.
-        episode (int): Current episode number, used for logging.
+        save_path (str): Optional path to save the video.
+        episode (int): Current episode number for logging purposes.
         show_grid (bool): Whether to draw grid lines on the pitch.
-        show_heatmap (bool): Whether to color cells based on reward.
-        show_rewards (bool): Whether to display reward values inside cells.
+        show_heatmap (bool): Whether to color cells based on reward values.
+        show_rewards (bool): Whether to display numeric reward values inside cells.
         full_pitch (bool): Whether to render the full pitch.
 
     Returns:
-        float: Final reward from the episode.
+        float: The cumulative reward accumulated during this evaluation episode.
     """
     obs, _ = env.reset()
     done = False
     states = []
+    cumulative_reward = 0.0  # Accumulate total reward over the episode
 
-    # Collect environment states until episode termination
     while not done:
         action, _ = model.predict(obs)
         obs, reward, done, truncated, info = env.step(action)
+        cumulative_reward += reward
 
-        # Deep copy environment state for rendering (players and ball)
+        # Copy current environment state for rendering
         attacker_copy = env.attacker.copy()
         defender_copy = env.defender.copy()
         ball_copy = env.ball.copy()
@@ -69,7 +72,6 @@ def evaluate_and_render(model, env, save_path=None, episode=0,
             "opponents": [defender_copy]
         })
 
-    # Render the episode and optionally save as video
     if save_path:
         render_episode(
             states,
@@ -81,25 +83,25 @@ def evaluate_and_render(model, env, save_path=None, episode=0,
             show_rewards=show_rewards,
             env=env
         )
-        print(f"[Episode {episode + 1}] Evaluation reward: {reward:.4f}")
+        print(f"[Episode {episode + 1}] Evaluation cumulative reward: {cumulative_reward:.4f}")
 
-    return reward
+    return cumulative_reward
 
 
 def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
                       eval_every_episodes=100, show_grid=False, show_heatmap=False, show_rewards=False):
     """
     Train a PPO agent on the OffensiveScenarioMove environment.
-    Periodically evaluates the policy and saves animations.
+    Save videos and collect evaluation rewards every 'eval_every_episodes' episodes for plotting.
 
     Args:
         episodes (int): Total number of training episodes.
         seconds_per_episode (int): Duration of each episode in seconds.
-        fps (int): Frames per second for each episode.
-        eval_every_episodes (int): Frequency (in episodes) to render evaluation.
+        fps (int): Simulation frequency (frames per second).
+        eval_every_episodes (int): Frequency (in episodes) to save video and evaluation reward.
         show_grid (bool): Whether to draw grid lines on evaluation renders.
-        show_heatmap (bool): Whether to show reward heatmap in evaluation renders.
-        show_rewards (bool): Whether to show reward values in evaluation renders.
+        show_heatmap (bool): Whether to show the reward heatmap in evaluation renders.
+        show_rewards (bool): Whether to show reward values inside evaluation renders.
     """
     ensure_dirs()
 
@@ -110,11 +112,11 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
     print(f"Total timesteps (approx.): {total_timesteps}")
     print(f"Steps per episode: {max_steps_per_episode}")
 
-    # Monitored environments for training and evaluation
-    env = Monitor(OffensiveScenarioMoveSingleAgent(max_steps=max_steps_per_episode))
-    eval_env = OffensiveScenarioMoveSingleAgent(max_steps=max_steps_per_episode)
+    # Create environments for training and evaluation
+    env = Monitor(OffensiveScenarioMoveSingleAgent(max_steps=max_steps_per_episode, fps=fps))
+    eval_env = OffensiveScenarioMoveSingleAgent(max_steps=max_steps_per_episode, fps=fps)
 
-    # PPO model configuration
+    # PPO agent configuration
     model = PPO(
         "MlpPolicy",
         env,
@@ -126,56 +128,57 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
         gamma=0.99,
         gae_lambda=0.95,
         learning_rate=1e-3,
-        ent_coef=0.01,  # Entropy coefficient to encourage exploration
+        ent_coef=0.01,
     )
 
-    all_rewards = []
-    episodes_list = []
+    eval_rewards = []    # Store rewards for plotting
+    eval_episodes = []   # Store episodes evaluated
 
     print("Starting training...")
     for episode in trange(episodes, desc="Episodes Progress"):
+        # Train for one full episode worth of timesteps
         model.learn(total_timesteps=max_steps_per_episode, reset_num_timesteps=False)
 
-        # Periodically evaluate and render
-        save_render = None
+        # Evaluate only every eval_every_episodes, save video and reward
         if (episode + 1) % eval_every_episodes == 0:
             save_render = f"training/renders/singleAgentMove/episode_{episode + 1}.mp4"
+            cumulative_reward = evaluate_and_render(
+                model,
+                eval_env,
+                save_path=save_render,
+                episode=episode,
+                show_grid=show_grid,
+                show_heatmap=show_heatmap,
+                show_rewards=show_rewards,
+                full_pitch=True
+            )
+            eval_rewards.append(cumulative_reward)
+            eval_episodes.append(episode + 1)
 
-        reward = evaluate_and_render(
-            model,
-            eval_env,
-            save_path=save_render,
-            episode=episode,
-            show_grid=show_grid,
-            show_heatmap=show_heatmap,
-            show_rewards=show_rewards,
-            full_pitch=True
-        )
-        all_rewards.append(reward)
-        episodes_list.append(episode + 1)
-
-    # Save final trained model
+    # Save the final trained model
     model.save("training/models/single_agent_move_model")
 
-    # Plot evaluation rewards over episodes
+    # Close all the animated render windows
+    plt.close('all')
+
+    # Plot evaluation rewards
     plt.figure(figsize=(10, 4))
-    plt.plot(episodes_list, all_rewards, marker='.')
-    plt.title("Evaluation Reward over Episodes")
+    plt.plot(eval_episodes, eval_rewards, marker='o', linestyle='-')
+    plt.title(f"Cumulative Reward every {eval_every_episodes} Episodes")
     plt.xlabel("Episodes")
-    plt.ylabel("Reward (Evaluation)")
+    plt.ylabel("Cumulative Rewards")
     plt.grid(True)
     plt.tight_layout()
     plt.savefig("training/renders/singleAgentMove/single_agent_training_progress.png")
     plt.show()
 
-
-# Execute training when run directly
+# Main entry point
 if __name__ == "__main__":
     train_and_monitor(
-        episodes=20000,
+        episodes=10000,
         seconds_per_episode=10,
         fps=24,
-        eval_every_episodes=2000,
+        eval_every_episodes=1000,
         show_grid=False,
         show_heatmap=True,
         show_rewards=False

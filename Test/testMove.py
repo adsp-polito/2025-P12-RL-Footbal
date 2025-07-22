@@ -4,7 +4,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import numpy as np
 import matplotlib.pyplot as plt
-from env.offensiveScenarioMoveSingleAgent import OffensiveScenarioMoveSingleAgent
+from env.scenarios.offensiveScenarioMoveSingleAgent import OffensiveScenarioMoveSingleAgent
 from helpers.visuals import render_episode
 from time import time
 
@@ -35,7 +35,7 @@ while not done:
     })
 
 # Ensure output directory exists for saving animation
-os.makedirs('video', exist_ok=True)
+os.makedirs('videoTest', exist_ok=True)
 
 # Measure rendering time
 time_start = time()
@@ -50,9 +50,9 @@ anim = render_episode(
     show_heatmap=True,
     show_rewards=False,
     env=env,
-    save_path="video/testMove.mp4"
+    save_path="videoTest/testMove.mp4"
 )
 
 time_end = time()
-print("Rendering complete. Animation saved in the 'video' directory.")
+print("Rendering complete. Animation saved in the 'videoTest' directory.")
 print(f"Rendering took {time_end - time_start:.2f} seconds.")

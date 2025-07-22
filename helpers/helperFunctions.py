@@ -4,7 +4,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import numpy as np
 
-from env.pitch import X_MIN, X_MAX, Y_MIN, Y_MAX
+from env.objects.pitch import X_MIN, X_MAX, Y_MIN, Y_MAX
 
 def normalize(x, y):
     """

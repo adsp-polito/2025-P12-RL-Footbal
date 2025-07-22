@@ -6,9 +6,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from players.playerAttacker import PlayerAttacker
 from players.playerDefender import PlayerDefender
 from players.playerGoalkeeper import PlayerGoalkeeper
-from env.ball import Ball
+from env.objects.ball import Ball
 from helpers.visuals import render_episode
-from env.pitch import X_MIN, Y_MIN, X_MAX, Y_MAX
+from env.objects.pitch import X_MIN, Y_MIN, X_MAX, Y_MAX
 import numpy as np
 from helpers.helperFunctions import normalize
 from time import time
@@ -80,6 +80,8 @@ for frame in range(240):
         "opponents": [defender_copy, goalkeeper_copy]
     })
 
+# Ensure output directory exists for saving animation
+os.makedirs('videoTest', exist_ok=True)
 
 time_start = time()
 print("Rendering episode...")
@@ -91,8 +93,9 @@ anim = render_episode(states,
                       show_grid=False,
                       show_heatmap=False,
                       show_rewards=False,
-                      save_path="video/testAttDefGK.mp4")
+                      save_path="videoTest/testAttDefGK.mp4")
 
 time_end = time()
-print("Rendering complete. Animations saved in the 'video' directory.")
+
+print("Rendering complete. Animations saved in the 'videoTest' directory.")
 print(f"Rendering took {time_end - time_start:.2f} seconds.")

@@ -1,42 +1,46 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Arc, Rectangle
 
-# === GRID INFORMATION (USED FOR RL) ===
-# The pitch is overlaid with a 5x5m cell grid for RL training, visual debugging, and reward shaping.
+# GRID INFORMATION (USED FOR RL)
+# The pitch is overlaid with a 5x5m (or 1x1m) cell grid for RL training, visual debugging, and reward shaping.
 
-# → Full pitch grid:
-#     - Area: 130m (x) × 90m (y) = full pitch with 5m margin on all sides
-#     - N_COLS_FULL = 130 / 5 = 26 columns
-#     - N_ROWS = 90 / 5 = 18 rows
-#     - Total cells: 26 × 18 = 468
+# ==> Full pitch grid:
+#       - Area: 130m (x) × 90m (y) = full pitch with 5m margin on all sides
+#       - If using 5x5m cells:
+#           - N_COLS_FULL = 130 / 5 = 26 columns
+#           - N_ROWS_FULL = 90 / 5 = 18 rows
+#           - Total cells: 26 × 18 = 468
 
-# → Half pitch grid:
-#     - Area: 70m (x) × 90m (y) = half pitch with 5m margin on all sides
-#     - N_COLS_HALF = 70 / 5 = 14 columns
-#     - N_ROWS = 90 / 5 = 18 rows
-#     - Total cells: 14 × 18 = 252
+# ==> Half pitch grid:
+#       - Area: 70m (x) × 90m (y) = half pitch with 5m margin on all sides
+#       - If using 5x5m cells:
+#           - N_COLS_HALF = 70 / 5 = 14 columns
+#           - N_ROWS_HALF = 90 / 5 = 18 rows
+#           - Total cells: 14 × 18 = 252
 
-# === Z-ORDER LAYERS EXPLANATION ===
+# Z-ORDER LAYERS EXPLANATION
 # Z-order defines the drawing priority (higher values appear on top)
 # We use the following convention to control rendering layers:
 
-# Z-ORDER LAYERS EXPLANATION
 # Z-order defines the drawing priority (higher values appear on top).
 # The following convention is used to control rendering layers:
 
-# zorder = 0 → Field background stripes (base layer)
-# zorder = 1 → Debug grid lines (optional, for RL debugging)
-# zorder = 2 → Static pitch elements:
-#              - Field boundaries
-#              - Penalty areas and goal areas
-#              - Center line and circle
-#              - Penalty arcs and corner arcs
-#              - Text labels for cell indices (debugging)
-#              These are usually drawn without explicitly setting zorder, as matplotlib defaults place them between z=1 and z=3.
-# zorder = 3 → Dynamic elements (always drawn on top):
-#              - Attacking player (blue)
-#              - Defenders (red)
-#              - Ball (white)
+# zorder = 0 ==> Field background stripes (base layer)
+
+# zorder = 1 ==> Debug grid lines (optional, for RL debugging)
+
+# zorder = 2 ==> Static pitch elements:
+#                   - Field boundaries
+#                   - Penalty areas and goal areas
+#                   - Center line and circle
+#                   - Penalty arcs and corner arcs
+#                   - Text labels for cell indices (debugging)
+#                These are usually drawn without explicitly setting zorder, as matplotlib defaults place them
+
+# zorder = 3 ==> Dynamic elements (always drawn on top):
+#              - Attacking player
+#              - Defenders
+#              - Ball
 
 # Most matplotlib drawing functions (e.g., ax.plot, ax.add_patch) default to zorder=2.
 # We make it explicit where needed to ensure consistent rendering layers.
@@ -46,7 +50,6 @@ FIELD_WIDTH = 120
 FIELD_HEIGHT = 80
 HALF_FIELD_X = FIELD_WIDTH // 2
 CENTER_Y = FIELD_HEIGHT // 2
-CELL_SIZE = 1  # meters (e.g., 5x5m, or 1x1m for fine resolution)
 STRIPE_WIDTH = 5
 
 # Fields Margins (for a 120x80 pitch)
@@ -63,6 +66,14 @@ PENALTY_SPOT_X_LEFT = 11          # x position for left side
 CENTER_CIRCLE_RADIUS = 10         # 10 meters radius
 GOAL_HEIGHT = 7.32                # 7.32 meters (standard)
 GOAL_DEPTH = 2.44                 # 2.44 meters depth
+
+
+# Grid cell size for reward shaping.
+# Defines the resolution of the pitch grid.
+# Smaller cells (e.g., 1m) allow fine-grained shaping but increase computational cost.
+# Larger cells (e.g., 5m) reduce detail but are more efficient.
+# The cell size should match the environment's scale and be a divisor of the pitch dimensions (e.g., 120x80).
+CELL_SIZE = 1  # meters (e.g., 5x5m, or 1x1m for fine resolution)
 
 def draw_penalty_area(ax, side='right', lc='white'):
     """
@@ -265,8 +276,6 @@ def draw_half_pitch(
 
     return ax
 
-
-
 def draw_pitch(
     ax=None,
     field_color='green',
@@ -401,4 +410,7 @@ def draw_pitch(
     ax.set_yticks([])
 
     return ax
+
+
+
 

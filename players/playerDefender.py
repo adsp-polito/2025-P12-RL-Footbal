@@ -10,9 +10,14 @@ class PlayerDefender:
             speed (float): Current speed factor [0, 1]
             max_speed (float): Maximum speed in m/s (real-world units)
         """
+        # Technical attributes
         self.tackling = tackling
         self.marking = marking
         self.anticipation = anticipation
+
+        # Speed is a factor of max_speed, where 1.0 means full speed
+        # This allows for dynamic speed changes during the game based
+        # on stamina, fatigue, or tactical decisions.
         self.speed = speed
         self.max_speed = max_speed
 

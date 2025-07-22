@@ -7,8 +7,8 @@ from gymnasium import spaces
 import numpy as np
 from players.playerAttacker import PlayerAttacker
 from players.playerDefender import PlayerDefender
-from env.ball import Ball
-from env.pitch import X_MIN, X_MAX, Y_MIN, Y_MAX, FIELD_HEIGHT, CENTER_Y, GOAL_HEIGHT, FIELD_WIDTH, CELL_SIZE
+from env.objects.ball import Ball
+from env.objects.pitch import X_MIN, X_MAX, Y_MIN, Y_MAX, FIELD_HEIGHT, CENTER_Y, GOAL_HEIGHT, FIELD_WIDTH, CELL_SIZE
 from helpers.helperFunctions import normalize, distance
 
 # Coordinate System Design:
@@ -44,7 +44,7 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
 
     metadata = {"render_modes": ["human"]}
 
-    def __init__(self, max_steps=240):
+    def __init__(self, max_steps=240, fps=24):
         super().__init__()
 
         # Action space: attacker moves in x and y, continuous control
@@ -69,9 +69,10 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         self.num_cells_y = int((Y_MAX - Y_MIN) / CELL_SIZE)
 
         # Simulation Parameters
-        self.time_per_step = 1 / 24
-        self.attacker_max_speed = 10.0  # m/s ~ 36 km/h
-        self.defender_max_speed = 10.0  # m/s ~ 36 km/h
+        self.time_per_step = 1 / fps  # Time per step in seconds
+
+        # Reward grid for position-based rewards
+        self.reward_grid = None
 
     def reset(self, seed=None, options=None):
         """
@@ -100,9 +101,9 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
 
 
     def step(self, action):
-        """Execute one environment step: attacker moves, ball follows, defender pursues"""
+        """Execute one environment step: attacker moves, ball follows, defender pursues."""
 
-        # Attacker movement using OOP encapsulation
+        # Attacker movement
         self.attacker.move_with_action(
             action=action,
             time_per_step=self.time_per_step,
@@ -110,16 +111,15 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
             y_range=Y_MAX - Y_MIN
         )
 
-        # Ball offset in attacker's direction (dribbling)
+        # Ball follows attacker (dribbling)
         self._update_ball_position(action)
 
-        # Defender moves automatically towards attacker using OOP encapsulation
+        # Defender movement towards attacker
         att_x, att_y = self.attacker.get_position()
         def_x, def_y = self.defender.get_position()
         direction = np.array([att_x - def_x, att_y - def_y])
-        distance_to_attacker = np.linalg.norm(direction)
-        if distance_to_attacker != 0:
-            direction /= distance_to_attacker
+        if np.linalg.norm(direction) != 0:
+            direction /= np.linalg.norm(direction)
         else:
             direction = np.array([0.0, 0.0])
 
@@ -130,24 +130,18 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
             y_range=Y_MAX - Y_MIN
         )
 
-        # Possession check
-        if self._check_possession_loss():
-            reward = -1.0
-            self._log_step("Ball stolen", reward)
-            return self._get_obs(), reward, True, False, {}
-
-        # Reward logic
+        # Compute cumulative reward (including possession loss, bounds, etc.)
         reward = self._compute_reward()
-        self._log_step(f"Dist to Goal", reward)
+        self._log_step(f"Step reward", reward)
 
         # Timeout check
         self.steps += 1
         if self.steps >= self.max_steps:
             self.done = True
-            # print(f"STEP {self.steps:3} | Timeout reached | FINAL REWARD: {reward:.4f}")
             return self._get_obs(), reward, self.done, False, {}
 
         return self._get_obs(), reward, self.done, False, {}
+
 
     def _update_ball_position(self, action):
         """
@@ -169,77 +163,117 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
     def _check_possession_loss(self):
         """
         Check if the defender has stolen the ball from the attacker.
-        The defender steals the ball if they are close enough and have a chance to tackle.
+        The defender steals the ball if they are within a certain distance threshold
+        and their tackling ability is sufficient.
         """
-        # Define a threshold for tackling based on the distance to the ball
-        threshold = 0.5 / np.sqrt((X_MAX - X_MIN) * (Y_MAX - Y_MIN)) # Normalized distance threshold (1 meter)
-        if distance(self.defender.get_position(), self.ball.position) < threshold:
+        # Get real positions in meters
+        def_x, def_y = self.defender.get_position()
+        def_x = def_x * (X_MAX - X_MIN) + X_MIN
+        def_y = def_y * (Y_MAX - Y_MIN) + Y_MIN
+        ball_x = self.ball.position[0] * (X_MAX - X_MIN) + X_MIN
+        ball_y = self.ball.position[1] * (Y_MAX - Y_MIN) + Y_MIN
+
+        threshold = 0.5  # meters
+        if np.sqrt((def_x - ball_x) ** 2 + (def_y - ball_y) ** 2) < threshold:
             if np.random.rand() < self.defender.tackling:
                 self.has_possession = False
                 self.done = True
                 return True
         return False
     
+    def _build_reward_grid(self):
+        """
+        Builds the reward grid based on pitch dimensions and stores it.
+        Out of bounds cells are assigned strong negative rewards.
+        """
+        grid = np.zeros((self.num_cells_x, self.num_cells_y))
+
+        for i in range(self.num_cells_x):
+            for j in range(self.num_cells_y):
+
+                # Calculate the center of the cell in meters
+                cell_x = X_MIN + (i + 0.5) * CELL_SIZE
+                cell_y = Y_MIN + (j + 0.5) * CELL_SIZE
+
+                # Check if the cell is out of bounds or in the goal area
+                GOAL_MIN_Y = CENTER_Y - GOAL_HEIGHT / 2
+                GOAL_MAX_Y = CENTER_Y + GOAL_HEIGHT / 2
+                is_out = (cell_x < 0 or cell_x > FIELD_WIDTH or cell_y < 0 or cell_y > FIELD_HEIGHT)
+                is_goal_area = (cell_x > FIELD_WIDTH and GOAL_MIN_Y <= cell_y <= GOAL_MAX_Y)
+
+                # Assign rewards based on position
+                if is_out and not is_goal_area:
+                    grid[i, j] = -5.0
+                else:
+                    x_norm = (cell_x - X_MIN) / (X_MAX - X_MIN)
+                    y_norm = (cell_y - Y_MIN) / (Y_MAX - Y_MIN)
+                    x_reward = -0.5 + 1.0 * x_norm
+                    y_penalty = -0.15 * abs(y_norm - 0.5) * 2
+                    grid[i, j] = x_reward + y_penalty
+
+        # Store the grid for later use
+        self.reward_grid = grid
+
+
     def _get_position_reward(self, x, y):
         """
-        Compute a reward based on the attacker's position on the pitch in meters.
-        Reward is higher closer to the opponent's goal (x -> 125) and slightly favors central y positions.
+        Returns the reward from the reward grid for the attacker's position.
+        Builds the grid on first access.
         """
+        if self.reward_grid is None:
+            self._build_reward_grid()
 
-        # Normalize x and y to [0, 1] according to real field dimensions
-        x_norm = (x - X_MIN) / (X_MAX - X_MIN)
-        y_norm = (y - Y_MIN) / (Y_MAX - Y_MIN)
+        cell_x = int((x - X_MIN) / CELL_SIZE)
+        cell_y = int((y - Y_MIN) / CELL_SIZE)
 
-        # Reward increases linearly with x (progression towards opponent's goal)
-        x_reward = -0.5 + 1.0 * x_norm  # From -0.5 (X_MIN) to +0.5 (X_MAX)
+        cell_x = np.clip(cell_x, 0, self.num_cells_x - 1)
+        cell_y = np.clip(cell_y, 0, self.num_cells_y - 1)
 
-        # Slight penalty for lateral positions: y=0.5 is central, sides get a small penalty
-        y_penalty = -0.15 * abs(y_norm - 0.5) * 2  # Max -0.15 at edges, 0 at center
+        return self.reward_grid[cell_x, cell_y]
 
-        return x_reward + y_penalty
 
 
     def _compute_reward(self):
         """
-        Reward shaping based solely on smooth positional reward (x, y) over the pitch.
-        Encourages progression towards opponent's goal and allows realistic lateral movement.
+        Computes the reward for the current step based on the attacker's position.
+        Looks up the reward grid, applies a time penalty, and checks for goals or possession loss.
         """
-        reward = 0.0
+        reward = 0.0  # Initialize reward for this step
 
-        # Get attacker's position in meters (denormalized)
+        # Convert attacker's position from normalized [0, 1] to meters
         att_x, att_y = self.attacker.get_position()
         x_m = att_x * (X_MAX - X_MIN) + X_MIN
         y_m = att_y * (Y_MAX - Y_MIN) + Y_MIN
 
-        # Base time penalty to encourage movement
+        # Apply small time penalty to encourage active movement
         reward -= 0.1
 
-        # Position-based reward shaping (x progression and y positioning)
-        reward += self._get_position_reward(x_m, y_m)
+        # Get reward based on position from reward grid
+        pos_reward = self._get_position_reward(x_m, y_m)
+        reward += pos_reward
 
-        # Terminal conditions: out of bounds or goal
-        if self._is_out_of_bounds(x_m, y_m):
+        # If in out-of-bounds cell, terminate the episode
+        if pos_reward <= -4.0:
             self.done = True
-            reward -= 3.5
-            self._log_step("Out of bounds", reward)
+            self._log_step("Out of bounds via reward grid", reward)
             return reward
 
+        # Check if a goal has been scored
         if self._is_goal(x_m, y_m):
             self.done = True
             reward += 5.0
             self._log_step("Goal scored", reward)
+            return reward  
+
+        # Check if possession was lost
+        if self._check_possession_loss():
+            reward -= 1.0
+            self._log_step("Ball stolen", reward)
+            self.done = True
             return reward
 
         return reward
 
-
-    def _is_out_of_bounds(self, x, y):
-        """
-        Check if the ball is out of bounds
-        """
-        GOAL_MIN_Y = CENTER_Y - GOAL_HEIGHT / 2
-        GOAL_MAX_Y = CENTER_Y + GOAL_HEIGHT / 2
-        return (x < 0 or x > FIELD_WIDTH or y < 0 or y > FIELD_HEIGHT) and not (x > FIELD_WIDTH and GOAL_MIN_Y <= y <= GOAL_MAX_Y)
 
     def _is_goal(self, x, y):
         """
@@ -249,6 +283,20 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         GOAL_MAX_Y = CENTER_Y + GOAL_HEIGHT / 2
         return x > FIELD_WIDTH and GOAL_MIN_Y <= y <= GOAL_MAX_Y
 
+    def _get_obs(self):
+        """
+        Get the current observation: normalized positions of attacker, defender, ball, and possession status.
+        """
+        # Normalize positions to [0, 1]
+        att_x, att_y = normalize(*self.attacker.get_position())
+        def_x, def_y = normalize(*self.defender.get_position())
+        ball_x, ball_y = normalize(*self.ball.position)
+
+        # Possession status: 1 if attacker has possession, 0 otherwise
+        possession = 1.0 if self.has_possession else 0.0
+        return np.array([att_x, att_y, def_x, def_y, ball_x, ball_y, possession], dtype=np.float32)
+
+    # Only for debugging purposes
     def _log_step(self, status, reward):
         """
         Log the current step with positions and status.
@@ -268,19 +316,7 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
 
         # print(f"STEP {self.steps:3} | ATTACKER: ({att_x_m:.2f}, {att_y_m:.2f}) | DEFENDER: ({def_x_m:.2f}, {def_y_m:.2f}) | BALL: ({ball_x_m:.2f}, {ball_y_m:.2f}) | {status} | REWARD: {reward:.4f}")
 
-    def _get_obs(self):
-        """
-        Get the current observation: normalized positions of attacker, defender, ball, and possession status.
-        """
-        # Normalize positions to [0, 1]
-        att_x, att_y = normalize(*self.attacker.get_position())
-        def_x, def_y = normalize(*self.defender.get_position())
-        ball_x, ball_y = normalize(*self.ball.position)
-
-        # Possession status: 1 if attacker has possession, 0 otherwise
-        possession = 1.0 if self.has_possession else 0.0
-        return np.array([att_x, att_y, def_x, def_y, ball_x, ball_y, possession], dtype=np.float32)
-
+    
     def close(self):
         """
         Close the environment and release resources.

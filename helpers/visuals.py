@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from env.pitch import draw_half_pitch, draw_pitch, X_MIN, Y_MIN, X_MAX, Y_MAX
+from env.objects.pitch import draw_half_pitch, draw_pitch, X_MIN, Y_MIN, X_MAX, Y_MAX
 from matplotlib.patches import Circle
 
 # COORDINATE SYSTEMS AND NORMALIZATION
