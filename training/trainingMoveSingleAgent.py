@@ -77,6 +77,8 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0,
     if save_path:
         render_episode(
             states,
+            internal_min_reward=env.internal_min_reward,
+            internal_max_reward=env.internal_max_reward,
             pitch=pitch,
             save_path=save_path,
             fps=24,
@@ -146,8 +148,8 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
         # Train for one full episode worth of timesteps
         model.learn(total_timesteps=max_steps_per_episode, reset_num_timesteps=False)
 
-        # Evaluate and save video periodically
-        if (episode + 1) % eval_every_episodes == 0:
+        # Evaluate and save video periodically, also at the first episode
+        if episode == 0 or (episode + 1) % eval_every_episodes == 0:
             save_render = f"training/renders/singleAgentMove/episode_{episode + 1}.mp4"
             cumulative_reward = evaluate_and_render(
                 model,
@@ -183,10 +185,10 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
 
 if __name__ == "__main__":
     train_and_monitor(
-        episodes=10000,
+        episodes=2000,
         seconds_per_episode=10,
         fps=24,
-        eval_every_episodes=1000,
+        eval_every_episodes=200,
         show_grid=False,
         show_heatmap=True,
         show_rewards=False

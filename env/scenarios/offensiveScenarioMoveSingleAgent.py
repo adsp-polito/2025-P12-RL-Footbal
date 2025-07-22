@@ -2,7 +2,6 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-os.environ["GYM_DISABLE_ATARI"] = "1"
 import gymnasium
 from gymnasium import spaces
 import numpy as np
@@ -74,7 +73,8 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         self.cell_size = self.pitch.CELL_SIZE
 
         # Simulation Parameters
-        self.time_per_step = 1 / fps  # Time per step in seconds
+        self.fps = fps                          # Frames per second for rendering (standard 24 FPS)
+        self.time_per_step = 1.0 / self.fps     # Time per step in seconds 
 
         # Reward grid for position-based rewards
         self.reward_grid = None
@@ -189,56 +189,42 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
     def _build_reward_grid(self):
         """
         Builds the reward grid based on pitch dimensions and stores it.
-        Out-of-bounds cells are assigned strong negative rewards.
-        Cells directly in front of the goal (within goal depth and goal height) receive a high positive reward.
+        Out of bounds cells are assigned strong negative rewards (-5.0).
+        Cells inside the goal area (behind goal line and within goal height) get high positive reward (+5.0).
         """
         grid = np.zeros((self.num_cells_x, self.num_cells_y))
 
-        # Define the exact bounds of the goal area in front of the goal line
-        goal_x_min = self.pitch.FIELD_WIDTH  # Goal line start (e.g., 120m)
-        goal_x_max = self.pitch.FIELD_WIDTH + self.pitch.GOAL_DEPTH  # Goal depth (e.g., 122.44m)
-        goal_y_min = self.pitch.CENTER_Y - self.pitch.GOAL_HEIGHT / 2
-        goal_y_max = self.pitch.CENTER_Y + self.pitch.GOAL_HEIGHT / 2
+        goal_min_y = self.pitch.CENTER_Y - self.pitch.GOAL_HEIGHT / 2
+        goal_max_y = self.pitch.CENTER_Y + self.pitch.GOAL_HEIGHT / 2
+        goal_x_min = self.pitch.FIELD_WIDTH  # goal line
+        goal_x_max = self.pitch.FIELD_WIDTH + self.pitch.GOAL_DEPTH  # depth of the goal area
 
         for i in range(self.num_cells_x):
             for j in range(self.num_cells_y):
 
-                # Calculate the center of the cell in meters
+                # Calculate center of the cell in meters
                 cell_x = self.pitch.X_MIN + (i + 0.5) * self.cell_size
                 cell_y = self.pitch.Y_MIN + (j + 0.5) * self.cell_size
 
-                # Check if the cell is out of pitch bounds (excluding goal area)
-                is_out = (
-                    cell_x < 0 or 
-                    cell_x > self.pitch.FIELD_WIDTH or 
-                    cell_y < 0 or 
-                    cell_y > self.pitch.FIELD_HEIGHT
-                )
+                # Check if out of bounds (excluding goal area)
+                is_out = (cell_x < 0 or cell_x > self.pitch.FIELD_WIDTH or cell_y < 0 or cell_y > self.pitch.FIELD_HEIGHT)
 
-                # Check if the cell is inside the goal area in front of the goal line
-                is_goal_area = (
-                    goal_x_min <= cell_x <= goal_x_max and
-                    goal_y_min <= cell_y <= goal_y_max
-                )
+                # Check if inside the goal area (behind goal line, within goal height)
+                is_goal_area = (goal_x_min <= cell_x <= goal_x_max) and (goal_min_y <= cell_y <= goal_max_y)
 
-                # Assign rewards based on cell position
+                # Assign rewards
                 if is_out and not is_goal_area:
-                    grid[i, j] = -5.0  # Strong penalty for out-of-bounds cells
+                    grid[i, j] = -5.0  # penalty out of bounds
                 elif is_goal_area:
-                    grid[i, j] = 5.0   # High reward for cells inside the goal area
+                    grid[i, j] = 5.0   # high reward for goal area
                 else:
-                    # Base reward: linear progression towards opponent's goal (x axis)
-                    # and lateral penalty for being away from center (y axis)
                     x_norm = (cell_x - self.pitch.X_MIN) / (self.pitch.X_MAX - self.pitch.X_MIN)
                     y_norm = (cell_y - self.pitch.Y_MIN) / (self.pitch.Y_MAX - self.pitch.Y_MIN)
                     x_reward = -0.5 + 1.0 * x_norm
                     y_penalty = -0.15 * abs(y_norm - 0.5) * 2
                     grid[i, j] = x_reward + y_penalty
 
-        # Store the reward grid for later use
         self.reward_grid = grid
-
-
 
     def _get_position_reward(self, x, y):
         """

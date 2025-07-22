@@ -9,7 +9,6 @@ from helpers.visuals import render_episode
 from time import time
 from env.objects.pitch import Pitch
 
-
 # Initialize the pitch
 pitch = Pitch()
 pitch.assert_coordinates_match_helpers()
@@ -50,13 +49,13 @@ print("\nRendering episode...")
 anim = render_episode(
     states,
     pitch=pitch,
-    fps=24,
+    fps=env.fps,
     full_pitch=True,
     show_grid=False,
     show_heatmap=True,
     show_rewards=False,
     reward_grid=env.reward_grid,
-    save_path="test/videoTest/testMovePlasma.mp4"
+    save_path="test/videoTest/testMove.mp4"
 )
 
 time_end = time()

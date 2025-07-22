@@ -281,7 +281,7 @@ class Pitch:
 
         # Draw the center circle
         ax.add_patch(Circle((self.FIELD_WIDTH // 2, self.CENTER_Y), self.CENTER_CIRCLE_RADIUS, color=lc, fill=False, linewidth=2, zorder=2))
-
+        
         # Draw penalty areas and goals on both sides
         for side in ['left', 'right']:
             self._draw_penalty_area(ax, side, lc)
@@ -412,22 +412,46 @@ class Pitch:
             show_grid (bool): Whether to overlay grid lines.
             show_rewards (bool): Whether to annotate reward numbers inside each cell.
         """
+
+        # Get global min and max (these correspond to margin and goal fixed values)
+        global_min = reward_grid.min()
+        global_max = reward_grid.max()
+
+        # Mask out cells with values == global min or max
+        mask_internal = (reward_grid != global_min) & (reward_grid != global_max)
+        internal_values = reward_grid[mask_internal]
+
+        # Compute internal min and max excluding margin and goal values
+        if internal_values.size > 0:
+            internal_min = internal_values.min()
+            internal_max = internal_values.max()
+        else:
+            # fallback if no internal values present
+            internal_min = global_min
+            internal_max = global_max
+
+        # Draw heatmap using normalization and fixed min/max for edges
         for i in range(self.num_cells_x):
             for j in range(self.num_cells_y):
                 x0 = self.X_MIN + i * self.CELL_SIZE
                 y0 = self.Y_MIN + j * self.CELL_SIZE
                 reward = reward_grid[i, j]
 
-                # Normalize reward to [0, 1] for colormap
-                min_reward = np.min(reward_grid)
-                max_reward = np.max(reward_grid)
+                if reward == global_min:
+                    norm = 0.0  # fixed min color for margin
+                elif reward == global_max:
+                    norm = 1.0  # fixed max color for goal
+                else:
+                    if internal_max == internal_min:
+                        norm = 0.5  # avoid division by zero
+                    else:
+                        norm = (reward - internal_min) / (internal_max - internal_min)
+                    norm = np.clip(norm, 0, 1)
 
-                normalized_reward = (reward - min_reward) / (max_reward - min_reward)
+                # Use a colormap to convert normalized value to color
+                color = plt.cm.coolwarm(norm)
 
-                # Use a colormap to convert normalized reward to color
-                color = plt.cm.coolwarm(normalized_reward)
-
-                # Draw the rectangle for the cell with color based on reward
+                # Draw the rectangle for the cell
                 rect = Rectangle(
                     (x0, y0),
                     self.CELL_SIZE,
@@ -440,6 +464,7 @@ class Pitch:
                 )
                 ax.add_patch(rect)
 
+                # If show_rewards is True, annotate the cell with its reward value
                 if show_rewards:
                     ax.text(
                         x0 + self.CELL_SIZE / 2,
