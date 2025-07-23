@@ -41,10 +41,10 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
     losing possession or going out of bounds, and reward scoring.
     """
 
-    metadata = {"render_modes": ["human"]}
-
     def __init__(self, pitch, max_steps=240, fps=24):
 
+        # Initialize the parent class
+        # This sets up the environment with the necessary metadata and configurations
         super().__init__()
 
         # Pitch object for rendering and coordinate normalization
@@ -96,11 +96,6 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         self.has_possession = True
         self.done = False
         self.steps = 0
-        
-        # Initialize current column (using real-world meters)
-        att_x, _ = self.attacker.get_position()
-        x_m = att_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
-        self.last_column = int(x_m // 5)
 
         return self._get_obs(), {}
 
@@ -137,7 +132,6 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
 
         # Compute cumulative reward (including possession loss, bounds, etc.)
         reward = self._compute_reward()
-        self._log_step(f"Step reward", reward)
 
         # Timeout check
         self.steps += 1
@@ -266,25 +260,21 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         # If in out-of-bounds cell, terminate the episode
         if pos_reward <= -4.0:
             self.done = True
-            self._log_step("Out of bounds via reward grid", reward)
             return reward
 
         # Check if a goal has been scored
         if self._is_goal(x_m, y_m):
             self.done = True
             reward += 5.0
-            self._log_step("Goal scored", reward)
             return reward  
 
         # Check if possession was lost
         if self._check_possession_loss():
             reward -= 1.0
-            self._log_step("Ball stolen", reward)
             self.done = True
             return reward
 
         return reward
-
 
     def _is_goal(self, x, y):
         """
@@ -307,27 +297,6 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         possession = 1.0 if self.has_possession else 0.0
         return np.array([att_x, att_y, def_x, def_y, ball_x, ball_y, possession], dtype=np.float32)
 
-    # Only for debugging purposes
-    def _log_step(self, status, reward):
-        """
-        Log the current step with positions and status.
-        """
-
-        # Denormalize positions for logging
-        att_x, att_y = self.attacker.get_position()
-        def_x, def_y = self.defender.get_position()
-
-        # Note: X_MIN, X_MAX, Y_MIN, Y_MAX are defined in pitch
-        att_x_m = att_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
-        att_y_m = att_y * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
-        def_x_m = def_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
-        def_y_m = def_y * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
-        ball_x_m = self.ball.position[0] * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
-        ball_y_m = self.ball.position[1] * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
-
-        # print(f"STEP {self.steps:3} | ATTACKER: ({att_x_m:.2f}, {att_y_m:.2f}) | DEFENDER: ({def_x_m:.2f}, {def_y_m:.2f}) | BALL: ({ball_x_m:.2f}, {ball_y_m:.2f}) | {status} | REWARD: {reward:.4f}")
-
-    
     def close(self):
         """
         Close the environment and release resources.
