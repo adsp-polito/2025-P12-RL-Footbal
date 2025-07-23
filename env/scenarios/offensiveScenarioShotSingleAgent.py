@@ -405,7 +405,7 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
                     x_norm = (cell_x - self.pitch.X_MIN) / (self.pitch.X_MAX - self.pitch.X_MIN)
                     y_norm = (cell_y - self.pitch.Y_MIN) / (self.pitch.Y_MAX - self.pitch.Y_MIN)
                     x_reward = -0.5 + 1.0 * x_norm
-                    y_penalty = -0.15 * abs(y_norm - 0.5) * 2
+                    y_penalty = -0.25 * abs(y_norm - 0.5) * 2
                     grid[i, j] = x_reward + y_penalty
 
         self.reward_grid = grid
@@ -430,7 +430,7 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
         """
         Check if the ball is in the net
         """
-        margin = 2.0  # 2.0 meters margin for goal area
+        margin = 1.0  # 1.0 meters margin for goal area
 
         GOAL_MIN_Y = self.pitch.CENTER_Y - self.pitch.GOAL_HEIGHT / 2
         GOAL_MAX_Y = self.pitch.CENTER_Y + self.pitch.GOAL_HEIGHT / 2
@@ -449,7 +449,7 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
             bool: True if ball is outside field + margin, False otherwise
         """
 
-        margin_m = 2.0  # 2.0 meters margin for out of bounds
+        margin_m = 1.0  # 1.0 meters margin for out of bounds
 
         # Check if ball outside real field + margin
         if (ball_x_m < 0 - margin_m or
@@ -538,7 +538,7 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
         
         # Penalize if the attacker tries to shoot but is not the owner of the ball
         if shot_flag and self.ball.owner != self.attacker:
-            reward -= 2.5
+            reward -= 1.0
         
         # Convert ball position to meters for shot-related calculations
         ball_x, ball_y = self.ball.position
@@ -553,6 +553,9 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
 
             self.shot_just_started = False  # Reset flag after one-time bonus
 
+            # Bonus reward for starting a shot
+            reward += 2.0
+
             # Bonus for shooting from a good position on the field
             shot_pos_reward = self._get_position_reward(ball_x_m, ball_y_m)
             reward += 10 * shot_pos_reward
@@ -564,17 +567,22 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
             # Use shot direction if available, else default to goal direction
             shot_dir = self.shot_direction if self.shot_direction is not None else goal_direction
 
-            # Compute angle between shot direction and goal direction (in radians)
+            # Compute cosine similarity (alignment) between shot direction and goal direction
             alignment = np.clip(np.dot(shot_dir, goal_direction), -1, 1)
-            angle = np.arccos(alignment)  # angle between 0 and pi
+            alignment_normalized = (alignment + 1) / 2  # Normalize to [0, 1]
 
-            # Normalize angle to [0, 1]
-            normalized_angle = angle / np.pi
+            p = 3  # Power factor for scaling the bonus
 
-            # Calculate reward linearly from +0.5 (perfect alignment) to -0.5 (opposite)
-            angle_reward = 0.5 - normalized_angle
+            skewed_value = alignment_normalized ** p # Skew towards higher values
+
+            # Map alignment [-1, 1] linearly to reward range [-5, 5]
+            min_bonus = -5.0
+            max_bonus = 5.0
+
+            angle_reward = skewed_value * (max_bonus - min_bonus) + min_bonus
 
             reward += angle_reward
+
 
         # DURING SHOT: CONTINUOUS REWARD LOGIC
         # Provide continuous reward during the shot based on shot direction and power

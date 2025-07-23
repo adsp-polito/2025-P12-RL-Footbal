@@ -170,11 +170,14 @@ class Pitch:
         self._draw_background(ax, field_color, stripes)
         self._draw_static_elements(ax)
 
-        # If heatmap is enabled, use the environment's reward grid for coloring cells
-        # Otherwise, draw a simple grid overlay
+        # Draw heatmap, rewards or grid overlay if requested
         if show_heatmap and reward_grid is not None:
-            self._draw_heatmap(ax, reward_grid, show_grid=show_grid, show_rewards=show_rewards)
-        elif show_grid:
+            self._draw_heatmap(ax, reward_grid)
+
+        if show_rewards and reward_grid is not None:
+            self._draw_rewards(ax, reward_grid)
+
+        if show_grid:
             self._draw_grid(ax)
 
         
@@ -216,10 +219,14 @@ class Pitch:
         self._draw_background(ax, field_color, stripes)
         self._draw_half_pitch_elements(ax)
 
-        # Draw heatmap or grid overlay
+        # Draw heatmap, rewards or grid overlay if requested
         if show_heatmap and reward_grid is not None:
-            self._draw_heatmap(ax, reward_grid, show_grid=show_grid, show_rewards=show_rewards)
-        elif show_grid:
+            self._draw_heatmap(ax, reward_grid)
+
+        if show_rewards and reward_grid is not None:
+            self._draw_rewards(ax, reward_grid)
+
+        if show_grid:
             self._draw_grid(ax)
 
         # Set axis limits to focus on the offensive half
@@ -402,78 +409,95 @@ class Pitch:
                 )
                 ax.add_patch(rect)
 
-    def _draw_heatmap(self, ax, reward_grid, show_grid=False, show_rewards=False):
+    def _draw_heatmap(self, ax, reward_grid, show_grid=False):
         """
         Draw a heatmap of rewards over the pitch based on a reward grid.
 
         Parameters:
             ax (matplotlib.axes.Axes): Matplotlib axis to draw on.
             reward_grid (2D np.array): Grid of reward values.
-            show_grid (bool): Whether to overlay grid lines.
-            show_rewards (bool): Whether to annotate reward numbers inside each cell.
+            show_grid (bool): Whether to overlay grid lines on top of the heatmap.
         """
-
-        # Get global min and max (these correspond to margin and goal fixed values)
+        # Get global min and max values for the reward grid
         global_min = reward_grid.min()
         global_max = reward_grid.max()
 
-        # Mask out cells with values == global min or max
+        # Mask out cells that have the global min or max values to isolate internal cell values
         mask_internal = (reward_grid != global_min) & (reward_grid != global_max)
         internal_values = reward_grid[mask_internal]
 
-        # Compute internal min and max excluding margin and goal values
+        # Compute min and max excluding margin and goal cells, fallback to global min/max if none
         if internal_values.size > 0:
             internal_min = internal_values.min()
             internal_max = internal_values.max()
         else:
-            # fallback if no internal values present
             internal_min = global_min
             internal_max = global_max
 
-        # Draw heatmap using normalization and fixed min/max for edges
+        # Iterate over each cell to draw the colored rectangle
         for i in range(self.num_cells_x):
             for j in range(self.num_cells_y):
+                # Compute bottom-left corner coordinates of the cell in pitch meters
                 x0 = self.X_MIN + i * self.CELL_SIZE
                 y0 = self.Y_MIN + j * self.CELL_SIZE
+
                 reward = reward_grid[i, j]
 
+                # Normalize reward to [0, 1] for colormap use
                 if reward == global_min:
-                    norm = 0.0  # fixed min color for margin
+                    norm = 0.0  # Fixed color for margin cells
                 elif reward == global_max:
-                    norm = 1.0  # fixed max color for goal
+                    norm = 1.0  # Fixed color for goal cells
                 else:
                     if internal_max == internal_min:
-                        norm = 0.5  # avoid division by zero
+                        norm = 0.5  # Avoid division by zero when all internal values equal
                     else:
                         norm = (reward - internal_min) / (internal_max - internal_min)
                     norm = np.clip(norm, 0, 1)
 
-                # Use a colormap to convert normalized value to color
+                # Map normalized reward to a color using a colormap
                 color = plt.cm.coolwarm(norm)
 
-                # Draw the rectangle for the cell
+                # Create a rectangle patch for the heatmap cell
                 rect = Rectangle(
                     (x0, y0),
                     self.CELL_SIZE,
                     self.CELL_SIZE,
                     facecolor=color,
-                    edgecolor='black' if show_grid else 'none',
+                    edgecolor='black' if show_grid else 'none',  # Draw grid lines if requested
                     linewidth=0.4,
-                    alpha=0.6,
+                    alpha=0.6, 
                     zorder=1
                 )
                 ax.add_patch(rect)
 
-                # If show_rewards is True, annotate the cell with its reward value
-                if show_rewards:
-                    ax.text(
-                        x0 + self.CELL_SIZE / 2,
-                        y0 + self.CELL_SIZE / 2,
-                        f"{reward:.2f}",
-                        ha='center',
-                        va='center',
-                        fontsize=self.CELL_SIZE * 0.7,
-                        color='black',
-                        alpha=0.7,
-                        zorder=2
-                    )
+
+    def _draw_rewards(self, ax, reward_grid):
+        """
+        Draw numeric reward values inside each cell of the reward grid.
+
+        Parameters:
+            ax (matplotlib.axes.Axes): Matplotlib axis to draw on.
+            reward_grid (2D np.array): Grid of reward values.
+        """
+        # Iterate over each cell and add text annotation with reward value
+        for i in range(self.num_cells_x):
+            for j in range(self.num_cells_y):
+                # Compute bottom-left corner coordinates of the cell in pitch meters
+                x0 = self.X_MIN + i * self.CELL_SIZE
+                y0 = self.Y_MIN + j * self.CELL_SIZE
+
+                reward = reward_grid[i, j]
+
+                # Add centered text with the reward value formatted with 2 decimals
+                ax.text(
+                    x0 + self.CELL_SIZE / 2,
+                    y0 + self.CELL_SIZE / 2,
+                    f"{reward:.2f}",
+                    ha='center',
+                    va='center',
+                    fontsize=self.CELL_SIZE * 0.85,  # Scale font size with cell size
+                    color='black',
+                    alpha=0.7,
+                    zorder=2  
+                )

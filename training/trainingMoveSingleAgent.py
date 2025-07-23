@@ -93,7 +93,7 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0,
             rewards_per_frame=rewards_per_frame,
             show_info=True
         )
-        print(f"[Episode {episode + 1}] Evaluation cumulative reward: {cumulative_reward:.4f}")
+        print(f"[Episode {episode}] Evaluation cumulative reward: {cumulative_reward:.4f}")
 
     return cumulative_reward
 
@@ -150,13 +150,13 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
     eval_episodes = []   # Store episodes evaluated
 
     print("Starting training...")
-    for episode in trange(episodes, desc="Episodes Progress"):
+    for episode in trange(1, episodes + 1, desc="Episodes Progress"):
         # Train for one full episode worth of timesteps
         model.learn(total_timesteps=max_steps_per_episode, reset_num_timesteps=False)
 
         # Evaluate and save video periodically, including the first episode
-        if (episode + 1) % eval_every_episodes == 0 or episode == 0:
-            save_render = f"training/renders/singleAgentMove/episode_{episode + 1}.mp4"
+        if (episode) % eval_every_episodes == 0 or episode == 1:
+            save_render = f"training/renders/singleAgentMove/episode_{episode}.mp4"
             cumulative_reward = evaluate_and_render(
                 model,
                 eval_env,
@@ -169,7 +169,7 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
                 full_pitch=True
             )
             eval_rewards.append(cumulative_reward)
-            eval_episodes.append(episode + 1)
+            eval_episodes.append(episode)
 
     # Save the final trained model
     model.save("training/models/singleAgentMoveModel")
