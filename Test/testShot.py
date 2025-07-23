@@ -33,7 +33,7 @@ while not done:
 
     # Sample a random action from the environment's action space
     action = env.action_space.sample()
-    action = np.array([0.0, 0.0, 1.0, 1.0, 1.0, 0.0])  # no movimento, shot_flag=1, massima potenza, direzione verso x positiva (porta)
+    # action = np.array([0.0, 0.0, 1.0, 1.0, 1.0, 0.0])  # no movement, shot_flag=1, max power direction towards positive x (goal)
     obs, reward, done, truncated, info = env.step(action)
 
 
@@ -73,6 +73,7 @@ anim = render_episode(
     rewards_per_frame=rewards,
     show_info=True
 )
+
 
 # Measure rendering end time
 time_end = time()

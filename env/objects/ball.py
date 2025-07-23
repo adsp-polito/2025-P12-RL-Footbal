@@ -131,7 +131,7 @@ class Ball:
         """
         return self.velocity
 
-    def update(self, time_step, friction=0.0015):
+    def update(self, time_step):
         """
         Update the ball's position based on its velocity and apply friction to reduce speed.
 
@@ -143,10 +143,12 @@ class Ball:
         self.position += self.velocity * time_step
 
         # Apply friction to the velocity
-        self.apply_friction(friction)
+        self.apply_friction()
 
         # Ensure ball position remains within normalized bounds [0,1]
         self.position = np.clip(self.position, 0.0, 1.0)
+
+        return self.velocity
 
     def is_out_of_bounds(self):
         """
