@@ -1,77 +1,172 @@
 import numpy as np
 
-# Normalization parameters
-X_MIN, Y_MIN = -5, -5
-X_MAX, Y_MAX = 125, 85
-PITCH_WIDTH = X_MAX - X_MIN   # 130 meters
-PITCH_HEIGHT = Y_MAX - Y_MIN  # 90 meters
-
 class Ball:
     """
-    A class representing the football in a simplified environment.
+    Class representing a football (soccer ball) in a normalized 2D pitch coordinate system.
 
-    The ball's position is stored in normalized space ([0, 1] x [0, 1]),
-    relative to the extended field dimensions with margins:
-    X ∈ [-5, 125], Y ∈ [-5, 85] meters.
-
-    Methods allow resetting, moving, and checking the ball's state.
+    Attributes:
+        position (np.ndarray): Current normalized position on the pitch, with x and y values in [0,1].
+        velocity (np.ndarray): Current velocity vector, normalized per second.
+        owner_id (int or None): ID of the player currently possessing the ball, or None if free.
     """
 
-    def __init__(self):
+    def __init__(self, position=None):
         """
-        Initializes the ball at the center of the pitch (normalized) and sets no owner.
+        Initialize the ball object.
+
+        Args:
+            position (tuple, list, np.ndarray, optional): Initial normalized position [x, y].
+                Defaults to the center of the pitch at [0.5, 0.5] if not specified.
         """
-        # Absolute center of the pitch in meters (adjusted for extended bounds)
-        abs_cx = 60 + abs(X_MIN)
-        abs_cy = 40 + abs(Y_MIN)
+        # Set initial position; default is pitch center
+        if position is None:
+            position = [0.5, 0.5]
+        self.position = np.array(position, dtype=np.float32)
 
-        # Normalize to [0, 1]
-        cx = abs_cx / PITCH_WIDTH
-        cy = abs_cy / PITCH_HEIGHT
-        self.init_position = np.array([cx, cy], dtype=np.float32)
+        # Initialize velocity vector as zero (ball stationary)
+        self.velocity = np.zeros(2, dtype=np.float32)
 
-        # Current normalized position
-        self.position = self.init_position.copy()
+        # Initialize owner as None (ball not possessed)
+        self.owner = None
 
-        # ID of the player currently in possession (None if free)
+    def reset(self, position=None):
+        """
+        Reset ball state to a given position (or center) and clear velocity and possession.
+
+        Args:
+            position (tuple, list, np.ndarray, optional): Position to reset to.
+                Defaults to center [0.5, 0.5] if not provided.
+        """
+        if position is None:
+            position = [0.5, 0.5]
+        self.position = np.array(position, dtype=np.float32)
+
+        # Reset velocity to zero
+        self.velocity.fill(0.0)
+
+        # Clear possession
         self.owner_id = None
 
-    def reset(self):
+    
+    def set_owner(self, player):
         """
-        Resets the ball to the initial center position (normalized) and clears possession.
+        Set the player who currently possesses the ball.
+        Args:
+            player (Player): The player object who owns the ball.
         """
-        self.position = self.init_position.copy()
-        self.owner_id = None
+        self.owner = player
+        self.velocity.fill(0)
 
-    def set_position(self, new_pos):
+    def release(self, velocity):
         """
-        Sets the ball's position manually.
+        Release the ball from possession, setting its velocity.
+        Args:
+            velocity (tuple, list, np.ndarray): Velocity vector to apply when releasing the ball.
+        """
+        self.owner = None
+        self.velocity = np.array(velocity, dtype=np.float32)
 
-        Parameters:
-            new_pos (tuple or list): New (x, y) position in normalized space [0, 1].
+    # Friction model rationale:
+    #
+    # In this simulation, friction is applied once per frame to the ball's velocity.
+    # Supposing that the simulation runs at 24 frames per second, even moderate per-frame
+    # friction values (e.g., 0.01 or 1%) would result in a rapid loss of speed over
+    # just a few seconds. For example:
+    #
+    #   - A friction_factor of 0.01 → 99% speed retained per frame
+    #   - After 1 second (24 frames): (0.99)^24 ≈ 0.79 → 21% velocity lost
+    #   - After 2 seconds: (0.99)^48 ≈ 0.63 → 37% velocity lost
+    #
+    # While this may be acceptable for certain physics simulations, in football
+    # the ball typically travels 10–30 meters in a pass and needs to maintain
+    # momentum long enough to realistically simulate this behavior.
+    #
+    # For this reason, we use a very small friction factor (e.g., 0.001):
+    #   - (0.999)^24 ≈ 0.976 → only 2.4% lost after 1 second
+    #   - This provides a much smoother and more realistic deceleration
+    #     over multiple seconds of simulation.
+
+    def apply_friction(self, friction=0.0015):
         """
-        self.position = np.array(new_pos, dtype=np.float32)
+        Apply friction to the ball's velocity.
+
+        Args:
+            friction (float): Friction coefficient to apply.
+        """
+        self.velocity *= (1 - friction)
+
+    def set_position(self, pos):
+        """
+        Set the ball's position manually.
+
+        Args:
+            pos (tuple, list, np.ndarray): New normalized position [x, y].
+        """
+        self.position = np.array(pos, dtype=np.float32)
 
     def get_position(self):
         """
-        Returns the current normalized position of the ball.
+        Get the current normalized position of the ball.
 
         Returns:
-            np.ndarray: Current ball position as (x, y).
+            np.ndarray: Position vector [x, y].
         """
         return self.position
 
-    def is_out_of_bounds(self):
+    def set_velocity(self, vel):
         """
-        Checks whether the ball is outside the valid normalized [0, 1] pitch area.
+        Set the ball's velocity vector manually.
+
+        Args:
+            vel (tuple, list, np.ndarray): Velocity vector in normalized units per second.
+        """
+        self.velocity = np.array(vel, dtype=np.float32)
+
+    def get_velocity(self):
+        """
+        Get the current velocity vector of the ball.
 
         Returns:
-            bool: True if the ball is out of bounds, False otherwise.
+            np.ndarray: Velocity vector [vx, vy].
+        """
+        return self.velocity
+
+    def update(self, time_step, friction=0.0015):
+        """
+        Update the ball's position based on its velocity and apply friction to reduce speed.
+
+        Args:
+            time_step (float): Duration of the simulation step in seconds.
+            friction (float): Fractional decay of velocity per time step (default is 0.0015).
+        """
+        # Move ball according to velocity scaled by time step
+        self.position += self.velocity * time_step
+
+        # Apply friction to the velocity
+        self.apply_friction(friction)
+
+        # Ensure ball position remains within normalized bounds [0,1]
+        self.position = np.clip(self.position, 0.0, 1.0)
+
+    def is_out_of_bounds(self):
+        """
+        Check if the ball has left the normalized pitch area.
+
+        Returns:
+            bool: True if ball is out of bounds, False otherwise.
         """
         x, y = self.position
         return not (0.0 <= x <= 1.0 and 0.0 <= y <= 1.0)
-    
+
     def copy(self):
+        """
+        Create a deep copy of this Ball instance, including position, velocity, and owner.
+
+        Returns:
+            Ball: A new Ball object with identical state.
+        """
         new_ball = Ball()
-        new_ball.position = np.array(self.position)  # ensure it's copied as array, not tuple
+        new_ball.position = self.position.copy()
+        new_ball.velocity = self.velocity.copy()
+        new_ball.owner = self.owner.copy() if self.owner else None
         return new_ball

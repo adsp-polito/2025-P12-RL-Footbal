@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from tqdm import trange
 from stable_baselines3 import PPO
 from stable_baselines3.common.monitor import Monitor
-from env.scenarios.offensiveScenarioMoveSingleAgent import OffensiveScenarioMoveSingleAgent
+from env.scenarios.offensiveScenarioShotSingleAgent import OffensiveScenarioShotSingleAgent
 from helpers.visuals import render_episode
 from env.objects.pitch import Pitch
 
@@ -28,7 +28,7 @@ def ensure_dirs():
     """
     Ensure necessary directories for saving outputs exist.
     """
-    os.makedirs("training/renders/singleAgentMove", exist_ok=True)
+    os.makedirs("training/renders/singleAgentShot", exist_ok=True)
     os.makedirs("training/models", exist_ok=True)
 
 
@@ -102,7 +102,7 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
                       eval_every_episodes=100, show_grid=False,
                       show_heatmap=False, show_rewards=False):
     """
-    Train a PPO agent on the OffensiveScenarioMove environment.
+    Train a PPO agent on the OffensiveScenarioShot environment.
     Save videos and collect evaluation rewards every 'eval_every_episodes' episodes for plotting.
 
     Args:
@@ -128,8 +128,8 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
     pitch.assert_coordinates_match_helpers()
 
     # Create environments for training and evaluation, passing pitch explicitly to env
-    env = Monitor(OffensiveScenarioMoveSingleAgent(pitch=pitch, max_steps=max_steps_per_episode, fps=fps))
-    eval_env = OffensiveScenarioMoveSingleAgent(pitch=pitch, max_steps=max_steps_per_episode, fps=fps)
+    env = Monitor(OffensiveScenarioShotSingleAgent(pitch=pitch, max_steps=max_steps_per_episode, fps=fps))
+    eval_env = OffensiveScenarioShotSingleAgent(pitch=pitch, max_steps=max_steps_per_episode, fps=fps)
 
     # PPO agent configuration
     model = PPO(
@@ -156,7 +156,7 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
 
         # Evaluate and save video periodically, including the first episode
         if (episode + 1) % eval_every_episodes == 0 or episode == 0:
-            save_render = f"training/renders/singleAgentMove/episode_{episode + 1}.mp4"
+            save_render = f"training/renders/singleAgentShot/episode_{episode + 1}.mp4"
             cumulative_reward = evaluate_and_render(
                 model,
                 eval_env,
@@ -172,7 +172,7 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
             eval_episodes.append(episode + 1)
 
     # Save the final trained model
-    model.save("training/models/singleAgentMoveModel")
+    model.save("training/models/singleAgentShotModel")
 
     # Close all matplotlib plots
     plt.close('all')
@@ -185,7 +185,7 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
     plt.ylabel("Cumulative Rewards", fontsize=14, fontweight='bold')
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("training/renders/singleAgentMove/SingleAgentMoveRewards.png")
+    plt.savefig("training/renders/singleAgentShot/SingleAgentShotRewards.png")
     plt.show()
 
 

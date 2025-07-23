@@ -61,8 +61,10 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         self.defender = PlayerDefender()
         self.ball = Ball()
 
+        # Attacker starts with the ball
+        self.ball.set_owner(self.attacker)
+
         # Simulation parameters
-        self.has_possession = True
         self.done = False
         self.steps = 0
         self.max_steps = max_steps  # standard 24 FPS * 10 seconds
@@ -92,8 +94,10 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         self.defender.reset_position(*normalize(110, 40))
         self.ball.position = normalize(60, 40)
 
+        # Reset the ball state
+        self.ball.owner = self.attacker  # Attacker starts with the ball
+
         # Reset game state
-        self.has_possession = True
         self.done = False
         self.steps = 0
 
@@ -142,43 +146,59 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         return self._get_obs(), reward, self.done, False, {}
 
 
-    def _update_ball_position(self, action):
+    def _update_ball_position(self, action=None):
         """
-        Update the ball position based on the attacker's movement with a slight offset.
-        If the attacker is stationary, the ball moves slightly forward
-        to simulate dribbling
+        Update the ball's position based on the current owner.
+        If the attacker owns the ball, position it slightly ahead of the attacker
+        in the direction of the last action to simulate dribbling.
+        If the defender owns the ball, position it exactly on the defender.
+        If the ball is free, update its position according to its velocity.
         """
-
-        direction = np.array([action[0], action[1]])
-        if np.linalg.norm(direction) > 0:
-            direction /= np.linalg.norm(direction)
-            offset = 0.01
-            ball_x = self.attacker.position[0] + direction[0] * offset
-            ball_y = self.attacker.position[1] + direction[1] * offset
-            self.ball.position = (ball_x, ball_y)
+        if self.ball.owner is self.attacker:
+            direction = np.array([0.0, 0.0])
+            if action is not None:
+                direction = np.array([action[0], action[1]])
+                norm = np.linalg.norm(direction)
+                if norm > 0:
+                    direction /= norm
+            offset = 0.01  # small offset ahead of attacker to simulate dribbling
+            # Position ball slightly in front of the attacker based on movement direction
+            self.ball.position = self.attacker.position + direction * offset
+            self.ball.velocity.fill(0)
+        elif self.ball.owner is self.defender:
+            # Ball sticks exactly to defender's position
+            self.ball.position = self.defender.position.copy()
+            self.ball.velocity.fill(0)
         else:
-            self.ball.position = (self.attacker.position[0] + 0.01, self.attacker.position[1])
-            
+            # Ball is free, update position using velocity and time step
+            self.ball.update(self.time_per_step)
+
     def _check_possession_loss(self):
         """
         Check if the defender has stolen the ball from the attacker.
         The defender steals the ball if they are within a certain distance threshold
         and their tackling ability is sufficient.
+        If the ball is stolen, update the ball owner accordingly.
         """
         # Get real positions in meters
         def_x, def_y = self.defender.get_position()
         def_x = def_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
         def_y = def_y * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
+
         ball_x = self.ball.position[0] * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
         ball_y = self.ball.position[1] * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
 
         threshold = 0.5  # meters
-        if np.sqrt((def_x - ball_x) ** 2 + (def_y - ball_y) ** 2) < threshold:
+        distance = np.sqrt((def_x - ball_x) ** 2 + (def_y - ball_y) ** 2)
+        
+        if distance < threshold:
             if np.random.rand() < self.defender.tackling:
-                self.has_possession = False
+                # Update ball owner to defender
+                self.ball.set_owner(self.defender)
                 self.done = True
                 return True
         return False
+
     
     def _build_reward_grid(self):
         """
@@ -236,8 +256,6 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
 
         return self.reward_grid[cell_x, cell_y]
 
-
-
     def _compute_reward(self):
         """
         Computes the reward for the current step based on the attacker's position.
@@ -294,7 +312,8 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         ball_x, ball_y = normalize(*self.ball.position)
 
         # Possession status: 1 if attacker has possession, 0 otherwise
-        possession = 1.0 if self.has_possession else 0.0
+        possession = 1.0 if self.ball.owner is self.attacker else 0.0
+
         return np.array([att_x, att_y, def_x, def_y, ball_x, ball_y, possession], dtype=np.float32)
 
     def close(self):
