@@ -185,6 +185,18 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
                 self.shot_just_started = True            # Mark that a shot has just started
 
                 self.ball.set_owner(None)  # Ball is no longer possessed by attacker during shot
+                
+                # Set ball velocity to match the shot (in normalized units)
+                pitch_width = self.pitch.X_MAX - self.pitch.X_MIN
+                pitch_height = self.pitch.Y_MAX - self.pitch.Y_MIN
+
+                velocity_real = self.shot_direction * self.shot_power
+                velocity_norm = np.array([
+                    velocity_real[0] / pitch_width,
+                    velocity_real[1] / pitch_height
+                ])
+
+                self.ball.set_velocity(velocity_norm)
 
         else:
             # Shot is in progress
@@ -216,8 +228,7 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
         )
 
         # Compute reward
-
-        reward = self._compute_reward(shot_flag)
+        reward = self._compute_reward()
 
         # Check if shot finished (only if currently shooting)
         if self.is_shooting:
@@ -238,7 +249,7 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
             possession_lost = self._check_possession_loss()
 
             # Check if ball stopped moving (velocity is zero)
-            ball_stopped = ball_velocity_norm < 0.01
+            ball_stopped = ball_velocity_norm == 0
 
             # If any terminal condition met, end shot
             if goal_scored or possession_lost or ball_completely_out or ball_stopped:
@@ -258,57 +269,69 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
 
         return self._get_obs(), reward, self.done, False, {}
 
-
-
     def _update_ball_position(self, action=None):
         """
-        Update the ball's position based on the current state of play.
+        Update the ball's position and velocity based on the current game state.
 
-        - If a shot is in progress (self.is_shooting is True), move the ball along the shot trajectory
-        calculated by shot direction and power.
-        - If the ball is possessed by the attacker, position the ball slightly ahead of the attacker
-        in the direction of movement to simulate dribbling.
-        - If the ball is possessed by the defender, place the ball exactly at the defender's position.
-        - If the ball is free (no owner), update its position according to its velocity and apply friction.
-        
+        - If a shot is in progress (self.is_shooting is True), set the ball's velocity
+        according to the shot direction and power (converted to normalized units)
+        and update the position applying friction.
+        - If the ball is possessed by the attacker, position the ball slightly ahead
+        of the attacker in the movement direction to simulate dribbling, and set velocity to zero.
+        - If the ball is possessed by the defender, place the ball exactly at the defender's position,
+        and set velocity to zero.
+        - If the ball is free (no owner), update the position and velocity based on current velocity
+        applying friction.
+
         Args:
-            action (optional np.ndarray): The movement direction vector of the attacker, used only when dribbling.
+            action (np.ndarray, optional): The 2D movement direction vector of the attacker, normalized.
+                                        Used only when dribbling to position the ball ahead of the player.
         """
         if self.is_shooting:
+            
+
             pitch_width = self.pitch.X_MAX - self.pitch.X_MIN
             pitch_height = self.pitch.Y_MAX - self.pitch.Y_MIN
 
-            # Calculate normalized displacement based on shot direction, power and time step
-            velocity_x = (self.shot_direction[0] * self.shot_power * self.time_per_step) / pitch_width
-            velocity_y = (self.shot_direction[1] * self.shot_power * self.time_per_step) / pitch_height
+            # Calculate real shot velocity vector in meters per second
+            velocity_real = self.shot_direction * self.shot_power
 
-            # Update ball position along shot trajectory
-            new_ball_x = self.ball.position[0] + velocity_x
-            new_ball_y = self.ball.position[1] + velocity_y
-            self.ball.position = [new_ball_x, new_ball_y]
+            # Convert real velocity to normalized velocity (unit per second)
+            velocity_norm = np.array([
+                velocity_real[0] / pitch_width,
+                velocity_real[1] / pitch_height
+            ])
+
+            # Set ball velocity to normalized velocity
+            self.ball.set_velocity(velocity_norm)
+
+            # Update ball position and apply friction according to time step
+            self.ball.update(self.time_per_step)
+
 
         elif self.ball.owner is self.attacker:
-            # Default direction vector is zero (no movement)
+            # Default direction is zero (no movement)
             direction = np.array([0.0, 0.0])
-
-            # Normalize attacker's movement action vector if provided
             if action is not None:
                 direction = np.array([action[0], action[1]])
                 norm = np.linalg.norm(direction)
                 if norm > 0:
                     direction /= norm
 
-            offset = 0.01  # Small forward offset to simulate dribbling
-            self.ball.position = self.attacker.position + direction * offset
-            self.ball.velocity.fill(0)
+            offset = 0.01  # Small forward offset in normalized coordinates to simulate dribbling
+
+            # Position the ball slightly ahead of the attacker in movement direction
+            new_pos = self.attacker.position + direction * offset
+            self.ball.set_position(new_pos)
+
 
         elif self.ball.owner is self.defender:
-            # Ball is exactly at defender's position when possessed by defender
-            self.ball.position = self.defender.position.copy()
-            self.ball.velocity.fill(0)
+            # Position ball exactly at defender's location
+            self.ball.set_position(self.defender.position)
+            self.ball.set_owner(self.defender)
 
         else:
-            # Ball is free; update position according to velocity and friction
+            # Ball is free: update position and velocity using physics with friction
             self.ball.update(self.time_per_step)
 
     def _check_possession_loss(self):
@@ -428,8 +451,6 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
 
         return False
 
-
-    
     def _get_obs(self):
         """
         Get the current observation: normalized positions of attacker, defender, ball,
@@ -454,7 +475,7 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
             is_shooting
         ], dtype=np.float32)
     
-    def _compute_reward(self, shot_flag):
+    def _compute_reward(self):
         """
         Compute the reward for the current environment step.
 
@@ -469,9 +490,6 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
         - Continuous reward during the shot to encourage accurate trajectory and
         progress towards the goal.
         - Final reward at the end of the shot based on shot success and position.
-
-        Args:
-            shot_flag (int): Indicates if the agent requested to shot (1) or not (0).
 
         Returns:
             float: The computed reward value for the current step.
@@ -508,10 +526,10 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
             self.done = True
             return reward
         
-        # If shooting is requested, check if the attacker has possession
-        if shot_flag == 1 and self.ball.owner is not self.attacker:
-            reward -= 5.0  # Penalize shooting without possession
-
+        # Penalize if the attacker tries to shoot but is not the owner of the ball
+        if self.is_shooting and self.ball.owner != self.attacker:
+            reward -= 5.0
+        
         # Convert ball position to meters for shot-related calculations
         ball_x, ball_y = self.ball.position
         ball_x_m = ball_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
@@ -527,7 +545,7 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
 
             # Bonus for shooting from a good position on the field
             shot_pos_reward = self._get_position_reward(ball_x_m, ball_y_m)
-            reward += 2.5 * shot_pos_reward
+            reward += 10 * shot_pos_reward
 
             # Compute goal direction vector from ball position
             goal_direction = np.array([1.0, 0.5]) - np.array([ball_x, ball_y])
@@ -548,6 +566,18 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
 
             reward += angle_reward
 
+        # DURING SHOT: CONTINUOUS REWARD LOGIC
+        # Provide continuous reward during the shot based on shot direction and power
+        #elif self.is_shooting and not self.shot_just_started:
+
+            # Calculate the distance from the ball to the goal in normalized coordinates
+            #goal_dir = np.array([1.0, 0.5]) - np.array(self.ball.position)
+            #goal_dir /= np.linalg.norm(goal_dir)
+            #shot_alignment = np.dot(self.shot_direction, goal_dir)
+
+            # Reward for being aligned with the goal direction
+            #reward += 2.0 * self.shot_power * max(0, shot_alignment)
+
         # END OF SHOT: REWARD LOGIC
         # Provide a reward boost when the shot is finished (ball stopped, out or possession lost)
         if self.is_shooting:
@@ -558,8 +588,8 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
                 self._check_possession_loss() or
                 self._is_goal(ball_x_m, ball_y_m)):
                 # Penalize if ball stopped outside or possession lost
-                if (self._is_ball_completely_out(ball_x_m, ball_y_m) or self._check_possession_loss()) and not self._is_goal(ball_x_m, ball_y_m):
-                    reward -= 2.0
+                if (self._is_ball_completely_out(ball_x_m, ball_y_m) or self._check_possession_loss()):
+                    reward -= 5.0
 
                 # End the shot
                 self.is_shooting = False

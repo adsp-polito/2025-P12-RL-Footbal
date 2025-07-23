@@ -1,5 +1,7 @@
 import sys
 import os
+
+import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import the new shooting environment
@@ -31,6 +33,7 @@ while not done:
 
     # Sample a random action from the environment's action space
     action = env.action_space.sample()
+    action = np.array([0.0, 0.0, 1.0, 1.0, 1.0, 0.0])  # no movimento, shot_flag=1, massima potenza, direzione verso x positiva (porta)
     obs, reward, done, truncated, info = env.step(action)
 
 

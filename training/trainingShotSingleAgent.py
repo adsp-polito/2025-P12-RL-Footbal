@@ -194,7 +194,7 @@ if __name__ == "__main__":
         episodes=2000,
         seconds_per_episode=10,
         fps=24,
-        eval_every_episodes=200,
+        eval_every_episodes=400 ,
         show_grid=False,
         show_heatmap=True,
         show_rewards=False

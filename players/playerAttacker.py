@@ -140,6 +140,7 @@ class PlayerAttacker:
         Create a deep copy of the player instance.
         Useful for rendering snapshots without side effects.
         """
+
         new_player = PlayerAttacker(
             shooting=self.shooting,
             passing=self.passing,
