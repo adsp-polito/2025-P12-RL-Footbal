@@ -512,12 +512,9 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
         x_m = att_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
         y_m = att_y * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
 
-        # Apply a small time penalty to discourage inactivity
-        reward -= 0.1
-
         # Add position-based reward from the reward grid (encourages good positioning)
         pos_reward = self._get_position_reward(x_m, y_m)
-        reward += pos_reward
+        reward += pos_reward * 0.8  # Scale down to avoid large swings
 
         # Terminate episode if attacker is out of bounds (strong penalty)
         if pos_reward <= -4.0:
@@ -532,13 +529,13 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
 
         # Penalize losing possession of the ball to the defender
         if self._check_possession_loss():
-            reward -= 1.0
+            reward -= 5.0
             self.done = True
             return reward
         
         # Penalize if the attacker tries to shoot but is not the owner of the ball
         if shot_flag and self.ball.owner != self.attacker:
-            reward -= 1.0
+            reward -= 2.0
         
         # Convert ball position to meters for shot-related calculations
         ball_x, ball_y = self.ball.position
@@ -554,11 +551,11 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
             self.shot_just_started = False  # Reset flag after one-time bonus
 
             # Bonus reward for starting a shot
-            reward += 2.0
+            reward += 3.0
 
             # Bonus for shooting from a good position on the field
             shot_pos_reward = self._get_position_reward(ball_x_m, ball_y_m)
-            reward += 10 * shot_pos_reward
+            reward += 15 * shot_pos_reward
 
             # Compute goal direction vector from ball position
             goal_direction = np.array([1.0, 0.5]) - np.array([ball_x, ball_y])
@@ -569,18 +566,16 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
 
             # Compute cosine similarity (alignment) between shot direction and goal direction
             alignment = np.clip(np.dot(shot_dir, goal_direction), -1, 1)
-            alignment_normalized = (alignment + 1) / 2  # Normalize to [0, 1]
+            alignment = (alignment + 1) / 2.0  # Normalize to [0, 1]
 
             p = 3  # Power factor for scaling the bonus
 
-            skewed_value = alignment_normalized ** p # Skew towards higher values
+            angle_reward = alignment ** p # Skew towards higher values
 
-            # Map alignment [-1, 1] linearly to reward range [-5, 5]
-            min_bonus = -5.0
-            max_bonus = 5.0
+            # scale to add penalty for misalignment
+            angle_reward = 2 * angle_reward - 1  # Scale to [-1, 1]
 
-            angle_reward = skewed_value * (max_bonus - min_bonus) + min_bonus
-
+            # Add angle reward to the total reward
             reward += angle_reward
 
 

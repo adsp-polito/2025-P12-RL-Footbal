@@ -156,7 +156,7 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
         model.learn(total_timesteps=max_steps_per_episode, reset_num_timesteps=False)
 
         # Evaluate and save video periodically, including the first episode
-        if (episode) % eval_every_episodes == 0:
+        if (episode) % eval_every_episodes == 0 or episode == 1:
             save_render = f"training/renders/singleAgentShot/episode_{episode}.mp4"
             cumulative_reward = evaluate_and_render(
                 model,
@@ -192,7 +192,7 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
 
 if __name__ == "__main__":
     train_and_monitor(
-        episodes=2,
+        episodes=10000,
         seconds_per_episode=10,
         fps=24,
         eval_every_episodes=1000,
