@@ -182,7 +182,6 @@ class PlayerAttacker:
         if not self.is_direction_visible(desired_direction):
             return 0.0, np.array([0.0, 0.0]), 0.0
         
-        print("SHOOOOOTING!")
 
         # Normalize the desired direction to a unit vector
         norm = np.linalg.norm(desired_direction)

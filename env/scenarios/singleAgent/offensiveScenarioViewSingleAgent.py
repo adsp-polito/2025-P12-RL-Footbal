@@ -181,7 +181,8 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
                 self._update_ball_position(movement_action)
             else:
                 # Movement blocked → don't move, don't update ball
-                print("Movement blocked: action outside field of view.")
+                # print("Movement blocked: action outside field of view.")
+                pass
 
             # Attempt a shot if shot_flag is active and attacker owns the ball
             if shot_flag and self.ball.owner is self.attacker:
@@ -636,7 +637,7 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
             if np.linalg.norm(direction) > 0 and not self.attacker.is_direction_visible(direction):
                 reward -= 0.25
                 #print("Movement outside FOV: penalizing reward")
-                
+
         return reward
 
 
