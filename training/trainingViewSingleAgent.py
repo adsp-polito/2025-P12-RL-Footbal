@@ -93,6 +93,7 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0,
             rewards_per_frame.append(reward)
 
     if save_path:
+
         render_episode(
             states,
             pitch=pitch,
@@ -155,7 +156,7 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
         env,
         verbose=0,
         device="cpu",
-        seed=42,
+        seed=np.random.randint(10000),
         n_steps=max_steps_per_episode,
         batch_size=48,
         gamma=0.99,
@@ -212,8 +213,8 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
 
 if __name__ == "__main__":
     train_and_monitor(
-        episodes=10000,
+        episodes=30000,
         seconds_per_episode=10,
         fps=24,
-        eval_every_episodes=1000
+        eval_every_episodes=3000
     )

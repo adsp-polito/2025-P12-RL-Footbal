@@ -166,7 +166,7 @@ def render_episode(states, pitch, save_path=None, fps=24, stripes=False, full_pi
         # Get current reward and cumulative reward if available
         if rewards_per_frame is not None:
             reward_val = rewards_per_frame[frame_idx]
-            cum_reward = sum(rewards_per_frame[:frame_idx])
+            cum_reward = sum(rewards_per_frame[:frame_idx+1])
         else:
             reward_val = None
             cum_reward = None

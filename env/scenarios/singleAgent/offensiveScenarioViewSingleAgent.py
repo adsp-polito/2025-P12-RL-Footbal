@@ -446,7 +446,7 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
             bool: True if ball is outside field + margin, False otherwise
         """
 
-        margin_m = 2.5  # 2.5 meters margin for out of bounds
+        margin_m = 1.0  # 1.0 meters margin for out of bounds
 
         # Check if ball outside real field + margin
         if (ball_x_m < 0 - margin_m or
@@ -517,11 +517,6 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
 
         # TERMINAL CONDITIONS REWARD LOGIC
 
-        # Penalize for being out of bound
-        if self._is_ball_completely_out(x_m, y_m):
-            reward -= 5.0
-            return reward
-
         # Check if a goal has been scored and reward accordingly
         if self._is_goal(x_m, y_m):
             reward += 15.0
@@ -558,11 +553,11 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
             self.shot_just_started = False  # Reset flag after one-time bonus
 
             # Bonus reward for starting a shot
-            reward += 5.0
+            reward += 2.0
 
             # Bonus for shooting from a good position on the field
             shot_pos_reward = self._get_position_reward(ball_x_m, ball_y_m)
-            reward += 7.5 * shot_pos_reward
+            reward += 2.0 * shot_pos_reward
 
             # Compute goal direction vector from ball position
             goal_direction = np.array([1.0, 0.5]) - np.array([ball_x, ball_y])
