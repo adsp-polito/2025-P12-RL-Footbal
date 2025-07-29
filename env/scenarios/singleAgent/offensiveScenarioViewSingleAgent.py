@@ -502,6 +502,8 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
 
         reward = 0.0  # Initialize reward accumulator
 
+        # POSITION-BASED REWARD LOGIC
+
         # Get attacker's normalized position and convert to meters
         att_x, att_y = self.attacker.get_position()
         x_m = att_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
@@ -509,7 +511,11 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
 
         # Add position-based reward from the reward grid (encourages good positioning)
         pos_reward = self._get_position_reward(x_m, y_m)
-        reward += pos_reward * 0.8  # Scale down to avoid large swings
+        reward += pos_reward  # Scale down to avoid large swings
+
+
+
+        # TERMINAL CONDITIONS REWARDLOGIC
 
         # Terminate episode if attacker is out of bounds (strong penalty)
         if pos_reward <= -4.0:
@@ -527,7 +533,11 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
             reward -= 5.0
             self.done = True
             return reward
-        
+
+
+
+        # SHOOT REWARD LOGIC
+
         # Penalize if the attacker tries to shoot but is not the owner of the ball
         if shot_flag and self.ball.owner != self.attacker:
             reward -= 2.0
@@ -550,7 +560,7 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
             self.shot_just_started = False  # Reset flag after one-time bonus
 
             # Bonus reward for starting a shot
-            reward += 3.0
+            reward += 5.0
 
             # Bonus for shooting from a good position on the field
             shot_pos_reward = self._get_position_reward(ball_x_m, ball_y_m)
@@ -621,7 +631,7 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
 
             # If ball stopped but no terminal condition, end the shot only (episode continues)
             elif ball_stopped:
-                # Optional: apply a small penalty for shot stopping early
+                # apply a small penalty for shot stopping early
                 reward -= 1.0
 
                 # End the shot but keep episode running
@@ -630,13 +640,21 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
                 self.shot_power = 0.0
                 self.shot_position = None
 
+
+
+
+        # FOV REWARD LOGIC
+
         # Penalize attempted movement outside the field of view
         # This encourages the agent to only attempt movement in visible directions.
+        # Reward bonus if the attacker is moving in a valid direction within FOV
         if hasattr(self, "attempted_movement_direction"):
             direction = self.attempted_movement_direction
-            if np.linalg.norm(direction) > 0 and not self.attacker.is_direction_visible(direction):
-                reward -= 0.25
-                #print("Movement outside FOV: penalizing reward")
+            if np.linalg.norm(direction) > 0:
+                if self.attacker.is_direction_visible(direction):
+                    reward += 0.2  # small positive reward
+                else:
+                    reward -= 0.1  # existing penalty for bad direction
 
         return reward
 

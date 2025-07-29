@@ -21,6 +21,20 @@ obs, info = env.reset()
 states = []
 rewards = []
 
+# Add initial state before any action is taken (frame 0)
+attacker_copy = env.attacker.copy()
+defender_copy = env.defender.copy()
+ball_copy = env.ball.copy()
+
+states.append({
+    "player": attacker_copy,
+    "ball": ball_copy,
+    "opponents": [defender_copy]
+})
+
+rewards.append(0.0)  # No reward yet for frame 0
+
+
 done = False
 while not done:
     # Sample random action from action space (continuous in [-1, 1])

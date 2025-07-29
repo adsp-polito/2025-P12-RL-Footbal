@@ -60,6 +60,21 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0,
     rewards_per_frame = [] if save_path else None  # Collect rewards only if saving
     cumulative_reward = 0.0
 
+    # Add initial state before any action is taken (frame 0)
+    attacker_copy = env.attacker.copy()
+    defender_copy = env.defender.copy()
+    ball_copy = env.ball.copy()
+
+    states.append({
+        "player": attacker_copy,
+        "ball": ball_copy,
+        "opponents": [defender_copy]
+    })
+
+    if save_path:
+        rewards_per_frame.append(0.0)  # No reward yet for frame 0
+
+
     while not done:
         action, _ = model.predict(obs)
         obs, reward, done, truncated, info = env.step(action)

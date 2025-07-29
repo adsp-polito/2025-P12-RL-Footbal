@@ -160,13 +160,13 @@ def render_episode(states, pitch, save_path=None, fps=24, stripes=False, full_pi
                 circle.set_visible(False)
 
         # Calculate elapsed time in seconds and total frames count
-        elapsed_sec = (frame_idx + 1) / fps
+        elapsed_sec = frame_idx / fps
         total_frames = len(states)
 
         # Get current reward and cumulative reward if available
         if rewards_per_frame is not None:
             reward_val = rewards_per_frame[frame_idx]
-            cum_reward = sum(rewards_per_frame[:frame_idx + 1])
+            cum_reward = sum(rewards_per_frame[:frame_idx])
         else:
             reward_val = None
             cum_reward = None
@@ -184,7 +184,7 @@ def render_episode(states, pitch, save_path=None, fps=24, stripes=False, full_pi
             base_y_bottom = 1.06  # Y position for second info line (reward info)
 
             # Compose first line text parts with separators "|"
-            left_text_1 = f"Frame: {frame_idx + 1}/{total_frames}"
+            left_text_1 = f"Frame: {frame_idx}/{total_frames}"
             center_text_1 = "|"
             right_text_1 = f"Time: {elapsed_sec:.2f} s"
 
@@ -264,7 +264,7 @@ def render_episode(states, pitch, save_path=None, fps=24, stripes=False, full_pi
             center_x = 0.5
             base_y = 1.1
             fontsize = 24
-            line_text = f"Frame: {frame_idx + 1}/{total_frames}"
+            line_text = f"Frame: {frame_idx}/{total_frames}"
             info_texts['frame_only'] = ax.text(
                 center_x, base_y, line_text,
                 transform=ax.transAxes,
