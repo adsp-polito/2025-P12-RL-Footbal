@@ -90,8 +90,8 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
 
         # Reset the random seed if provided
         super().reset(seed=seed)
-        self.attacker.reset_position(*normalize(60, 40))
-        self.defender.reset_position(*normalize(110, 40))
+        self.attacker.reset_position(normalize(60, 40))
+        self.defender.reset_position(normalize(110, 40))
         self.ball.position = normalize(60, 40)
 
         # Reset the ball state

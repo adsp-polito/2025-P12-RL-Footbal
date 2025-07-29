@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from tqdm import trange
 from stable_baselines3 import PPO
 from stable_baselines3.common.monitor import Monitor
-from env.scenarios.offensiveScenarioShotSingleAgent import OffensiveScenarioShotSingleAgent
+from env.scenarios.singleAgent.offensiveScenarioShotSingleAgent import OffensiveScenarioShotSingleAgent
 from helpers.visuals import render_episode
 from env.objects.pitch import Pitch
 

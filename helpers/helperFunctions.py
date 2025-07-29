@@ -18,7 +18,7 @@ def normalize(x, y):
     """
     x_norm = (x - X_MIN) / (X_MAX - X_MIN)
     y_norm = (y - Y_MIN) / (Y_MAX - Y_MIN)
-    return x_norm, y_norm
+    return [x_norm, y_norm]
 
 
 def denormalize(x_norm, y_norm):
@@ -34,7 +34,7 @@ def denormalize(x_norm, y_norm):
     """
     x = x_norm * (X_MAX - X_MIN) + X_MIN
     y = y_norm * (Y_MAX - Y_MIN) + Y_MIN
-    return x, y
+    return [x, y]
 
 
 def distance(a, b):

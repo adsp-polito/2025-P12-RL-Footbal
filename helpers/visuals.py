@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from matplotlib.patches import Circle
+from matplotlib.patches import Circle, Wedge
+import numpy as np
 
 # COORDINATE SYSTEMS AND NORMALIZATION
 # The environment works on a normalized coordinate system [0, 1] × [0, 1],
@@ -15,7 +16,7 @@ from matplotlib.patches import Circle
 
 def render_episode(states, pitch, save_path=None, fps=24, stripes=False, full_pitch=False,
                    show_grid=False, show_heatmap=False, show_rewards=False, reward_grid=None,
-                   rewards_per_frame=None, show_info=True):
+                   rewards_per_frame=None, show_info=True, show_fov = False):
     """
     Render an animated soccer episode with player, ball, defenders on the pitch.
     Displays info lines above the pitch with frame/time and reward stats.
@@ -33,6 +34,7 @@ def render_episode(states, pitch, save_path=None, fps=24, stripes=False, full_pi
         reward_grid (np.ndarray or None): Reward grid for heatmap coloring.
         rewards_per_frame (list or np.ndarray or None): Rewards for each frame.
         show_info (bool): Show detailed info lines above pitch if True.
+        show_fov (bool): Show field of view cone for the player if True.
 
     Returns:
         matplotlib.animation.FuncAnimation: The animation object.
@@ -54,6 +56,10 @@ def render_episode(states, pitch, save_path=None, fps=24, stripes=False, full_pi
 
     ball_circle = Circle((0, 0), radius=0.5, color='white', ec='black', lw=1, zorder=5)
     ax.add_patch(ball_circle)
+
+    # Create a wedge for the field of view if show_fov is True
+    fov_wedge = Wedge(center=(0, 0), r=20, theta1=0, theta2=0, color='crimson', alpha=0.15, zorder=3)
+    ax.add_patch(fov_wedge)
 
     # Determine maximum number of defenders in any state, create corresponding circles
     max_opponents = max(len(state.get('opponents', [])) for state in states)
@@ -87,6 +93,44 @@ def render_episode(states, pitch, save_path=None, fps=24, stripes=False, full_pi
             player_circle.set_visible(True)
         else:
             player_circle.set_visible(False)
+
+        
+        # Show Field of View (FOV) cone if enabled and player exists
+        if show_fov and 'player' in state and state['player']:
+            player = state['player']
+
+            # Convert player's normalized position to meters
+            px, py = player.get_position()
+            px = px * (pitch.X_MAX - pitch.X_MIN) + pitch.X_MIN
+            py = py * (pitch.Y_MAX - pitch.Y_MIN) + pitch.Y_MIN
+
+            # Get last movement direction to orient the FOV
+            direction = getattr(player, "last_action_direction", np.array([1.0, 0.0]))  # fallback forward
+            norm = np.linalg.norm(direction)
+            direction = direction / norm if norm > 0 else np.array([1.0, 0.0])
+
+            # Compute orientation angle in degrees
+            angle_deg = np.degrees(np.arctan2(direction[1], direction[0]))
+
+            # Determine radius of vision cone from vision range factor and max range (in meters)
+            view_range = getattr(player, "fov_range", 0.5)
+            max_range = getattr(player, "max_fov_range", 90.0)
+            view_radius = view_range * max_range
+            fov_wedge.set_radius(view_radius)
+
+            # Determine FOV angle (spread) from fov_angle [0,1] and max_fov_angle [0, 180]
+            fov_factor = getattr(player, "fov_angle", 0.5)
+            max_angle = getattr(player, "max_fov_angle", 180.0)
+            fov_angle = fov_factor * max_angle
+
+            # Update wedge parameters
+            fov_wedge.set_center((px, py))
+            fov_wedge.theta1 = angle_deg - fov_angle / 2
+            fov_wedge.theta2 = angle_deg + fov_angle / 2
+            fov_wedge.set_visible(True)
+        else:
+            fov_wedge.set_visible(False)
+
 
         # Update ball position similarly
         if 'ball' in state and state['ball']:
@@ -232,7 +276,7 @@ def render_episode(states, pitch, save_path=None, fps=24, stripes=False, full_pi
             )
 
         # Return all patches and text objects for blitting optimization
-        return [player_circle, ball_circle] + defender_circles + [t for t in info_texts.values() if t is not None]
+        return [player_circle, ball_circle, fov_wedge] + defender_circles + [t for t in info_texts.values() if t is not None]
 
     # Create the animation object with the update function and frame count
     anim = animation.FuncAnimation(fig, update, frames=len(states),

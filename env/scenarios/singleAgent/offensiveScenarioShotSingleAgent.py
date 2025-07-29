@@ -106,8 +106,8 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
         super().reset(seed=seed)
 
         # Reset positions of players and ball (normalized coordinates)
-        self.attacker.reset_position(*normalize(60, 40))
-        self.defender.reset_position(*normalize(110, 40))
+        self.attacker.reset_position(normalize(60, 40))
+        self.defender.reset_position(normalize(110, 40))
         self.ball.position = normalize(60, 40)
 
         # Reset ball state

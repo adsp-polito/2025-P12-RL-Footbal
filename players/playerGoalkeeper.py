@@ -24,12 +24,17 @@ class PlayerGoalkeeper:
         # Position in normalized coordinates [0, 1]
         self.position = [0.0, 0.0]
 
-    def reset_position(self, start_x=0.0, start_y=0.0):
+    def reset_position(self, position):
         """
-        Reset goalkeeper position to specific starting point.
-        Coordinates are normalized in [0, 1].
+        Reset player position using a list of two normalized coordinates.
+
+        Args:
+            position (list): [x, y] in normalized coordinates.
         """
-        self.position = [start_x, start_y]
+        if isinstance(position, list) and len(position) == 2:
+            self.position = position
+        else:
+            raise ValueError("Position must be a list of two elements [x, y].")
 
     def move(self, delta_position):
         """

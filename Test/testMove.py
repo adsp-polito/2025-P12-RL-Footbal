@@ -4,7 +4,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import numpy as np
 import matplotlib.pyplot as plt
-from env.scenarios.offensiveScenarioMoveSingleAgent import OffensiveScenarioMoveSingleAgent
+from env.scenarios.singleAgent.offensiveScenarioMoveSingleAgent import OffensiveScenarioMoveSingleAgent
 from helpers.visuals import render_episode
 from time import time
 from env.objects.pitch import Pitch
@@ -61,7 +61,8 @@ anim = render_episode(
     reward_grid=env.reward_grid,
     save_path="test/videoTest/testMove.mp4",
     rewards_per_frame=rewards,
-    show_info=True
+    show_info=True,
+    show_fov=False
 )
 
 time_end = time()

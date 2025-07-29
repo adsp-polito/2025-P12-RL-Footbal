@@ -5,35 +5,33 @@ import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import the new shooting environment
-from env.scenarios.singleAgent.offensiveScenarioShotSingleAgent import OffensiveScenarioShotSingleAgent
+from env.scenarios.singleAgent.offensiveScenarioViewSingleAgent import OffensiveScenarioViewSingleAgent
 from helpers.visuals import render_episode
 from env.objects.pitch import Pitch
 from time import time
 
-# Initialize the pitch object
+# Create the pitch object and verify coordinate system consistency
 pitch = Pitch()
-
-# Verify coordinate system consistency with helper functions
 pitch.assert_coordinates_match_helpers()
 
-# Instantiate the environment with the pitch
-env = OffensiveScenarioShotSingleAgent(pitch=pitch)
 
-# Reset the environment and get initial observation and info
+# Instantiate the environment with the pitch
+env = OffensiveScenarioViewSingleAgent(pitch=pitch)
+
+# Reset the environment and retrieve initial observation
 obs, info = env.reset()
 
-# Lists to store states and rewards for later rendering
+# Initialize storage for rendering and reward tracking
 states = []
 rewards = []
-
 done = False
+
 
 # Main interaction loop: run episode until done
 while not done:
 
     # Sample a random action from the environment's action space
     action = env.action_space.sample()
-    # action = np.array([0.0, 0.0, 1.0, 1.0, 1.0, 0.0])  # no movement, shot_flag=1, max power direction towards positive x (goal)
     obs, reward, done, truncated, info = env.step(action)
 
 
@@ -69,10 +67,10 @@ anim = render_episode(
     show_heatmap=False,
     show_rewards=False,
     reward_grid=env.reward_grid,
-    save_path="test/videoTest/testShot34.mp4",  # Output video file path
+    save_path="test/videoTest/testFOV.mp4",  # Output video file path
     rewards_per_frame=rewards,
     show_info=True,
-    show_fov=False
+    show_fov=True
 )
 
 
@@ -80,3 +78,4 @@ anim = render_episode(
 time_end = time()
 print("Rendering complete. Animation saved in the 'videoTest' directory.")
 print(f"Rendering took {time_end - time_start:.2f} seconds.\n")
+
