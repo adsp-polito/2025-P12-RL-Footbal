@@ -208,6 +208,10 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         """
         grid = np.zeros((self.num_cells_x, self.num_cells_y))
 
+        position_reward_scale = 4.0
+        y_center_penalty_scale = 1.0
+
+
         goal_min_y = self.pitch.CENTER_Y - self.pitch.GOAL_HEIGHT / 2
         goal_max_y = self.pitch.CENTER_Y + self.pitch.GOAL_HEIGHT / 2
         goal_x_min = self.pitch.FIELD_WIDTH  # goal line
@@ -234,8 +238,10 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
                 else:
                     x_norm = (cell_x - self.pitch.X_MIN) / (self.pitch.X_MAX - self.pitch.X_MIN)
                     y_norm = (cell_y - self.pitch.Y_MIN) / (self.pitch.Y_MAX - self.pitch.Y_MIN)
-                    x_reward = -0.5 + 1.0 * x_norm
-                    y_penalty = -0.15 * abs(y_norm - 0.5) * 2
+
+                    x_reward = -0.5 * position_reward_scale + position_reward_scale * x_norm # range [-2, 2] if position_reward_scale = 4.0
+                    y_penalty = -0.5 * y_center_penalty_scale * abs(y_norm - 0.5) * 2 # range [-1, 0] if y_center_penalty_scale = 1.0
+
                     grid[i, j] = x_reward + y_penalty
 
         self.reward_grid = grid

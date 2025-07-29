@@ -160,8 +160,35 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
         shot_power = float(action[3])
         shot_direction = action[4:6]
 
+        # Attempt a shot if shot_flag is active and attacker owns the ball
+        if not self.is_shooting and shot_flag and self.ball.owner is self.attacker:
+            shot_quality, actual_direction, actual_power = self.attacker.shoot(
+                desired_direction=shot_direction,
+                desired_power=shot_power
+            )
+
+            # Only initiate the shot if it's valid (i.e., direction is within field of view)
+            if actual_power > 0.0:
+                self.is_shooting = True
+                self.shot_direction = actual_direction
+                self.shot_power = actual_power
+                self.shot_position = self.ball.position
+                self.shot_just_started = True
+                self.ball.set_owner(None)
+
+                # Convert real velocity to normalized units and set on ball
+                pitch_width = self.pitch.X_MAX - self.pitch.X_MIN
+                pitch_height = self.pitch.Y_MAX - self.pitch.Y_MIN
+                velocity_real = actual_direction * actual_power
+                velocity_norm = np.array([
+                    velocity_real[0] / pitch_width,
+                    velocity_real[1] / pitch_height
+                ])
+                self.ball.set_velocity(velocity_norm)
+                self.shot_just_started = False
+
         # Attacker logic when no shot is in progress
-        if not self.is_shooting:
+        if not self.is_shooting and self.ball.owner is self.attacker:
 
             # Save the attempted movement direction before checking visibility 
             # This is used for reward logic later
@@ -184,35 +211,11 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
                 # print("Movement blocked: action outside field of view.")
                 pass
 
-            # Attempt a shot if shot_flag is active and attacker owns the ball
-            if shot_flag and self.ball.owner is self.attacker:
-                shot_quality, actual_direction, actual_power = self.attacker.shoot(
-                    desired_direction=shot_direction,
-                    desired_power=shot_power
-                )
-
-                # Only initiate the shot if it's valid (i.e., direction is within field of view)
-                if actual_power > 0.0:
-                    self.is_shooting = True
-                    self.shot_direction = actual_direction
-                    self.shot_power = actual_power
-                    self.shot_position = self.ball.position
-                    self.shot_just_started = True
-                    self.ball.set_owner(None)
-
-                    # Convert real velocity to normalized units and set on ball
-                    pitch_width = self.pitch.X_MAX - self.pitch.X_MIN
-                    pitch_height = self.pitch.Y_MAX - self.pitch.Y_MIN
-                    velocity_real = actual_direction * actual_power
-                    velocity_norm = np.array([
-                        velocity_real[0] / pitch_width,
-                        velocity_real[1] / pitch_height
-                    ])
-                    self.ball.set_velocity(velocity_norm)
+            
 
         else:
             # During shooting phase: attacker does not move; ball moves autonomously
-            self._update_ball_position(None)
+            self.ball.update(self.time_per_step)
 
         # Defender moves toward the current ball position
         ball_x, ball_y = self.ball.position
@@ -283,25 +286,6 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
                                         Used only when dribbling to position the ball ahead of the player.
         """
         if self.is_shooting:
-            pitch_width = self.pitch.X_MAX - self.pitch.X_MIN
-            pitch_height = self.pitch.Y_MAX - self.pitch.Y_MIN
-
-            # Set ball velocity only once at the start of the shot
-            if self.shot_just_started:
-                # Calculate real shot velocity vector in meters per second
-                velocity_real = self.shot_direction * self.shot_power
-
-                # Convert real velocity to normalized velocity (unit per second)
-                velocity_norm = np.array([
-                    velocity_real[0] / pitch_width,
-                    velocity_real[1] / pitch_height
-                ])
-
-                # Assign normalized velocity to the ball
-                self.ball.set_velocity(velocity_norm)
-
-                # Reset the flag so velocity is not reset every update
-                self.shot_just_started = False
 
             # Update ball position and velocity (apply friction) every step
             self.ball.update(self.time_per_step)
@@ -373,6 +357,10 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
         """
         grid = np.zeros((self.num_cells_x, self.num_cells_y))
 
+        position_reward_scale = 4.0
+        y_center_penalty_scale = 1.0
+
+
         goal_min_y = self.pitch.CENTER_Y - self.pitch.GOAL_HEIGHT / 2
         goal_max_y = self.pitch.CENTER_Y + self.pitch.GOAL_HEIGHT / 2
         goal_x_min = self.pitch.FIELD_WIDTH  # goal line
@@ -399,8 +387,10 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
                 else:
                     x_norm = (cell_x - self.pitch.X_MIN) / (self.pitch.X_MAX - self.pitch.X_MIN)
                     y_norm = (cell_y - self.pitch.Y_MIN) / (self.pitch.Y_MAX - self.pitch.Y_MIN)
-                    x_reward = -0.5 + 1.0 * x_norm
-                    y_penalty = -0.25 * abs(y_norm - 0.5) * 2
+
+                    x_reward = -0.5 * position_reward_scale + position_reward_scale * x_norm # range [-2, 2] if position_reward_scale = 4.0
+                    y_penalty = -0.5 * y_center_penalty_scale * abs(y_norm - 0.5) * 2 # range [-1, 0] if y_center_penalty_scale = 1.0
+
                     grid[i, j] = x_reward + y_penalty
 
         self.reward_grid = grid
@@ -525,12 +515,12 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
         # Check if a goal has been scored and reward accordingly
         if self._is_goal(x_m, y_m):
             self.done = True
-            reward += 10.0
+            reward += 15.0
             return reward
 
         # Penalize losing possession of the ball to the defender
         if self._check_possession_loss():
-            reward -= 5.0
+            reward -= 3.0
             self.done = True
             return reward
 
@@ -564,7 +554,7 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
 
             # Bonus for shooting from a good position on the field
             shot_pos_reward = self._get_position_reward(ball_x_m, ball_y_m)
-            reward += 15 * shot_pos_reward
+            reward += 5 * shot_pos_reward
 
             # Compute goal direction vector from ball position
             goal_direction = np.array([1.0, 0.5]) - np.array([ball_x, ball_y])
@@ -585,7 +575,7 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
             angle_reward = 2 * angle_reward - 1  # Scale to [-1, 1]
 
             # Add angle reward to the total reward
-            reward += angle_reward
+            reward += 2 * angle_reward # scale to [-2, 2] range
 
 
         # DURING SHOT: CONTINUOUS REWARD LOGIC
@@ -616,30 +606,24 @@ class OffensiveScenarioViewSingleAgent(gymnasium.Env):
             # If any terminal condition occurs (goal, out of bounds, possession lost)
             if goal_scored or ball_completely_out or possession_lost:
                 # Penalize if ball is out or possession lost
-                if ball_completely_out or possession_lost:
-
+                if ball_completely_out:
+                    reward -= 3.0
+                elif possession_lost:
                     reward -= 5.0
 
                 # End the episode
                 self.done = True
-
-                # End the shot
-                self.is_shooting = False
-                self.shot_direction = None
-                self.shot_power = 0.0
-                self.shot_position = None
 
             # If ball stopped but no terminal condition, end the shot only (episode continues)
             elif ball_stopped:
                 # apply a small penalty for shot stopping early
                 reward -= 1.0
 
-                # End the shot but keep episode running
-                self.is_shooting = False
-                self.shot_direction = None
-                self.shot_power = 0.0
-                self.shot_position = None
-
+            # End the shot
+            self.is_shooting = False
+            self.shot_direction = None
+            self.shot_power = 0.0
+            self.shot_position = None
 
 
 
