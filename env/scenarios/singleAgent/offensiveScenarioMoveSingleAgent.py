@@ -281,11 +281,6 @@ class OffensiveScenarioMoveSingleAgent(gymnasium.Env):
         pos_reward = self._get_position_reward(x_m, y_m)
         reward += pos_reward
 
-        # If in out-of-bounds cell, terminate the episode
-        if pos_reward <= -4.0:
-            self.done = True
-            return reward
-
         # Check if a goal has been scored
         if self._is_goal(x_m, y_m):
             self.done = True

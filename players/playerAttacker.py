@@ -61,7 +61,7 @@ class PlayerAttacker:
 
         # Last action direction for reward logic
         # This will be used to determine if the player attempted a movement in the wrong direction
-        self.last_action_direction = np.array([0.0, 0.0])
+        self.last_action_direction = np.array([1.0, 0.0])
 
     def reset_position(self, position):
         """

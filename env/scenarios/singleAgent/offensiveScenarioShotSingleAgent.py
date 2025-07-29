@@ -522,11 +522,6 @@ class OffensiveScenarioShotSingleAgent(gymnasium.Env):
         pos_reward = self._get_position_reward(x_m, y_m)
         reward += pos_reward * 0.8  # Scale down to avoid large swings
 
-        # Terminate episode if attacker is out of bounds (strong penalty)
-        if pos_reward <= -4.0:
-            self.done = True
-            return reward
-
         # Check if a goal has been scored and reward accordingly
         if self._is_goal(x_m, y_m):
             self.done = True

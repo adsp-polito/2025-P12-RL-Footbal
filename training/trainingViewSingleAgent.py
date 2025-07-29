@@ -160,7 +160,7 @@ def train_and_monitor(episodes=1000, seconds_per_episode=10, fps=24,
         batch_size=48,
         gamma=0.99,
         gae_lambda=0.95,
-        learning_rate=1e-3,
+        learning_rate=1e-4,
         ent_coef=0.01,
     )
 
