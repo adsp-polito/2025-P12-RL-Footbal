@@ -161,7 +161,7 @@ def render_episode(states, pitch, save_path=None, fps=24, stripes=False, full_pi
 
         # Calculate elapsed time in seconds and total frames count
         elapsed_sec = frame_idx / fps
-        total_frames = len(states)
+        total_frames = len(states)-1
 
         # Get current reward and cumulative reward if available
         if rewards_per_frame is not None:
