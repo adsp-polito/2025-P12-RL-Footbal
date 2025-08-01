@@ -1,17 +1,11 @@
-import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-import numpy as np
-import matplotlib.pyplot as plt
-from env.scenarios.singleAgent.offensiveScenarioMoveSingleAgent import OffensiveScenarioMoveSingleAgent
-from helpers.visuals import render_episode
+from football_tactical_ai.env.scenarios.singleAgent.move import OffensiveScenarioMoveSingleAgent
+from football_tactical_ai.helpers.visuals import render_episode
 from time import time
-from env.objects.pitch import Pitch
+from football_tactical_ai.env.objects.pitch import Pitch
 
 # Initialize the pitch
 pitch = Pitch()
-pitch.assert_coordinates_match_helpers()
 
 # Create environment instance
 env = OffensiveScenarioMoveSingleAgent(pitch=pitch)
@@ -34,12 +28,11 @@ states.append({
 
 rewards.append(0.0)  # No reward yet for frame 0
 
-
-done = False
-while not done:
+terminated = truncated = False
+while not (terminated or truncated):
     # Sample random action from action space (continuous in [-1, 1])
     action = env.action_space.sample()
-    obs, reward, done, truncated, info = env.step(action)
+    obs, reward, terminated, truncated, info = env.step(action)
 
     # Copy current environment state (players and ball)
     attacker_copy = env.attacker.copy()

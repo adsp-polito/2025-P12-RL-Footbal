@@ -1,20 +1,12 @@
-import sys
+
 import os
-
-import numpy as np
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# Import the new shooting environment
-from env.scenarios.singleAgent.offensiveScenarioShotSingleAgent import OffensiveScenarioShotSingleAgent
-from helpers.visuals import render_episode
-from env.objects.pitch import Pitch
+from football_tactical_ai.env.scenarios.singleAgent.shot import OffensiveScenarioShotSingleAgent
+from football_tactical_ai.helpers.visuals import render_episode
 from time import time
+from football_tactical_ai.env.objects.pitch import Pitch
 
 # Initialize the pitch object
 pitch = Pitch()
-
-# Verify coordinate system consistency with helper functions
-pitch.assert_coordinates_match_helpers()
 
 # Instantiate the environment with the pitch
 env = OffensiveScenarioShotSingleAgent(pitch=pitch)
@@ -39,16 +31,15 @@ states.append({
 
 rewards.append(0.0)  # No reward yet for frame 0
 
-done = False
+terminated = truncated = False
 
-# Main interaction loop: run episode until done
-while not done:
+# Main interaction loop: run episode until terminated or truncated
+while not terminated and not truncated:
 
     # Sample a random action from the environment's action space
     action = env.action_space.sample()
     # action = np.array([0.0, 0.0, 1.0, 1.0, 1.0, 0.0])  # no movement, shot_flag=1, max power direction towards positive x (goal)
-    obs, reward, done, truncated, info = env.step(action)
-
+    obs, reward, t, truncated, info = env.step(action)
 
     # Create deep copies of the current attacker, defender, and ball states for visualization
     attacker_copy = env.attacker.copy()
@@ -82,7 +73,7 @@ anim = render_episode(
     show_heatmap=False,
     show_rewards=False,
     reward_grid=env.reward_grid,
-    save_path="test/videoTest/testShot34.mp4",  # Output video file path
+    save_path="test/videoTest/testShot.mp4",  # Output video file path
     rewards_per_frame=rewards,
     show_info=True,
     show_fov=False
