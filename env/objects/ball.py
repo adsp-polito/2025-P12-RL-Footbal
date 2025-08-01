@@ -45,9 +45,8 @@ class Ball:
         self.velocity.fill(0.0)
 
         # Clear possession
-        self.owner_id = None
+        self.owner = None
 
-    
     def set_owner(self, player):
         """
         Set the player who currently possesses the ball.
