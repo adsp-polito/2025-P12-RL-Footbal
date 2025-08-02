@@ -109,6 +109,13 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             info (dict): Additional information about the environment state.
         """
 
+        # Goal scoring logic for final reward to incentivize scoring
+        goal_scored = False
+
+        # Initialize shot quality to None for reward computation
+        # This will be set if a shot is successfully initiated
+        shot_quality = None
+
         # Unpack and format action components
         movement_action = action[0:2]
         shot_flag = 1 if action[2] > 0.5 else 0
@@ -164,7 +171,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self._apply_defender_ai()
 
         # Compute reward (all logic handled internally)
-        reward, terminated = self.compute_reward(shot_flag=shot_flag)
+        reward, terminated = self.compute_reward(shot_flag=shot_flag, shot_quality=shot_quality)
 
         # Check if shot finished (only if currently shooting)
         if self.is_shooting:
@@ -208,13 +215,9 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         
         truncated = self._t >= self.max_steps
 
-        # Check for NaN values in observation or reward
-        if np.any(np.isnan(obs)) or np.isnan(reward):
-            print("[WARNING] NaN detected in observation or reward. Resetting episode.")
-            obs = np.nan_to_num(obs, nan=0.0)
-            reward = -50.0  # Penality for NaN state
-            terminated = True
-            truncated = True
+        # Penalization if episode finished and goal not scored
+        if terminated and not goal_scored:
+            reward -= 5.0
 
         return obs, reward, terminated, truncated, {}
 
@@ -292,7 +295,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             self.ball.update(self.time_per_step)
 
     
-    def compute_reward(self, shot_flag=None):
+    def compute_reward(self, shot_flag=None, shot_quality=None):
         """
         Compute the reward for the current environment step.
 
@@ -311,6 +314,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             shot_flag (int, optional): Flag indicating if a shot is being attempted.
         Returns:
             float: The computed reward value for the current step.
+            shot_quality (float, optional): Estimated quality of the shot (0 to 1).
         """
 
         reward = 0.0  # Initialize reward accumulator
@@ -336,9 +340,12 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
         # Check if a goal has been scored and reward accordingly
         if self._is_goal(x_m, y_m):
-            reward += 5.0
+            print("[INFO] Goal scored!")
+            reward += 10.0
             terminated = True  # End episode on goal
             return reward, terminated
+        else:
+            reward -= 0.1  # Small penalty for not scoring
 
         # Penalize losing possession of the ball to the defender
         if self._check_possession_loss():
@@ -347,6 +354,10 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             return reward, terminated
 
         # SHOOT REWARD LOGIC
+
+        # Reward for high shot quality 
+        if shot_quality is not None:
+            reward += 2.5 * shot_quality  # Scale shot quality reward [0, 5] to encourage good shots
 
         # Penalize if the attacker tries to shoot but is not the owner of the ball
         if shot_flag and self.ball.owner != self.attacker:
@@ -477,14 +488,6 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         possession,
         is_shooting
         ], dtype=np.float32)
-
-        # Check for NaN or out-of-bounds values in the observation
-        if np.any(np.isnan(obs)) or np.any(obs < 0.0) or np.any(obs > 1.0):
-            print(f"[NaN or out-of-bounds OBS at step {self._t}]")
-            print(f"att_pos: {(att_x, att_y)}, def_pos: {(def_x, def_y)}, ball_pos: {(ball_x, ball_y)}")
-            print(f"poss: {possession}, is_shooting: {is_shooting}")
-            print(f"OBS: {obs}")
-            obs = np.nan_to_num(obs, nan=0.0, posinf=1.0, neginf=0.0)
 
         return obs
 
