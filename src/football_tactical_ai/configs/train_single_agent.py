@@ -63,8 +63,8 @@ SCENARIOS: dict[str, dict] = {
         },
         "paths": {
             "save_model_path": "training/models/singleAgentShotModel",
-            "save_render_dir": "training/renders/singleAgent_shot",
-            "plot_path": "training/renders/singleAgent_shot/SingleAgentShotRewards.png"
+            "save_render_dir": "training/renders/singleAgentShot",
+            "plot_path": "training/renders/singleAgentShot/SingleAgentShotRewards.png"
         },
         "ppo": {
             "batch_size": 48,
@@ -98,8 +98,8 @@ SCENARIOS: dict[str, dict] = {
         },
         "paths": {
             "save_model_path": "training/models/singleAgentViewModel",
-            "save_render_dir": "training/renders/singleAgent_view",
-            "plot_path": "training/renders/singleAgent_view/SingleAgentViewRewards.png"
+            "save_render_dir": "training/renders/singleAgentView",
+            "plot_path": "training/renders/singleAgentView/SingleAgentViewRewards.png"
         },
         "ppo": {
             "batch_size": 48,

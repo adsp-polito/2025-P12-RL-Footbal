@@ -293,7 +293,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
 
         # Add position-based reward from the reward grid (encourages good positioning)
         pos_reward = self._get_position_reward(x_m, y_m)
-        reward += pos_reward * 0.8  # Scale down to avoid large swings
+        reward += pos_reward
 
         # Check if a goal has been scored and reward accordingly
         if self._is_goal(x_m, y_m):
@@ -309,7 +309,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         
         # Penalize if the attacker tries to shoot but is not the owner of the ball
         if shot_flag and self.ball.owner != self.attacker:
-            reward -= 2.0
+            reward -= 0.5
         
         # Convert ball position to meters for shot-related calculations
         ball_x, ball_y = self.ball.position
@@ -325,7 +325,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             self.shot_just_started = False  # Reset flag after one-time bonus
 
             # Bonus reward for starting a shot
-            reward += 3.0
+            reward += 3.5
 
             # Bonus for shooting from a good position on the field
             shot_pos_reward = self._get_position_reward(ball_x_m, ball_y_m)
@@ -394,7 +394,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             # If ball stopped but no terminal condition, end the shot only (episode continues)
             elif ball_stopped:
                 # Optional: apply a small penalty for shot stopping early
-                reward -= 1.0
+                reward -= 1.5
 
                 # End the shot but keep episode running
                 self.is_shooting = False
