@@ -86,8 +86,8 @@ SCENARIOS: dict[str, dict] = {
         ),
         "seconds_per_episode": 10,
         "fps": 24,
-        "episodes": 10000,
-        "eval_every": 2000,
+        "episodes": 30000,
+        "eval_every": 6000,
         "render": {
             "show_grid": False,
             "show_heatmap": False,
@@ -103,10 +103,10 @@ SCENARIOS: dict[str, dict] = {
         },
         "ppo": {
             "batch_size": 48,
-            "learning_rate": 1e-3,
+            "learning_rate": 1e-4,
             "gamma": 0.99,
             "gae_lambda": 0.95,
-            "ent_coef": 0.01,
+            "ent_coef": 0.02,
             "device": "cpu",
             "seed": 42,
             "verbose": 0,

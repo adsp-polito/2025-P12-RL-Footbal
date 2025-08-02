@@ -259,8 +259,9 @@ class BaseOffensiveScenario(gym.Env):
         """
         grid = np.zeros((self.num_cells_x, self.num_cells_y))
 
-        position_reward_scale = 4.0
-        y_center_penalty_scale = 1.0
+        # Define scales for position and y-center penalty
+        position_reward_scale = 1.0
+        y_center_penalty_scale = 0.5
 
 
         goal_min_y = self.pitch.center_y - self.pitch.goal_width / 2
@@ -290,8 +291,8 @@ class BaseOffensiveScenario(gym.Env):
                     x_norm = (cell_x - self.pitch.x_min) / (self.pitch.x_max - self.pitch.x_min)
                     y_norm = (cell_y - self.pitch.y_min) / (self.pitch.y_max - self.pitch.y_min)
 
-                    x_reward = -0.5 * position_reward_scale + position_reward_scale * x_norm # range [-2, 2] if position_reward_scale = 4.0
-                    y_penalty = -0.5 * y_center_penalty_scale * abs(y_norm - 0.5) * 2 # range [-1, 0] if y_center_penalty_scale = 1.0
+                    x_reward = -0.5 * position_reward_scale + position_reward_scale * x_norm # range [-0.5, 0.5] if position_reward_scale = 1.0
+                    y_penalty = -0.5 * y_center_penalty_scale * abs(y_norm - 0.5) * 2 # range [-0.25, 0.0] if y_center_penalty_scale = 0.5
 
                     grid[i, j] = x_reward + y_penalty
 

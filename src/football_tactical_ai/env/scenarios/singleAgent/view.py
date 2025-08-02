@@ -86,6 +86,8 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.shot_position = None
         self.shot_just_started = False  # Reset for new episode
 
+        self.attacker.last_action_direction = np.array([1.0, 0.0])  # Reset last action direction
+
         # Return initial observation and info dictionary as required by Gym API
         return self._get_obs(), {}
     
@@ -186,8 +188,8 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             # Check if possession lost
             possession_lost = self._check_possession_loss()
 
-            # Check if ball stopped moving (velocity is zero)
-            ball_stopped = ball_velocity_norm == 0
+            # Check if ball stopped moving (velocity is near zero)
+            ball_stopped = ball_velocity_norm < 0.01
 
             # If any terminal condition met, end shot
             if goal_scored or possession_lost or ball_completely_out or ball_stopped:
@@ -205,10 +207,16 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             terminated = self._check_termination()
         
         truncated = self._t >= self.max_steps
+
+        # Check for NaN values in observation or reward
+        if np.any(np.isnan(obs)) or np.isnan(reward):
+            print("[WARNING] NaN detected in observation or reward. Resetting episode.")
+            obs = np.nan_to_num(obs, nan=0.0)
+            reward = -50.0  # Penality for NaN state
+            terminated = True
+            truncated = True
+
         return obs, reward, terminated, truncated, {}
-
-
-
 
     def _update_ball_position(self, action=None):
         """
@@ -308,6 +316,11 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         reward = 0.0  # Initialize reward accumulator
         terminated = False  # Initialize termination flag
 
+        # TIME PENALTY LOGIC
+
+        # Apply a small time penalty to encourage active play
+        reward -= 0.02  # Small penalty for each step to encourage efficiency
+
         # POSITION-BASED REWARD LOGIC
 
         # Get attacker's normalized position and convert to meters
@@ -317,19 +330,19 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
         # Add position-based reward from the reward grid (encourages good positioning)
         pos_reward = self._get_position_reward(x_m, y_m)
-        reward += pos_reward  # Scale down to avoid large swings
+        reward += pos_reward  # Scale the position reward to encourage good positioning
 
         # TERMINAL CONDITIONS REWARD LOGIC
 
         # Check if a goal has been scored and reward accordingly
         if self._is_goal(x_m, y_m):
-            reward += 15.0
+            reward += 5.0
             terminated = True  # End episode on goal
             return reward, terminated
 
         # Penalize losing possession of the ball to the defender
         if self._check_possession_loss():
-            reward -= 3.0
+            reward -= 1.0
             terminated = True # End episode on possession loss
             return reward, terminated
 
@@ -337,13 +350,13 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
         # Penalize if the attacker tries to shoot but is not the owner of the ball
         if shot_flag and self.ball.owner != self.attacker:
-            reward -= 2.0
+            reward -= 0.5
         
         # Penalize if attacker tried to shoot but the shot was invalid (e.g., direction not in FOV)
         # Shot_flag is True if the attacker attempted a shot, but it was not valid since the shot was not initiated
         # This means the shot was not started due to invalid direction or power
         elif shot_flag and not self.is_shooting and self.ball.owner is self.attacker:
-            reward -= 1.0  # Penalty for attempting a shot in the wrong direction
+            reward -= 0.25  # Penalty for attempting a shot in the wrong direction
 
         # Convert ball position to meters for shot-related calculations
         ball_x, ball_y = self.ball.position
@@ -359,15 +372,19 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             self.shot_just_started = False  # Reset flag after one-time bonus
 
             # Bonus reward for starting a shot
-            reward += 2.0
+            reward += 2.5
 
             # Bonus for shooting from a good position on the field
             shot_pos_reward = self._get_position_reward(ball_x_m, ball_y_m)
-            reward += 2.0 * shot_pos_reward
+            reward += 3.0 * shot_pos_reward
 
             # Compute goal direction vector from ball position
             goal_direction = np.array([1.0, 0.5]) - np.array([ball_x, ball_y])
-            goal_direction /= np.linalg.norm(goal_direction)
+            norm = np.linalg.norm(goal_direction)
+            if norm < 1e-6:
+                goal_direction = np.array([1.0, 0.0])  # fallback
+            else:
+                goal_direction /= norm
 
             # Use shot direction if available, else default to goal direction
             shot_dir = self.shot_direction if self.shot_direction is not None else goal_direction
@@ -384,7 +401,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             angle_reward = 2 * angle_reward - 1  # Scale to [-1, 1]
 
             # Add angle reward to the total reward
-            reward += angle_reward
+            reward += angle_reward # Scale the angle reward to encourage good shooting angles
 
 
         # DURING SHOT: CONTINUOUS REWARD LOGIC
@@ -414,13 +431,13 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
             # Apply penalties
             if ball_completely_out:
-                reward -= 5.0
+                reward -= 1.5
                 terminated = True  # End episode on ball out
             elif possession_lost:
-                reward -= 2.0
+                reward -= 1.0
                 terminated = True
             elif ball_stopped and not terminal_condition:
-                reward -= 1.0  # shot stopped early but not due to terminal outcome
+                reward -= 0.25  # shot stopped early but not due to terminal outcome
 
         # FOV REWARD LOGIC
 
@@ -431,9 +448,9 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             direction = self.attempted_movement_direction
             if np.linalg.norm(direction) > 0:
                 if self.attacker.is_direction_visible(direction):
-                    reward += 0.2  # small positive reward
+                    reward += 0.25  # small positive reward
                 else:
-                    reward -= 0.1  # existing penalty for bad direction
+                    reward -= 0.1  # penalty for bad direction
 
         return reward, terminated
     
@@ -453,13 +470,24 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         # Shooting flag: 1 if shooting in progress, else 0
         is_shooting = 1.0 if self.is_shooting else 0.0
 
-        return np.array([
-            att_x, att_y,
-            def_x, def_y,
-            ball_x, ball_y,
-            possession,
-            is_shooting
+        obs = np.array([
+        att_x, att_y,
+        def_x, def_y,
+        ball_x, ball_y,
+        possession,
+        is_shooting
         ], dtype=np.float32)
+
+        # Check for NaN or out-of-bounds values in the observation
+        if np.any(np.isnan(obs)) or np.any(obs < 0.0) or np.any(obs > 1.0):
+            print(f"[NaN or out-of-bounds OBS at step {self._t}]")
+            print(f"att_pos: {(att_x, att_y)}, def_pos: {(def_x, def_y)}, ball_pos: {(ball_x, ball_y)}")
+            print(f"poss: {possession}, is_shooting: {is_shooting}")
+            print(f"OBS: {obs}")
+            obs = np.nan_to_num(obs, nan=0.0, posinf=1.0, neginf=0.0)
+
+        return obs
+
 
     def close(self):
             """
