@@ -1,4 +1,5 @@
 import numpy as np
+import os
 from football_tactical_ai.configs import pitch_settings as PS
 
 def normalize(x, y):
@@ -46,3 +47,21 @@ def distance(a, b):
         float: Euclidean distance between points a and b.
     """
     return np.linalg.norm(np.array(a) - np.array(b))
+
+def ensure_dirs(path_or_paths):
+    """
+    Ensure that one or more directories exist.
+
+    Args:
+        path_or_paths (str | list[str] | dict): Path(s) to ensure exist.
+    """
+    if isinstance(path_or_paths, dict):
+        paths = path_or_paths.values()
+    elif isinstance(path_or_paths, str):
+        paths = [path_or_paths]
+    else:
+        paths = path_or_paths
+
+    for path in paths:
+        dir_path = os.path.dirname(path) if os.path.splitext(path)[1] else path
+        os.makedirs(dir_path, exist_ok=True)

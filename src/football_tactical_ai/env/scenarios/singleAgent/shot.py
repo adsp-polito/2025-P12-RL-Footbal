@@ -182,7 +182,6 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
 
         # Build return tuple
         obs = self._get_obs()
-        print(terminated)
         if not terminated:
             terminated = self._check_termination()
         

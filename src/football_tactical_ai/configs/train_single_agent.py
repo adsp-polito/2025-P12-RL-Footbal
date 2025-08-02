@@ -7,78 +7,114 @@ Usage:
     model = PPO("MlpPolicy", env, **cfg["ppo"])
 """
 
-# Configuration for training a single agent in football tactical AI scenarios
-SECONDS_PER_EPISODE = 10
-FPS                 = 24
-BATCH_SIZE          = 48
-GAMMA               = 0.99
-GAE_LAMBDA          = 0.95
-ENT_COEF            = 0.01
-
-
-# Prepare the configuration for the scenarios                                           
 SCENARIOS: dict[str, dict] = {
-    # 1) MOVE
+    # MOVE scenario configuration
     "move": {
         "env_class": (
-            "football_tactical_ai.env.scenarios.single_agent."
-            "offensiveScenarioMoveSingleAgent:OffensiveScenarioMoveSingleAgent"
+            "football_tactical_ai.env.scenarios.singleAgent."
+            "move:OffensiveScenarioMoveSingleAgent"
         ),
-        "max_steps": SECONDS_PER_EPISODE * FPS,   # 240
+        "seconds_per_episode": 10,
+        "fps": 24,
+        "episodes": 10000,
+        "eval_every": 2000,
+        "render": {
+            "show_grid": False,
+            "show_heatmap": False,
+            "show_rewards": False,
+            "full_pitch": True,
+            "show_info": True,
+            "show_fov": False
+        },
+        "paths": {
+            "save_model_path": "training/models/singleAgentMoveModel",
+            "save_render_dir": "training/renders/singleAgentMove",
+            "plot_path": "training/renders/singleAgentMove/SingleAgentMoveRewards.png"
+        },
         "ppo": {
-            "n_steps": SECONDS_PER_EPISODE * FPS,
-            "batch_size": BATCH_SIZE,
+            "batch_size": 48,
             "learning_rate": 1e-3,
-            "gamma": GAMMA,
-            "gae_lambda": GAE_LAMBDA,
-            "ent_coef": ENT_COEF,
+            "gamma": 0.99,
+            "gae_lambda": 0.95,
+            "ent_coef": 0.01,
             "device": "cpu",
             "seed": 42,
             "verbose": 0,
-        },
-        "eval_every": 200,
+        }
     },
 
-    # 2) SHOT
+    # SHOT scenario configuration
     "shot": {
         "env_class": (
-            "football_tactical_ai.env.scenarios.single_agent."
-            "offensiveScenarioShotSingleAgent:OffensiveScenarioShotSingleAgent"
+            "football_tactical_ai.env.scenarios.singleAgent."
+            "shot:OffensiveScenarioShotSingleAgent"
         ),
-        "max_steps": SECONDS_PER_EPISODE * FPS,
+        "seconds_per_episode": 10,
+        "fps": 24,
+        "episodes": 10000,
+        "eval_every": 2000,
+        "render": {
+            "show_grid": False,
+            "show_heatmap": False,
+            "show_rewards": False,
+            "full_pitch": True,
+            "show_info": True,
+            "show_fov": False
+        },
+        "paths": {
+            "save_model_path": "training/models/singleAgentShotModel",
+            "save_render_dir": "training/renders/singleAgent_shot",
+            "plot_path": "training/renders/singleAgent_shot/SingleAgentShotRewards.png"
+        },
         "ppo": {
-            "n_steps": SECONDS_PER_EPISODE * FPS,
-            "batch_size": BATCH_SIZE,
-            "learning_rate": 1e-3,      
-            "gamma": GAMMA,
-            "gae_lambda": GAE_LAMBDA,
-            "ent_coef": ENT_COEF,
+            "batch_size": 48,
+            "learning_rate": 1e-3,
+            "gamma": 0.99,
+            "gae_lambda": 0.95,
+            "ent_coef": 0.01,
             "device": "cpu",
             "seed": 42,
             "verbose": 0,
-        },
-        "eval_every": 1000,
+        }
     },
 
-    # 3) VIEW
+    # VIEW scenario configuration
     "view": {
         "env_class": (
-            "football_tactical_ai.env.scenarios.single_agent."
-            "offensiveScenarioViewSingleAgent:OffensiveScenarioViewSingleAgent"
+            "football_tactical_ai.env.scenarios.singleAgent."
+            "view:OffensiveScenarioViewSingleAgent"
         ),
-        "max_steps": SECONDS_PER_EPISODE * FPS,
-        "ppo": {
-            "n_steps": SECONDS_PER_EPISODE * FPS,
-            "batch_size": BATCH_SIZE,
-            "learning_rate": 1e-3,      
-            "gamma": GAMMA,
-            "gae_lambda": GAE_LAMBDA,
-            "ent_coef": ENT_COEF,
-            "device": "cpu",
-            "seed": None,               # None for random seed
-            "verbose": 0,
+        "seconds_per_episode": 10,
+        "fps": 24,
+        "episodes": 10000,
+        "eval_every": 2000,
+        "render": {
+            "show_grid": False,
+            "show_heatmap": False,
+            "show_rewards": False,
+            "full_pitch": True,
+            "show_info": True,
+            "show_fov": True
         },
-        "eval_every": 3000,
+        "paths": {
+            "save_model_path": "training/models/singleAgentViewModel",
+            "save_render_dir": "training/renders/singleAgent_view",
+            "plot_path": "training/renders/singleAgent_view/SingleAgentViewRewards.png"
+        },
+        "ppo": {
+            "batch_size": 48,
+            "learning_rate": 1e-3,
+            "gamma": 0.99,
+            "gae_lambda": 0.95,
+            "ent_coef": 0.01,
+            "device": "cpu",
+            "seed": 42,
+            "verbose": 0,
+        }
     },
 }
 
+# Automatically compute n_steps and max_steps for each scenario
+for cfg in SCENARIOS.values():
+    cfg["ppo"]["n_steps"] = cfg["seconds_per_episode"] * cfg["fps"]
+    cfg["max_steps"] = cfg["ppo"]["n_steps"]
