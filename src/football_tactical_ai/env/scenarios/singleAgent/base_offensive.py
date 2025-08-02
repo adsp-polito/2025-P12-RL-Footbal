@@ -89,7 +89,7 @@ class BaseOffensiveScenario(gym.Env):
     def step(self, action):
 
         # 1) Attacker movement
-        self._apply_attacker_action(action)
+        self._apply_attacker_action(action, enable_fov=False)
 
         # 2) Simple defender AI
         self._apply_defender_ai()
@@ -109,7 +109,7 @@ class BaseOffensiveScenario(gym.Env):
 
         return obs, reward, terminated, truncated, {}
 
-    def _apply_attacker_action(self, action) -> None:
+    def _apply_attacker_action(self, action, enable_fov=True) -> None:
         """
         Convert continuous action into attacker movement in normalised space.
 
@@ -124,6 +124,7 @@ class BaseOffensiveScenario(gym.Env):
             time_per_step=self.time_per_step,
             x_range=field_width_m,
             y_range=field_height_m,
+            enable_fov=enable_fov  # Enable FOV for attacker AI
         )
 
     def _apply_defender_ai(self) -> None:
@@ -149,8 +150,6 @@ class BaseOffensiveScenario(gym.Env):
         field_width_m  = self.pitch.x_max - self.pitch.x_min
         field_height_m = self.pitch.y_max - self.pitch.y_min
 
-        print("Defender position before move:", self.defender.get_position())
-
         # Move defender towards attacker
         self.defender.move_with_action(
             direction,
@@ -159,8 +158,6 @@ class BaseOffensiveScenario(gym.Env):
             y_range=field_height_m,
             enable_fov=False  # Disable FOV for defender AI
         )
-
-        print("Defender position after move:", self.defender.get_position())
 
     def _is_ball_completely_out(self, ball_x_m, ball_y_m):
         """

@@ -129,7 +129,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
 
         else:  
             # Attacker movement
-            self._apply_attacker_action(action)
+            self._apply_attacker_action(action, enable_fov=False)
 
             # Update ball position to follow attacker (dribbling)
             self._update_ball_position(movement_action)
