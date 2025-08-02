@@ -95,61 +95,54 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             info (dict): Additional information about the environment state.
         """
 
-        # Unpack action tuple
-        movement_action = action[0:2]                   # 2D movement vector in [-1,1]
-        shot_flag_cont = action[2]                      # Continuous float in [0,1] for shot flag
-        shot_flag = 1 if shot_flag_cont > 0.5 else 0    # Discrete shot flag (0 or 1)
-        shot_power = action[3]                          # Continuous float in [0,1] for shot power
-        shot_direction = action[4:6]                    # Continuous 2D vector in [-1,1] for shot direction  
+        # Unpack and format action components
+        movement_action = action[0:2]
+        shot_flag = 1 if action[2] > 0.5 else 0
+        shot_power = float(action[3])
+        shot_direction = action[4:6]
 
-        # Convert shot_power from array to scalar float
-        shot_power = float(shot_power)
+        # Attempt a shot if valid (not already shooting and attacker has the ball)
+        if not self.is_shooting and shot_flag and self.ball.owner is self.attacker:
+            shot_quality, actual_direction, actual_power = self.attacker.shoot(
+                desired_direction=shot_direction,
+                desired_power=shot_power,
+                enable_fov=False  # Disable FOV check for shooting
+            )
 
-        # Logic when no shot is currently active
-        if not self.is_shooting:
+            # Initiate the shot
+            self.is_shooting = True
+            self.shot_direction = actual_direction
+            self.shot_power = actual_power
+            self.shot_position = self.ball.position
+            self.shot_just_started = True
+            self.ball.set_owner(None)
+
+            # Convert real velocity to normalized velocity and set on the ball
+            pitch_width = self.pitch.x_max - self.pitch.x_min
+            pitch_height = self.pitch.y_max - self.pitch.y_min
+            velocity_real = actual_direction * actual_power
+            velocity_norm = np.array([
+                velocity_real[0] / pitch_width,
+                velocity_real[1] / pitch_height
+            ])
+            self.ball.set_velocity(velocity_norm)
+
+        else:  
             # Attacker movement
             self._apply_attacker_action(action)
 
             # Update ball position to follow attacker (dribbling)
             self._update_ball_position(movement_action)
 
-            # If agent requests to shoot, initiate shooting
-            if shot_flag == 1 and self.ball.owner == self.attacker:
-                # Calculate actual shot parameters with player skill and precision adjustment
-                shot_quality, actual_shot_direction, actual_shot_power = self.attacker.shoot(
-                    desired_direction=shot_direction,
-                    desired_power=shot_power,
-                    enable_fov=False  # FOV check is not needed in this scenario
-                )
-
-                # Initialize shooting state variables
-                self.is_shooting = True
-                self.shot_direction = actual_shot_direction
-                self.shot_power = actual_shot_power
-                self.shot_position = self.ball.position  # current ball position as shot origin
-                self.shot_just_started = True            # Mark that a shot has just started
-
-                self.ball.set_owner(None)  # Ball is no longer possessed by attacker during shot
-
-                # Set the ball's velocity to the shot direction and power
-                velocity_real = actual_shot_direction * actual_shot_power
-                velocity_norm = np.array([
-                    velocity_real[0] / (self.pitch.x_max - self.pitch.x_min),
-                    velocity_real[1] / (self.pitch.y_max - self.pitch.y_min)
-                ], dtype=np.float32)
-                self.ball.set_velocity(velocity_norm)
-        
-        else:
-            # Shot is in progress
-            self._apply_attacker_action(action)
-
-            # Move the ball autonomously along shot trajectory
-            self._update_ball_position(None)  # action ignored during shot
+        # Update ball movement
+        if self.is_shooting or self.ball.owner is None:
+            # Ball moves autonomously only after shot
+            self.ball.update(self.time_per_step)
 
         # Defender always moves towards the ball
         self._apply_defender_ai()
 
-        # Compute reward
+        # Compute reward (all logic handled internally)
         reward, terminated = self.compute_reward(shot_flag=shot_flag)
 
         # Check if shot finished (only if currently shooting)
@@ -158,7 +151,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             # Get current ball position in normalized coordinates
             ball_x, ball_y = self.ball.position
 
-            # Convert ball position to meters
+            # Convert ball position to meters and compute velocity norm
             pitch_width = self.pitch.x_max - self.pitch.x_min
             pitch_height = self.pitch.y_max - self.pitch.y_min
             ball_x_m = ball_x * pitch_width + self.pitch.x_min
@@ -189,6 +182,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
 
         # Build return tuple
         obs = self._get_obs()
+        print(terminated)
         if not terminated:
             terminated = self._check_termination()
         
@@ -304,7 +298,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
 
         # Check if a goal has been scored and reward accordingly
         if self._is_goal(x_m, y_m):
-            reward += 10.0
+            reward += 15.0
             terminated = True  # End episode on goal
             return reward, terminated
 
@@ -410,28 +404,6 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
                 self.shot_position = None
 
         return reward, terminated
-    
-    def _check_termination(self) -> bool:
-        """
-        Determines if the episode should terminate:
-        - If goal is scored
-        - If ball is completely out of bounds
-        - If attacker loses possession to the defender
-        - (Max steps handled separately by `truncated`)
-        """
-        ball_x, ball_y = self.ball.position
-        pitch_width = self.pitch.x_max - self.pitch.x_min
-        pitch_height = self.pitch.y_max - self.pitch.y_min
-
-        # Convert ball to meters
-        ball_x_m = ball_x * pitch_width + self.pitch.x_min
-        ball_y_m = ball_y * pitch_height + self.pitch.y_min
-
-        goal = self._is_goal(ball_x_m, ball_y_m)
-        out_of_bounds = self._is_ball_completely_out(ball_x_m, ball_y_m)
-        lost_possession = self._check_possession_loss()
-
-        return goal or out_of_bounds or lost_possession
 
     def _get_obs(self):
         """

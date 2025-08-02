@@ -1,19 +1,11 @@
-import sys
 import os
-
-import numpy as np
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# Import the new shooting environment
-from env.scenarios.singleAgent.offensiveScenarioViewSingleAgent import OffensiveScenarioViewSingleAgent
-from helpers.visuals import render_episode
-from env.objects.pitch import Pitch
+from football_tactical_ai.env.scenarios.singleAgent.view import OffensiveScenarioViewSingleAgent
+from football_tactical_ai.helpers.visuals import render_episode
 from time import time
+from football_tactical_ai.env.objects.pitch import Pitch
 
 # Create the pitch object and verify coordinate system consistency
 pitch = Pitch()
-pitch.assert_coordinates_match_helpers()
-
 
 # Instantiate the environment with the pitch
 env = OffensiveScenarioViewSingleAgent(pitch=pitch)
@@ -39,15 +31,15 @@ states.append({
 rewards.append(0.0)  # No reward yet for frame 0
 
 
-done = False
+terminated = truncated = False
 
 
-# Main interaction loop: run episode until done
-while not done:
+# Main interaction loop: run episode until terminated or truncated
+while not terminated and not truncated:
 
     # Sample a random action from the environment's action space
     action = env.action_space.sample()
-    obs, reward, done, truncated, info = env.step(action)
+    obs, reward, terminated, truncated, info = env.step(action)
 
 
     # Create deep copies of the current attacker, defender, and ball states for visualization

@@ -97,13 +97,10 @@ class BaseOffensiveScenario(gym.Env):
         # 3) Ball follows owner / updates physics
         self._update_ball_position(action)
 
-        # 4) Hook for child-specific per-frame logic (e.g. shooting)
-        self.after_step(action)
-
-        # 5) Increment step counter
+        # 4) Increment step counter
         self._t += 1
 
-        # 6) Build return tuple
+        # 5) Build return tuple
         obs = self._get_obs()
         reward = float(self.compute_reward())
         terminated = self._check_termination()
@@ -212,7 +209,6 @@ class BaseOffensiveScenario(gym.Env):
             if np.random.rand() < self.defender.tackling:
                 # Update ball owner to defender (possession lost)
                 self.ball.set_owner(self.defender)
-                self.done = True
                 return True
 
         return False
@@ -328,10 +324,28 @@ class BaseOffensiveScenario(gym.Env):
 
         return np.array([att_x, att_y, def_x, def_y, ball_x, ball_y, possession], dtype=np.float32)
     
+    def _check_termination(self) -> bool:
+        """
+        Determines if the episode should terminate:
+        - If goal is scored
+        - If ball is completely out of bounds
+        - If attacker loses possession to the defender
+        - (Max steps handled separately by `truncated`)
+        """
+        ball_x, ball_y = self.ball.position
+        pitch_width = self.pitch.x_max - self.pitch.x_min
+        pitch_height = self.pitch.y_max - self.pitch.y_min
+
+        # Convert ball to meters
+        ball_x_m = ball_x * pitch_width + self.pitch.x_min
+        ball_y_m = ball_y * pitch_height + self.pitch.y_min
+
+        goal = self._is_goal(ball_x_m, ball_y_m)
+        out_of_bounds = self._is_ball_completely_out(ball_x_m, ball_y_m)
+        lost_possession = self._check_possession_loss()
+
+        return goal or out_of_bounds or lost_possession
 
     # Mandatory / optional methods to override
     def compute_reward(self) -> float:         # must override
         raise NotImplementedError
-
-    def _check_termination(self) -> bool:      # must override
-        return NotImplementedError

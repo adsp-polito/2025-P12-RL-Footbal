@@ -1,4 +1,5 @@
 import numpy as np
+from gymnasium import spaces
 from football_tactical_ai.env.scenarios.singleAgent.base_offensive import BaseOffensiveScenario
 from football_tactical_ai.helpers.helperFunctions import normalize
 
@@ -42,10 +43,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
         # Initialize the parent class
         # This sets up the environment with the necessary metadata and configurations
-        super().__init__()
-
-        # Store pitch for position normalization and rendering
-        self.pitch = pitch
+        super().__init__(pitch=pitch, max_steps=max_steps, fps=fps)
 
         # Action space: (movement_x_y, shot_flag, shot_power, shot_direction)
         self.action_space = spaces.Box(
@@ -54,7 +52,6 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             dtype=np.float32
         )
 
-
         # Observation space: normalized player positions, ball position, and shooting state
         self.observation_space = spaces.Box(
             low=0.0,
@@ -62,31 +59,6 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             shape=(8,),  # 7 original + 1 is_shooting flag
             dtype=np.float32
         )
-
-        # Initialize player and ball entities
-        self.attacker = PlayerAttacker()
-        self.defender = PlayerDefender()
-        self.ball = Ball()
-
-        # Attacker starts with the ball
-        self.ball.set_owner(self.attacker)  
-
-        # Initialize environment state variables
-        self.done = False
-        self.steps = 0
-        self.max_steps = max_steps # Standard 24 FPS * 10 seconds
-
-        # Grid parameters for reward shaping (CELL_SIZE is in meters from pitch.py)
-        self.num_cells_x = self.pitch.num_cells_x
-        self.num_cells_y = self.pitch.num_cells_y
-        self.cell_size = self.pitch.CELL_SIZE
-
-        # Simulation Parameters
-        self.fps = fps                          # Frames per second for rendering (standard 24 FPS)
-        self.time_per_step = 1.0 / self.fps     # Time per step in seconds 
-
-        # Reward grid initialized as None; built on first use
-        self.reward_grid = None
 
         # Shooting state variables
         self.is_shooting = False            # Flag indicating if a shot is in progress
@@ -102,23 +74,10 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         The attacker and defender are placed at their starting positions, the ball is centered,
         and the game state and shooting state are initialized.
         """
-        # Reset the random seed if provided (important for reproducibility)
+        # Reset the random seed if provided
+        # By doing this, we use the reset method from the parent class so 
+        # the ball and players are initialized correctly
         super().reset(seed=seed)
-
-        # Reset positions of players and ball (normalized coordinates)
-        self.attacker.reset_position(normalize(60, 40))
-        self.defender.reset_position(normalize(110, 40))
-        self.ball.position = normalize(60, 40)
-
-        # Reset attacker state
-        self.attacker.last_action_direction = np.array([1.0, 0.0])
-
-        # Reset ball state
-        self.ball.owner = self.attacker  # Attacker starts with the ball
-
-        # Reset main environment state flags and counters
-        self.done = False
-        self.steps = 0
 
         # Reset shooting state
         self.is_shooting = False
@@ -135,18 +94,17 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         Execute one step in the environment.
 
         Args:
-            action (np.array): Array containing:
-                - movement_action (x, y): 2D vector in [-1, 1] for attacker movement.
-                - shot_flag: Float in [0, 1], interpreted as 1 if > 0.5.
-                - shot_power: Float in [0, 1], indicating desired shot strength.
-                - shot_direction: 2D vector in [-1, 1], indicating desired shot direction.
-
+            action (np.ndarray): Action vector containing:
+                - movement_x_y: 2D vector for player movement in [-1, 1]
+                - shot_flag: continuous float in [0, 1] indicating if a shot is being attempted
+                - shot_power: continuous float in [0, 1] for shot power
+                - shot_direction: 2D vector in [-1, 1] for shot direction
         Returns:
-            obs (np.array): Current observation after the step.
-            reward (float): Reward value computed for this step.
-            done (bool): Whether the episode has ended.
-            truncated (bool): Always False (not used).
-            info (dict): Empty dictionary for compatibility.
+            obs (np.ndarray): Current observation of the environment.
+            reward (float): Reward for the current step.
+            terminated (bool): True if the episode has ended due to a goal or possession loss.
+            truncated (bool): True if the episode has ended due to reaching max steps.
+            info (dict): Additional information about the environment state.
         """
 
         # Unpack and format action components
@@ -159,7 +117,8 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         if not self.is_shooting and shot_flag and self.ball.owner is self.attacker:
             shot_quality, actual_direction, actual_power = self.attacker.shoot(
                 desired_direction=shot_direction,
-                desired_power=shot_power
+                desired_power=shot_power,
+                enable_fov=True  # Enable FOV check for shooting
             )
 
             # Only initiate the shot if it's valid (within field of view)
@@ -172,8 +131,8 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
                 self.ball.set_owner(None)
 
                 # Convert real velocity to normalized velocity and set on the ball
-                pitch_width = self.pitch.X_MAX - self.pitch.X_MIN
-                pitch_height = self.pitch.Y_MAX - self.pitch.Y_MIN
+                pitch_width = self.pitch.x_max - self.pitch.x_min
+                pitch_height = self.pitch.y_max - self.pitch.y_min
                 velocity_real = actual_direction * actual_power
                 velocity_norm = np.array([
                     velocity_real[0] / pitch_width,
@@ -186,12 +145,9 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
         # Move attacker if direction is visible
         if self.attacker.is_direction_visible(movement_action):
-            self.attacker.move_with_action(
-                action=movement_action,
-                time_per_step=self.time_per_step,
-                x_range=self.pitch.X_MAX - self.pitch.X_MIN,
-                y_range=self.pitch.Y_MAX - self.pitch.Y_MIN
-            )
+            
+            # Attacker movement
+            self._apply_attacker_action(action)
 
             # Update ball position only if attacker still owns it
             if self.ball.owner is self.attacker:
@@ -202,53 +158,55 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             # Ball moves autonomously only after shot
             self.ball.update(self.time_per_step)
 
-        # Move defender toward current ball position
-        ball_x, ball_y = self.ball.position
-        def_x, def_y = self.defender.get_position()
-        direction = np.array([ball_x - def_x, ball_y - def_y])
-        norm = np.linalg.norm(direction)
-        direction = direction / norm if norm > 0 else np.array([0.0, 0.0])
-
-        self.defender.move_with_action(
-            direction,
-            time_per_step=self.time_per_step,
-            x_range=self.pitch.X_MAX - self.pitch.X_MIN,
-            y_range=self.pitch.Y_MAX - self.pitch.Y_MIN
-        )
+        # Defender always moves towards the ball
+        self._apply_defender_ai()
 
         # Compute reward (all logic handled internally)
-        reward = self._compute_reward(shot_flag=shot_flag)
+        reward, terminated = self.compute_reward(shot_flag=shot_flag)
 
-        # Shot termination logic (goal scored, ball out, etc.)
+        # Check if shot finished (only if currently shooting)
         if self.is_shooting:
-            pitch_width = self.pitch.X_MAX - self.pitch.X_MIN
-            pitch_height = self.pitch.Y_MAX - self.pitch.Y_MIN
-            ball_x_m = ball_x * pitch_width + self.pitch.X_MIN
-            ball_y_m = ball_y * pitch_height + self.pitch.Y_MIN
-            ball_velocity = np.linalg.norm(self.ball.velocity)
 
-            # Check if the ball is completely out of bounds, scored a goal, or possession lost
-            ball_out = self._is_ball_completely_out(ball_x_m, ball_y_m)
-            goal = self._is_goal(ball_x_m, ball_y_m)
+            # Get current ball position in normalized coordinates
+            ball_x, ball_y = self.ball.position
+
+            # Convert ball position to meters and compute velocity norm
+            pitch_width = self.pitch.x_max - self.pitch.x_min
+            pitch_height = self.pitch.y_max - self.pitch.y_min
+            ball_x_m = ball_x * pitch_width + self.pitch.x_min
+            ball_y_m = ball_y * pitch_height + self.pitch.y_min
+            ball_velocity_norm = np.linalg.norm(self.ball.velocity)
+
+            # Check if ball is completely out of bounds
+            ball_completely_out = self._is_ball_completely_out(ball_x_m, ball_y_m)
+
+            # Check if ball in goal
+            goal_scored = self._is_goal(ball_x_m, ball_y_m)
+
+            # Check if possession lost
             possession_lost = self._check_possession_loss()
-            ball_stopped = ball_velocity < 0.01
 
-            # End shot and possibly episode
-            if goal or ball_out or possession_lost or ball_stopped:
+            # Check if ball stopped moving (velocity is zero)
+            ball_stopped = ball_velocity_norm == 0
+
+            # If any terminal condition met, end shot
+            if goal_scored or possession_lost or ball_completely_out or ball_stopped:
                 self.is_shooting = False
                 self.shot_direction = None
                 self.shot_power = 0.0
                 self.shot_position = None
 
-                if goal or ball_out or possession_lost:
-                    self.done = True
+        # Increment step counter
+        self._t += 1
 
-        # End episode if maximum steps reached
-        self.steps += 1
-        if self.steps >= self.max_steps:
-            self.done = True
+        # Build return tuple
+        obs = self._get_obs()
+        if not terminated:
+            terminated = self._check_termination()
+        
+        truncated = self._t >= self.max_steps
+        return obs, reward, terminated, truncated, {}
 
-        return self._get_obs(), reward, self.done, False, {}
 
 
 
@@ -325,129 +283,8 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             # Ball is free: update position and velocity using physics with friction
             self.ball.update(self.time_per_step)
 
-
     
-    def _build_reward_grid(self):
-        """
-        Builds the reward grid based on pitch dimensions and stores it.
-        Out of bounds cells are assigned strong negative rewards (-5.0).
-        Cells inside the goal area (behind goal line and within goal height) get high positive reward (+5.0).
-        """
-        grid = np.zeros((self.num_cells_x, self.num_cells_y))
-
-        position_reward_scale = 4.0
-        y_center_penalty_scale = 2.0
-
-
-        goal_min_y = self.pitch.CENTER_Y - self.pitch.GOAL_HEIGHT / 2
-        goal_max_y = self.pitch.CENTER_Y + self.pitch.GOAL_HEIGHT / 2
-        goal_x_min = self.pitch.FIELD_WIDTH  # goal line
-        goal_x_max = self.pitch.FIELD_WIDTH + self.pitch.GOAL_DEPTH  # depth of the goal area
-
-        for i in range(self.num_cells_x):
-            for j in range(self.num_cells_y):
-
-                # Calculate center of the cell in meters
-                cell_x = self.pitch.X_MIN + (i + 0.5) * self.cell_size
-                cell_y = self.pitch.Y_MIN + (j + 0.5) * self.cell_size
-
-                # Check if out of bounds (excluding goal area)
-                is_out = (cell_x < 0 or cell_x > self.pitch.FIELD_WIDTH or cell_y < 0 or cell_y > self.pitch.FIELD_HEIGHT)
-
-                # Check if inside the goal area (behind goal line, within goal height)
-                is_goal_area = (goal_x_min <= cell_x <= goal_x_max) and (goal_min_y <= cell_y <= goal_max_y)
-
-                # Assign rewards
-                if is_out and not is_goal_area:
-                    grid[i, j] = -5.0  # penalty out of bounds
-                elif is_goal_area:
-                    grid[i, j] = 5.0   # high reward for goal area
-                else:
-                    x_norm = (cell_x - self.pitch.X_MIN) / (self.pitch.X_MAX - self.pitch.X_MIN)
-                    y_norm = (cell_y - self.pitch.Y_MIN) / (self.pitch.Y_MAX - self.pitch.Y_MIN)
-
-                    x_reward = -0.5 * position_reward_scale + position_reward_scale * x_norm # range [-2, 2] if position_reward_scale = 4.0
-                    y_penalty = -0.5 * y_center_penalty_scale * abs(y_norm - 0.5) * 2 # range [-1, 0] if y_center_penalty_scale = 1.0
-
-                    grid[i, j] = x_reward + y_penalty
-
-        self.reward_grid = grid
-
-    def _get_position_reward(self, x, y):
-        """
-        Returns the reward from the reward grid for the attacker's position.
-        Builds the grid on first access.
-        """
-        if self.reward_grid is None:
-            self._build_reward_grid()
-
-        cell_x = int((x - self.pitch.X_MIN) / self.cell_size)
-        cell_y = int((y - self.pitch.Y_MIN) / self.cell_size)
-
-        cell_x = np.clip(cell_x, 0, self.num_cells_x - 1)
-        cell_y = np.clip(cell_y, 0, self.num_cells_y - 1)
-
-        return self.reward_grid[cell_x, cell_y]
-    
-    def _is_goal(self, x, y):
-        """
-        Check if the ball is in the net
-        """
-        margin = 1.0  # 1.0 meters margin for goal area
-
-        GOAL_MIN_Y = self.pitch.CENTER_Y - self.pitch.GOAL_HEIGHT / 2
-        GOAL_MAX_Y = self.pitch.CENTER_Y + self.pitch.GOAL_HEIGHT / 2
-        return x > self.pitch.FIELD_WIDTH + margin and GOAL_MIN_Y <= y <= GOAL_MAX_Y
-
-    def _is_ball_completely_out(self, ball_x_m, ball_y_m):
-        """
-        Simple check if ball is outside the real field plus margin, using denormalized coordinates.
-
-        Args:
-            ball_x_m (float): Ball's x coordinate in meters.
-            ball_y_m (float): Ball's y coordinate in meters.
-            pitch: Pitch instance containing field dimensions and constants.
-
-        Returns:
-            bool: True if ball is outside field + margin, False otherwise
-        """
-
-        margin_m = 1.0  # 1.0 meters margin for out of bounds
-
-        # Check if ball outside real field + margin
-        if (ball_x_m < 0 - margin_m or
-            ball_x_m > self.pitch.FIELD_WIDTH + margin_m or
-            ball_y_m < 0 - margin_m or
-            ball_y_m > self.pitch.FIELD_HEIGHT + margin_m):
-            return True
-
-        return False
-
-    def _get_obs(self):
-        """
-        Get the current observation: normalized positions of attacker, defender, ball,
-        possession status, shooting flag, and shot progress.
-        """
-        # Normalize positions to [0, 1]
-        att_x, att_y = normalize(*self.attacker.get_position())
-        def_x, def_y = normalize(*self.defender.get_position())
-        ball_x, ball_y = normalize(*self.ball.position)
-
-        # Possession status: 1 if attacker has possession, 0 otherwise
-        possession = 1.0 if self.ball.owner is self.attacker else 0.0
-
-        # Shooting flag: 1 if shooting in progress, else 0
-        is_shooting = 1.0 if self.is_shooting else 0.0
-
-        return np.array([
-            att_x, att_y,
-            def_x, def_y,
-            ball_x, ball_y,
-            possession,
-            is_shooting
-        ], dtype=np.float32)
-    
-    def _compute_reward(self, shot_flag=None):
+    def compute_reward(self, shot_flag=None):
         """
         Compute the reward for the current environment step.
 
@@ -469,13 +306,14 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         """
 
         reward = 0.0  # Initialize reward accumulator
+        terminated = False  # Initialize termination flag
 
         # POSITION-BASED REWARD LOGIC
 
         # Get attacker's normalized position and convert to meters
         att_x, att_y = self.attacker.get_position()
-        x_m = att_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
-        y_m = att_y * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
+        x_m = att_x * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
+        y_m = att_y * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
 
         # Add position-based reward from the reward grid (encourages good positioning)
         pos_reward = self._get_position_reward(x_m, y_m)
@@ -486,12 +324,14 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         # Check if a goal has been scored and reward accordingly
         if self._is_goal(x_m, y_m):
             reward += 15.0
-            return reward
+            terminated = True  # End episode on goal
+            return reward, terminated
 
         # Penalize losing possession of the ball to the defender
         if self._check_possession_loss():
             reward -= 3.0
-            return reward
+            terminated = True # End episode on possession loss
+            return reward, terminated
 
         # SHOOT REWARD LOGIC
 
@@ -507,8 +347,8 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
         # Convert ball position to meters for shot-related calculations
         ball_x, ball_y = self.ball.position
-        ball_x_m = ball_x * (self.pitch.X_MAX - self.pitch.X_MIN) + self.pitch.X_MIN
-        ball_y_m = ball_y * (self.pitch.Y_MAX - self.pitch.Y_MIN) + self.pitch.Y_MIN
+        ball_x_m = ball_x * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
+        ball_y_m = ball_y * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
 
 
         # START OF SHOT: REWARD LOGIC
@@ -575,8 +415,10 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             # Apply penalties
             if ball_completely_out:
                 reward -= 5.0
+                terminated = True  # End episode on ball out
             elif possession_lost:
                 reward -= 2.0
+                terminated = True
             elif ball_stopped and not terminal_condition:
                 reward -= 1.0  # shot stopped early but not due to terminal outcome
 
@@ -593,8 +435,31 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
                 else:
                     reward -= 0.1  # existing penalty for bad direction
 
-        return reward
+        return reward, terminated
+    
+    def _get_obs(self):
+        """
+        Get the current observation: normalized positions of attacker, defender, ball,
+        possession status, shooting flag, and shot progress.
+        """
+        # Normalize positions to [0, 1]
+        att_x, att_y = self.attacker.get_position()
+        def_x, def_y = self.defender.get_position()
+        ball_x, ball_y = self.ball.position
 
+        # Possession status: 1 if attacker has possession, 0 otherwise
+        possession = 1.0 if self.ball.owner is self.attacker else 0.0
+
+        # Shooting flag: 1 if shooting in progress, else 0
+        is_shooting = 1.0 if self.is_shooting else 0.0
+
+        return np.array([
+            att_x, att_y,
+            def_x, def_y,
+            ball_x, ball_y,
+            possession,
+            is_shooting
+        ], dtype=np.float32)
 
     def close(self):
             """

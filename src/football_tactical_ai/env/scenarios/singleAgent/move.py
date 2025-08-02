@@ -83,12 +83,6 @@ class OffensiveScenarioMoveSingleAgent(BaseOffensiveScenario):
 
         return reward
 
-    def _check_termination(self) -> bool:
-        att_x, att_y = self.attacker.get_position()
-        x_m = att_x * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
-        y_m = att_y * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
-        return self._is_goal(x_m, y_m) or self._check_possession_loss()
-
     def _get_obs(self):
         """
         Get the current observation: normalized positions of attacker, defender, ball, and possession status.

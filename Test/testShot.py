@@ -39,7 +39,7 @@ while not terminated and not truncated:
     # Sample a random action from the environment's action space
     action = env.action_space.sample()
     # action = np.array([0.0, 0.0, 1.0, 1.0, 1.0, 0.0])  # no movement, shot_flag=1, max power direction towards positive x (goal)
-    obs, reward, t, truncated, info = env.step(action)
+    obs, reward, terminated, truncated, info = env.step(action)
 
     # Create deep copies of the current attacker, defender, and ball states for visualization
     attacker_copy = env.attacker.copy()
