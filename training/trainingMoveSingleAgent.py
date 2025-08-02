@@ -1,4 +1,4 @@
-from football_tactical_ai.helpers.helper_training_SingleAgent import train
+from football_tactical_ai.helpers.helper_training import train_SingleAgent
 
 if __name__ == "__main__":
-    train("move")
+    train_SingleAgent("move")

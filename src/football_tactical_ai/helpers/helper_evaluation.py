@@ -84,6 +84,5 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0, fps=24,
             show_info=show_info,
             show_fov=show_fov
         )
-        print(f"[Episode {episode}] Evaluation cumulative reward: {cumulative_reward:.4f}")
 
     return cumulative_reward

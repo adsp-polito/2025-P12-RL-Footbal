@@ -7,9 +7,9 @@ from stable_baselines3.common.monitor import Monitor
 from football_tactical_ai.env.objects.pitch import Pitch
 from football_tactical_ai.configs import train_single_agent as CFG
 from football_tactical_ai.helpers.helperFunctions import ensure_dirs
-from football_tactical_ai.helpers.helper_evaluation_SingleAgent import evaluate_and_render
+from football_tactical_ai.helpers.helper_evaluation import evaluate_and_render
 
-def train(scenario="move"):
+def train_SingleAgent(scenario="move"):
     """
     Train a PPO agent on the specified single-agent scenario defined in the config.
     
@@ -53,18 +53,27 @@ def train(scenario="move"):
     eval_episodes = []
 
     # Logging training configuration
-    print(f"\n{'=' * 50}")
-    print(f"Training scenario: {scenario}")
-    print(f"Total timesteps: {total_timesteps}")
-    print(f"Steps per episode: {max_steps_per_episode}")
-    print("Starting training...")
+    print("\n" + "=" * 100)
+    print("Starting PPO Training".center(100))
+    print("=" * 100)
+    print(f"{'Scenario:':25} {scenario}")
+    print(f"{'Episodes:':25} {episodes}")
+    print(f"{'Evaluation every:':25} {eval_every} episodes")
+    print(f"{'FPS:':25} {fps}")
+    print(f"{'Seconds per episode:':25} {cfg['seconds_per_episode']}")
+    print(f"{'Steps per episode:':25} {max_steps_per_episode}")
+    print(f"{'Total timesteps:':25} {total_timesteps}")
+    print("=" * 100 + "\n")
 
-    # Training loop
-    for episode in trange(1, episodes + 1, desc="Episodes Progress"):
+    print("\nStarting training...")
+
+    # Training loop with progress bar
+    for ep in trange(episodes, desc="Episodes Progress"):
+        episode = ep + 1  # true episode number starting from 1
         model.learn(total_timesteps=max_steps_per_episode, reset_num_timesteps=False)
 
-        # Periodic evaluation and video rendering
-        if episode == 1 or episode % eval_every == 0:
+        # Periodic evaluation and rendering
+        if episode % eval_every == 0 or episode == 1:
             save_render = os.path.join(cfg["paths"]["save_render_dir"], f"episode_{episode}.mp4")
             cumulative_reward = evaluate_and_render(
                 model,
@@ -75,6 +84,7 @@ def train(scenario="move"):
                 fps=fps,
                 **cfg["render"]
             )
+            print(f"[Episode {episode}] Evaluation cumulative reward: {cumulative_reward:.4f}")
             eval_rewards.append(cumulative_reward)
             eval_episodes.append(episode)
 

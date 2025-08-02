@@ -61,7 +61,7 @@ class OffensiveScenarioMoveSingleAgent(BaseOffensiveScenario):
         reward = 0.0  # Initialize reward for this step
 
          # Apply small time penalty to encourage active movement
-        reward -= 0.1
+        reward -= 0.2
 
         # Convert attacker's position from normalized [0, 1] to meters
         att_x, att_y = self.attacker.get_position()
@@ -73,7 +73,7 @@ class OffensiveScenarioMoveSingleAgent(BaseOffensiveScenario):
 
         # Check if a goal has been scored
         if self._is_goal(x_m, y_m):
-            reward += 5.0
+            reward += 15.0
             return reward  
 
         # Check if possession was lost
