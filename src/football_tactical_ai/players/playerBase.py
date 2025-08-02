@@ -112,7 +112,7 @@ class BasePlayer(ABC):
 
         return angle_deg <= (max_angle / 2)
 
-    def move_with_action(self, action, time_per_step, x_range, y_range):
+    def move_with_action(self, action, time_per_step, x_range, y_range, enable_fov=True):
         """
         Move player based on continuous action input and visual constraints.
 
@@ -133,7 +133,7 @@ class BasePlayer(ABC):
 
 
         # Check if movement is allowed
-        if not self.is_direction_visible(action):
+        if not self.is_direction_visible(action) and enable_fov == True:
             return
 
         # Normalize and save last direction

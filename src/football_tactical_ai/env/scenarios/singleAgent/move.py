@@ -59,6 +59,7 @@ class OffensiveScenarioMoveSingleAgent(BaseOffensiveScenario):
         Looks up the reward grid, applies a time penalty, and checks for goals or possession loss.
         """
         reward = 0.0  # Initialize reward for this step
+        terminated = False  # Initialize termination flag
 
          # Apply small time penalty to encourage active movement
         reward -= 0.2
@@ -74,14 +75,16 @@ class OffensiveScenarioMoveSingleAgent(BaseOffensiveScenario):
         # Check if a goal has been scored
         if self._is_goal(x_m, y_m):
             reward += 15.0
-            return reward  
+            terminated = True
+            return reward, terminated
 
         # Check if possession was lost
         if self._check_possession_loss():
             reward -= 1.0
-            return reward
+            terminated = True
+            return reward, terminated
 
-        return reward
+        return reward, terminated
 
     def _get_obs(self):
         """

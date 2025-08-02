@@ -102,8 +102,9 @@ class BaseOffensiveScenario(gym.Env):
 
         # 5) Build return tuple
         obs = self._get_obs()
-        reward = float(self.compute_reward())
-        terminated = self._check_termination()
+        reward, terminated = self.compute_reward()
+        if not terminated:
+            terminated = self._check_termination()
         truncated = self._t >= self.max_steps
 
         return obs, reward, terminated, truncated, {}
@@ -148,13 +149,18 @@ class BaseOffensiveScenario(gym.Env):
         field_width_m  = self.pitch.x_max - self.pitch.x_min
         field_height_m = self.pitch.y_max - self.pitch.y_min
 
+        print("Defender position before move:", self.defender.get_position())
+
         # Move defender towards attacker
         self.defender.move_with_action(
             direction,
             time_per_step=self.time_per_step,
             x_range=field_width_m,
-            y_range=field_height_m
+            y_range=field_height_m,
+            enable_fov=False  # Disable FOV for defender AI
         )
+
+        print("Defender position after move:", self.defender.get_position())
 
     def _is_ball_completely_out(self, ball_x_m, ball_y_m):
         """
