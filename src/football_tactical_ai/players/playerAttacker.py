@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Any
 from football_tactical_ai.players.playerBase import BasePlayer
 
 class PlayerAttacker(BasePlayer):
@@ -9,22 +10,24 @@ class PlayerAttacker(BasePlayer):
              speed: float = 0.5,
              precision: float = 0.7,
              fov_angle: float = 0.5,
-             fov_range: float = 0.5):
+             fov_range: float = 0.5,
+             role: str = "ATT",
+             **kwargs: Any):
         
         """
-        Initialize an attacking player with specific technical skills and vision parameters.
+        Initialize an attacking player with technical and physical attributes.
         Args:
-            shooting (float): Shooting skill level [0, 1].
-            passing (float): Passing skill level [0, 1].
-            dribbling (float): Dribbling skill level [0, 1].
-            speed (float): Speed multiplier [0, 1].
-            precision (float): Precision of shots [0, 1].
+            shooting (float): Shooting skill [0, 1]
+            passing (float): Passing skill [0, 1]
+            dribbling (float): Dribbling skill [0, 1]
+            speed (float): Current speed factor [0, 1]
+            precision (float): Precision of shots [0, 1]
             fov_angle (float): Field of view angle as a fraction of max angle [0, 1].
             fov_range (float): Field of view range as a fraction of max range [0, 1].
-        
+            role (str): Player role, default is "ATT".
         Physical maxima are inherited from BasePlayer, but can be overridden.
         """
-        super().__init__()
+        super().__init__(agent_id=None, team=None, role=role, **kwargs)
 
         # Technical skills
         self.shooting  = shooting
@@ -104,6 +107,10 @@ class PlayerAttacker(BasePlayer):
     def get_parameters(self):
         """Return technical attributes for logging or debugging."""
         return {
+            "role": self.get_role(),
+            "speed": self.speed,
+            "fov_angle": self.fov_angle,
+            "fov_range": self.fov_range,
             "shooting": self.shooting,
             "precision": self.precision,
             "passing": self.passing,
@@ -113,6 +120,37 @@ class PlayerAttacker(BasePlayer):
     def get_role(self):
         """Return the player role name as string."""
         return "ATT"
+    
+    def execute_action(self, action: np.ndarray, time_step: float, x_range: float, y_range: float):
+        """
+        Executes a continuous action for an attacking player. The attacker can move 
+        and optionally shoot, depending on the action vector.
+
+        Args:
+            action (np.ndarray): Action vector of the form:
+                [dx, dy, shoot_flag, shot_power, shot_dir_x, shot_dir_y]
+            time_step (float): Duration of simulation step in seconds (e.g. 1 / FPS)
+            x_range (float): Field width in meters
+            y_range (float): Field height in meters
+
+        Returns:
+            Optional[Tuple[float, np.ndarray, float]]:
+                (shot_quality, shot_direction, shot_power) if a shot is taken
+                None otherwise
+        """
+
+        # Movement part (dx, dy)
+        super().execute_action(action, time_step, x_range, y_range)
+
+        # Shooting logic
+        if len(action) >= 6 and action[2] > 0.5:
+            desired_power = np.clip(action[3], 0.0, 1.0)
+            desired_direction = np.array(action[4:6])
+            return self.shoot(desired_direction=desired_direction, desired_power=desired_power)
+
+        # No shot attempted
+        return None
+
 
     def copy(self):
         """

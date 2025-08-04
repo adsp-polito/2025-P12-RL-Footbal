@@ -29,7 +29,7 @@ class BasePlayer(ABC):
         max_power: float      = MAX_POWER,
         max_fov_angle: float  = MAX_FOV_ANGLE,
         max_fov_range: float  = MAX_FOV_RANGE,
-        **_: Any,
+        **kwargs: Any,
     ) -> None:
         
         # fixed caps for this player
@@ -42,8 +42,12 @@ class BasePlayer(ABC):
         self.position: List[float] = [0.0, 0.0]   # normalised [0, 1]
         self.last_action_direction: np.ndarray = np.array([1.0, 0.0])  # last action direction
 
-    # SHARED METHODS
+        # attributes for the player instance (for multi agent scenarios)
+        self.agent_id = kwargs.get("agent_id", None)  # Example: "att_0"
+        self.team = kwargs.get("team", None)          # Example: "A" or "B"
+        self.role = kwargs.get("role", "GENERIC")     # Example: "ATT", "DEF", "GK"
 
+    # SHARED METHODS
     def reset_position(self, position: List[float]) -> None:
         """
         Reset player position using a list of two normalized coordinates.
@@ -150,6 +154,35 @@ class BasePlayer(ABC):
 
         # Apply movement
         self.move([dx, dy])
+
+    # Execute the action (to be overridden by subclasses)
+    # This method is specifically used in multi-agent environments
+    def execute_action(self, action: np.ndarray, time_step: float, x_range: float, y_range: float):
+        """
+        Executes a continuous action vector for the player. This method is called once per frame by the environment.
+
+        The base class handles only movement. Role-specific subclasses (Attacker, Defender, Goalkeeper)
+        should override this method to handle actions like shooting, tackling, diving, etc.
+
+        Args:
+            action (np.ndarray): Continuous action vector, typically [dx, dy, ...]
+            time_step (float): Duration of simulation step in seconds (e.g. 1 / FPS)
+            x_range (float): Field width in meters
+            y_range (float): Field height in meters
+        """
+
+        # Basic movement: interpret dx, dy
+        self.move_with_action(
+            action=action[:2],
+            time_per_step=time_step,
+            x_range=x_range,
+            y_range=y_range,
+            enable_fov=True
+        )
+
+        # This base implementation does not include a ny extra action
+        # (e.g. shooting, tackling) – these must be handled by child classes
+        return None
 
 
 
