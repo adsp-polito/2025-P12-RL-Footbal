@@ -121,7 +121,12 @@ class PlayerAttacker(BasePlayer):
         """Return the player role name as string."""
         return "ATT"
     
-    def execute_action(self, action: np.ndarray, time_step: float, x_range: float, y_range: float):
+    def execute_action(self, 
+                       action: np.ndarray, 
+                       time_step: float, 
+                       x_range: float, 
+                       y_range: float, 
+                       ball_owner: str = None) -> dict:
         """
         Executes a continuous action for an attacking player. The attacker can move 
         and optionally shoot, depending on the action vector.
@@ -132,24 +137,79 @@ class PlayerAttacker(BasePlayer):
             time_step (float): Duration of simulation step in seconds (e.g. 1 / FPS)
             x_range (float): Field width in meters
             y_range (float): Field height in meters
-
+            ball_owner (str): ID of the player who currently owns the ball.
         Returns:
-            Optional[Tuple[float, np.ndarray, float]]:
-                (shot_quality, shot_direction, shot_power) if a shot is taken
-                None otherwise
+            dict: Contextual information about the action taken.
         """
+                
+        # Extract movement vector
+        dx, dy = action[0], action[1]
+        direction = np.array([dx, dy])
+        norm = np.linalg.norm(direction)
+
+        # Default visibility check result
+        fov_visible = None
+
+        # If agent is moving, update direction and check FOV
+        if norm > 1e-6:
+            direction /= norm  # Normalize
+            self.last_action_direction = direction
+            fov_visible = self.is_direction_visible(direction)
+        else:
+            direction = np.array([0.0, 0.0])
+            fov_visible = None  # No movement
 
         # Movement part (dx, dy)
         super().execute_action(action, time_step, x_range, y_range)
 
         # Shooting logic
         if len(action) >= 6 and action[2] > 0.5:
+
+            # Extract shot parameters
             desired_power = np.clip(action[3], 0.0, 1.0)
             desired_direction = np.array(action[4:6])
-            return self.shoot(desired_direction=desired_direction, desired_power=desired_power)
 
-        # No shot attempted
-        return None
+            # FOV visibility check
+            is_visible = self.is_direction_visible(desired_direction)
+            
+            # Perform the shot
+            shot_quality, shot_direction, shot_power = self.shoot(
+                desired_direction=desired_direction,
+                desired_power=desired_power,
+                enable_fov=True
+            )
+
+            # Compute shot alignment with goal
+            goal_direction = np.array([1.0, 0.5]) - np.array(self.position)
+            goal_direction /= np.linalg.norm(goal_direction) if np.linalg.norm(goal_direction) > 1e-6 else 1
+            alignment = np.dot(shot_direction, goal_direction)
+            alignment = (alignment + 1) / 2.0  # [0, 1]
+
+            # Compute positional quality
+            x_pos, y_pos = self.position
+            x_factor = 0.2 + 0.8 * x_pos
+            y_dist = abs(y_pos - 0.5)
+            y_factor = max(0.5, 1 - 2 * y_dist)
+            positional_quality = x_factor * y_factor
+
+            # Return full context for reward system
+            return {
+                "shot_attempted": True,
+                "shot_quality": shot_quality,
+                "shot_power": shot_power,
+                "shot_direction": shot_direction,
+                "fov_visible": is_visible,
+                "invalid_shot_direction": not is_visible,
+                "not_owner_shot_attempt": ball_owner != self.agent_id,
+                "shot_alignment": alignment,
+                "start_shot_bonus": True,
+                "shot_positional_quality": positional_quality,
+            }
+
+        return {
+            "fov_visible": fov_visible,
+            "shot_attempted": False,
+        }
 
 
     def copy(self):

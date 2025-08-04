@@ -101,88 +101,91 @@ class FootballMultiEnv(ParallelEnv):
 
         return observations
 
-    def step(self, actions: Dict[str, np.ndarray]):
+    def _build_context(self, agent_id, player, shot_owner, shot_just_started, goal_owner, ball_out_by) -> dict:
         """
-        Execute a simulation step for each agent in the environment.
-
+        Build the context dictionary for the current action.
         Args:
-            actions (dict): Mapping from agent ID to their continuous action vector.
-
+            agent_id (str): ID of the agent performing the action.
+            player (BasePlayer): Player instance for the agent.
+            shot_owner (str): ID of the player who attempted the shot.
+            shot_just_started (bool): Whether the shot was just initiated.
+            goal_owner (str): ID of the player who scored a goal, if any.
+            ball_out_by (str): ID of the player who caused the ball to go out, if applicable.
         Returns:
-            tuple:
-                - observations: New observations after the step.
-                - rewards: Reward per agent.
-                - terminations: Terminal flag per agent (True if goal).
-                - truncations: Truncation flag per agent (True if max steps reached).
-                - infos: Additional info per agent (optional).
+            dict: Contextual information about the action taken.
         """
+        
+        goal_team = self.players[goal_owner].team if goal_owner else None
 
-        # Step counter
-        self.episode_step += 1
+        return {
+            "goal_scored": goal_owner == agent_id,
+            "goal_team": goal_team,
+            "ball_out_by": ball_out_by,
+            "start_shot_bonus": (agent_id == shot_owner and shot_just_started),
+            "possession_lost": self._check_possession_loss(agent_id),
 
-        # Dictionary to store results from agent actions (used for contextual reward logic)
-        self.last_action_results = {}
-
-        # Apply each agent's action and store contextual result (e.g., shot, direction, etc.)
-        for agent_id, action in actions.items():
-            player = self.players[agent_id]
-            result = player.execute_action(
-                action,
-                time_step=self.time_step,
-                x_range=self.x_range,
-                y_range=self.y_range
-            )
-            self.last_action_results[agent_id] = result or {}
-
-        # Physics update (e.g., ball movement)
-        self.ball.update(self.time_step)
-
-        # Initialize output containers
-        rewards = {}
-        terminations = {}
-        truncations = {}
-        infos = {}
-
-        # Compute reward for each agent using role-specific grid and contextual action result
-        for agent_id in self.agents:
-            player = self.players[agent_id]
-            role = player.get_role()
-            reward_grid = self.reward_grids.get(role)
-            context = self.last_action_results.get(agent_id, {})
-
-            rewards[agent_id] = get_reward(
-                agent_id=agent_id,
-                player=player,
-                ball=self.ball,
-                pitch=self.pitch,
-                reward_grid=reward_grid,
-                context=context,
-            )
-
-        # Check global termination conditions
-        goal_scored = self._check_goal()
-        timeout = self.episode_step >= self.max_steps
-
-        # Apply termination and truncation flags
-        for agent_id in self.agents:
-            terminations[agent_id] = goal_scored
-            truncations[agent_id] = timeout
-            infos[agent_id] = {}
-
-        # Get new observations
-        observations = {
-            agent_id: self._get_observation(agent_id)
-            for agent_id in self.agents
+            # default-safe entries for reward logic
+            "shot_attempted": False,
+            "shot_quality": None,
+            "not_owner_shot_attempt": False,
+            "invalid_shot_direction": False,
+            "shot_alignment": None,
+            "fov_visible": None,
+            "tackle_success": False,
+            "save_success": False,
+            "shot_positional_quality": 0.0,
         }
 
-        return observations, rewards, terminations, truncations, infos
 
 
+    
+    def _check_possession_loss(self, agent_id: str) -> bool:
+        """
+        Check if the attacker has lost possession to a defender or goalkeeper.
+        """
+        if not agent_id.startswith("att"):
+            return False
 
-    def _check_goal(self):
-        # Example: simple goal condition
-        ball_x, ball_y = self.ball.get_position()
-        return ball_x >= 1.0 and 0.4 <= ball_y <= 0.6  # in front of goal center
+        new_owner = self.ball.owner
+        if new_owner == agent_id:
+            return False
+
+        # Check if the new owner is a defender or goalkeeper
+        role = self.players.get(new_owner, None).get_role() if new_owner in self.players else None
+        return role in {"DEF", "GK"}
+    
+    def _is_ball_completely_out(self, ball_x_m, ball_y_m):
+        """
+        Simple check if ball is outside the real field plus margin, using denormalized coordinates.
+
+        Args:
+            ball_x_m (float): Ball's x coordinate in meters.
+            ball_y_m (float): Ball's y coordinate in meters.
+            pitch: Pitch instance containing field dimensions and constants.
+
+        Returns:
+            bool: True if ball is outside field + margin, False otherwise
+        """
+
+        margin_m = 1.0  # 1.0 meters margin for out of bounds
+
+        # Check if ball outside real field + margin
+        if (ball_x_m < 0 - margin_m or
+            ball_x_m > self.pitch.width + margin_m or
+            ball_y_m < 0 - margin_m or
+            ball_y_m > self.pitch.height + margin_m):
+            return True
+
+        return False
+
+
+    def _is_goal(self, x, y):
+        """
+        Check if the ball is in the net
+        """
+        GOAL_MIN_Y = self.pitch.center_y - self.pitch.goal_width / 2
+        GOAL_MAX_Y = self.pitch.center_y + self.pitch.goal_width / 2
+        return x > self.pitch.width and GOAL_MIN_Y <= y <= GOAL_MAX_Y
 
     def _get_observation(self, agent_id: str):
         """
@@ -191,7 +194,5 @@ class FootballMultiEnv(ParallelEnv):
         player = self.players[agent_id]
         px, py = player.get_position()
         bx, by = self.ball.get_position()
-
-        
 
         return np.array([px, py, bx, by], dtype=np.float32)
