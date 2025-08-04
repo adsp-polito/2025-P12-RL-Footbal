@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from football_tactical_ai.configs import pitch_settings as PS
+from football_tactical_ai.configs import pitchSettings as PS
 
 def normalize(x, y):
     """

@@ -5,9 +5,9 @@ from tqdm import trange
 from stable_baselines3 import PPO
 from stable_baselines3.common.monitor import Monitor
 from football_tactical_ai.env.objects.pitch import Pitch
-from football_tactical_ai.configs import train_single_agent as CFG
+from football_tactical_ai.configs import trainSingleAgent as CFG
 from football_tactical_ai.helpers.helperFunctions import ensure_dirs
-from football_tactical_ai.helpers.helper_evaluation import evaluate_and_render
+from football_tactical_ai.helpers.helperEvaluation import evaluate_and_render
 
 def train_SingleAgent(scenario="move"):
     """

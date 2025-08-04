@@ -1,4 +1,4 @@
-from football_tactical_ai.configs import pitch_settings as PS
+from football_tactical_ai.configs import pitchSettings as PS
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Arc, Rectangle
