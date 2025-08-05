@@ -197,7 +197,6 @@ class FootballMultiEnv(ParallelEnv):
             shot_context=self.shot_context
         )
 
-        print("BALL OWNER:", self.ball.get_owner(), "SHOT OWNER:", self.shot_owner)
         # Assign ball to a nearby player if unowned
         self._assign_ball_if_nearby()
 
