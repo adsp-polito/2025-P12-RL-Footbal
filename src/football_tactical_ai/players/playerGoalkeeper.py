@@ -1,5 +1,6 @@
 import numpy as np
 from football_tactical_ai.env.objects.ball import Ball
+from football_tactical_ai.helpers.helperFunctions import denormalize
 from football_tactical_ai.players.playerBase import BasePlayer
 from typing import Any
 
@@ -15,6 +16,8 @@ class PlayerGoalkeeper(BasePlayer):
                  catching: float = 0.5,
                  punch_power: float = 0.5,
                  role: str = "GK",
+                 agent_id: str = "gk_0",
+                 team: str = "B",
                  **kwargs: Any):
         """
         Initialize a goalkeeper with goalkeeping-specific attributes.
@@ -27,8 +30,15 @@ class PlayerGoalkeeper(BasePlayer):
             speed (float): Movement speed multiplier [0, 1].
             fov_angle (float): Vision angle [0, 1].
             fov_range (float): Vision range [0, 1].
+            catching (float): Probability of catching the ball [0, 1].
+            punch_power (float): Power of a punch to deflect the ball [0, 1].
+            role (str): Player role, default is "GK".
+            agent_id (str): Unique identifier for the goalkeeper.
+            team (str): Team identifier, default is "B".
+
+        Physical maxima are inherited from BasePlayer, but can be overridden.
         """
-        super().__init__(agent_id=None, team=None, role=role, **kwargs)
+        super().__init__(agent_id=agent_id, team=team, role=role, **kwargs)
 
         # Technical attributes
         self.reflexes   = reflexes
@@ -48,7 +58,7 @@ class PlayerGoalkeeper(BasePlayer):
 
     def dive(self, direction: str, ball: Ball) -> dict:
         """
-        Attempt a dive and evaluate interception.
+        Attempt a dive and evaluate if the shot is blocked or deflected.
 
         Args:
             direction (str): 'left' or 'right'
@@ -56,60 +66,64 @@ class PlayerGoalkeeper(BasePlayer):
 
         Returns:
             dict: {
-                'dive_success': float,
-                'save_success': bool,
-                'deflected': bool
+                'dive_score': float,   # Reflex + reach effectiveness
+                'blocked': bool,       # True if shot was caught and stopped
+                'deflected': bool      # True if shot was parried away
             }
         """
         if direction not in {"left", "right"}:
-            return {"dive_success": 0.0, "save_success": False, "deflected": False}
+            return {"dive_score": 0.0, "blocked": False, "deflected": False}
 
-        # Effectiveness of dive based on reflexes and reach
-        effectiveness = 0.5 * self.reflexes + 0.5 * self.reach
+        # Dive effectiveness based on reflexes and reach
+        dive_score = 0.5 * self.reflexes + 0.5 * self.reach
 
-        # Distance check
-        ball_x, ball_y = ball.get_position(denormalized=True)
-        self_x, self_y = self.get_position(denormalized=True)
+        # Denormalized position and distance check
+        ball_x, ball_y = denormalize(*ball.get_position())
+        self_x, self_y = denormalize(*self.get_position())
         distance = np.linalg.norm([ball_x - self_x, ball_y - self_y])
-        reachable = distance <= (1.0 + self.reach * 2.0)
+        reachable = distance <= (0.5 + self.reach)
 
         if not reachable:
-            return {
-                "dive_success": effectiveness,
-                "save_success": False,
-                "deflected": False
-            }
+            return {"dive_score": 0.0, "blocked": False, "deflected": False}
 
-        # Randomized outcome based on effectiveness
-        save_success = np.random.rand() < effectiveness
+        # Attempt to stop the shot
+        dive_successful = np.random.rand() < dive_score
 
-        if save_success:
-            # Catch or deflect?
-            if np.random.rand() < self.catching:
-                ball.set_owner(self.agent_id)
-                return {
-                    "dive_success": effectiveness,
-                    "save_success": True,
-                    "deflected": False
-                }
-            else:
-                # Directional deflection based on input
-                sign = -1 if direction == "left" else 1
-                deflect_velocity = np.array([0.12 * sign, 0.04]) * self.punch_power
-                ball.set_velocity(deflect_velocity)
-                ball.set_owner(None)
-                return {
-                    "dive_success": effectiveness,
-                    "save_success": True,
-                    "deflected": True
-                }
+        if not dive_successful:
+            return {"dive_score": dive_score, "blocked": False, "deflected": False}
 
-        return {
-            "dive_success": effectiveness,
-            "save_success": False,
-            "deflected": False
-        }
+        # CASE 1: Catch and stop
+        if np.random.rand() < self.catching:
+            ball.set_owner(self.agent_id)
+            return {"dive_score": dive_score, "blocked": True, "deflected": False}
 
+        # CASE 2: Deflection
+        incoming_velocity = np.array(ball.get_velocity())
+        speed = np.linalg.norm(incoming_velocity)
+        if speed < 1e-6:
+            incoming_dir = np.array([1.0, 0.0])
+        else:
+            incoming_dir = incoming_velocity / speed
+
+        # Rotate incoming direction slightly
+        if direction == "left":
+            rot_matrix = np.array([[0.95, -0.3], [0.3, 0.95]])
+        else:
+            rot_matrix = np.array([[0.95, 0.3], [-0.3, 0.95]])
+
+        deflected_dir = rot_matrix @ incoming_dir
+
+        # Add small random noise for realism
+        deflected_dir += np.random.normal(0, 0.05, size=2)
+        deflected_dir /= np.linalg.norm(deflected_dir)
+
+        # Final velocity scaled by original speed and punch power
+        final_velocity = deflected_dir * speed * self.punch_power
+
+        ball.set_velocity(final_velocity)
+        ball.set_owner(None)
+
+        return {"dive_score": dive_score, "blocked": False, "deflected": True}
 
     def get_parameters(self):
         """Return technical attributes for logging or debugging."""
@@ -124,31 +138,27 @@ class PlayerGoalkeeper(BasePlayer):
         }
     
     def execute_action(self, 
-                       action: np.ndarray, 
-                       time_step: float, 
-                       x_range: float, 
-                       y_range: float, 
-                       ball: Ball = None) -> dict:
+                   action: np.ndarray, 
+                   time_step: float, 
+                   x_range: float, 
+                   y_range: float, 
+                   ball: Ball = None) -> dict:
         """
         Executes a continuous action for a goalkeeper, including movement, dive, and shoot.
 
-        Args:
-            action (np.ndarray): Action vector:
-                [dx, dy, dive_left, dive_right, shoot_flag, power, dir_x, dir_y]
-            time_step (float): Simulation step in seconds
-            x_range (float): Field width
-            y_range (float): Field height
-            ball (Ball): The ball object representing the current state of the ball.
+        Action vector format:
+            [dx, dy, dive_left, dive_right, shoot_flag, power, dir_x, dir_y]
 
         Returns:
             dict: Contextual information about the action taken.
         """
 
         context = {
-            "dive_success": None,
-            "save_success": False,
+            "dive_score": None,
+            "blocked": False,
+            "deflected": False,
             "shot_attempted": False,
-            "not_owner_shot_attempt": False,
+            "invalid_shot_attempt": False,
             "invalid_shot_direction": False,
             "fov_visible": None,
             "shot_quality": None,
@@ -156,45 +166,42 @@ class PlayerGoalkeeper(BasePlayer):
             "shot_power": None,
         }
 
-        # Extract movement vector
+        # Extract and normalize movement direction
         dx, dy = action[0], action[1]
         direction = np.array([dx, dy])
         norm = np.linalg.norm(direction)
 
-        # Default visibility check result
-        fov_visible = None
-
-        # If agent is moving, update direction and check FOV
         if norm > 1e-6:
-            direction /= norm  # Normalize
+            direction /= norm
             self.last_action_direction = direction
-            fov_visible = self.is_direction_visible(direction)
+            context["fov_visible"] = self.is_direction_visible(direction)
         else:
             direction = np.array([0.0, 0.0])
-            fov_visible = None  # No movement
+            context["fov_visible"] = None
 
-        # Movement
+        # Apply movement
         super().execute_action(action, time_step, x_range, y_range)
 
+        # DIVE ACTION
+        dive_result = None
         if len(action) >= 4:
             if action[2] > 0.5:
                 dive_result = self.dive("left", ball)
             elif action[3] > 0.5:
                 dive_result = self.dive("right", ball)
-            else:
-                dive_result = None
 
-            if dive_result:
-                context["dive_success"] = dive_result["dive_success"]
-                context["save_success"] = dive_result["save_success"]
+        if dive_result:
+            context["dive_score"] = dive_result.get("dive_score", 0.0)
+            context["blocked"] = dive_result.get("blocked", False)
+            context["deflected"] = dive_result.get("deflected", False)
 
-        # Shooting logic (e.g., goal kick, pass)
+        # SHOOTING (goal kick or pass)
         if len(action) >= 8 and action[4] > 0.5:
             power = np.clip(action[5], 0.0, 1.0)
-            direction = np.array(action[6:8])
+            shoot_direction = np.array(action[6:8])
 
-            shot_quality, shot_direction, shot_power = self.shoot(
-                desired_direction=direction,
+            shot_quality, actual_direction, actual_power = self.shoot(
+                desired_direction=shoot_direction,
                 desired_power=power,
                 enable_fov=True
             )
@@ -202,15 +209,13 @@ class PlayerGoalkeeper(BasePlayer):
             context.update({
                 "shot_attempted": True,
                 "shot_quality": shot_quality,
-                "shot_direction": shot_direction,
-                "shot_power": shot_power,
-                "not_owner_shot_attempt": self.agent_id != ball.get_owner(),
-                "invalid_shot_direction": np.allclose(shot_direction, [0.0, 0.0]),
-                "fov_visible": fov_visible
+                "shot_direction": actual_direction,
+                "shot_power": actual_power,
+                "invalid_shot_attempt": self.agent_id != ball.get_owner(),
+                "invalid_shot_direction": np.allclose(actual_direction, [0.0, 0.0])
             })
 
         return context
-
 
     def get_role(self):
         """Return role name as string for rendering or role-based logic."""

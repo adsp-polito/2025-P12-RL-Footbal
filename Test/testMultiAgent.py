@@ -29,8 +29,9 @@ truncated = {agent: False for agent in env.agents}
 # Main loop for multi-agent environment
 while not all(terminated.values()) and not all(truncated.values()):
     # Sample actions for all agents
+
     actions = {
-        agent_id: env.action_space(agent_id).sample()
+        agent_id: env.action_space[agent_id].sample()
         for agent_id in env.agents
     }
 
@@ -61,7 +62,7 @@ anim = render_episode_multiAgent(
     show_heatmap=False,
     show_rewards=False,
     reward_grid=env.reward_grids["ATT"],
-    show_fov=True  # Optional: set to False if you don't want vision cones
+    show_fov=False 
 )
 
 # Save video

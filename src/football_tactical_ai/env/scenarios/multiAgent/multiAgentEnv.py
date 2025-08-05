@@ -7,6 +7,7 @@ from football_tactical_ai.players.playerAttacker import PlayerAttacker
 from football_tactical_ai.players.playerDefender import PlayerDefender
 from football_tactical_ai.players.playerGoalkeeper import PlayerGoalkeeper
 from football_tactical_ai.env.scenarios.multiAgent.physics import update_ball_state
+from football_tactical_ai.helpers.helperFunctions import denormalize
 from football_tactical_ai.env.objects.ball import Ball
 from football_tactical_ai.env.objects.pitch import Pitch
 from football_tactical_ai.configs.multiAgentEnvConfig import get_config
@@ -91,6 +92,7 @@ class FootballMultiEnv(ParallelEnv):
         # Ball and initial ownership
         self.ball = Ball()
         self.episode_step = 0
+        self.ball.set_owner("att_0")  # Initial ball ownership
 
         # Reward grids for each role
         self.reward_grids = {
@@ -98,6 +100,10 @@ class FootballMultiEnv(ParallelEnv):
             "DEF": build_defender_grid(self.pitch),
             "GK":  build_goalkeeper_grid(self.pitch),
         }
+
+        # Initialize shot context
+        self.shot_owner = None
+        self.shot_just_started = False
 
     # PettingZoo interface methods (required for multi-agent environments)
     @property
@@ -118,9 +124,6 @@ class FootballMultiEnv(ParallelEnv):
             dict: Initial observations for all agents.
         """
 
-        # Set random seed for reproducibility
-        super().reset(seed=seed)
-
         # Reset the environment state
         self.agents = self.possible_agents[:]
         self.episode_step = 0
@@ -137,42 +140,27 @@ class FootballMultiEnv(ParallelEnv):
             for agent_id in self.agents
         }
 
+        # Reset shot context
+        self._reset_shot_context()
+
         return observations, {}
 
     def step(self, actions: Dict[str, np.ndarray]):
         """
         Advance the environment by one timestep using the actions of all agents.
-
-        Args:
-            actions (dict): Dictionary of actions for each agent.
-
-        Returns:
-            Observations, rewards, terminations, truncations, infos:
-                - observations (dict): Observations for each agent.
-                - rewards (dict): Rewards for each agent.
-                - terminations (dict): Termination flags for each agent.
-                - truncations (dict): Truncation flags for each agent.
-                - infos (dict): Additional information for each agent.
         """
 
-        # Step 0: Action validation
+        # Step 0: Validate input
         if not isinstance(actions, dict):
             raise ValueError("Actions must be a dictionary mapping agent IDs to actions.")
         if not all(agent in actions for agent in self.agents):
             raise ValueError("All agents must provide an action.")
 
-        # Increment episode step
         self.episode_step += 1
-
-        # Initialize containers for observations, rewards, terminations, truncations, and infos
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
-
-        # Temporary context for actions
         temp_context = {}
-        shot_owner = None
-        shot_just_started = False
 
-        # Step 1: Action execution + context saving
+        # Step 1: Execute actions and handle shooting
         for agent_id, action in actions.items():
             player = self.players[agent_id]
             context = player.execute_action(
@@ -183,43 +171,53 @@ class FootballMultiEnv(ParallelEnv):
                 ball=self.ball
             )
 
-            # Shot attempted by this agent
+
+             # Check if this agent attempted a shot
             if context.get("shot_attempted", False):
-                shot_owner = agent_id
-                shot_just_started = True
+                # Verify if the shot is valid (agent owns the ball and has visibility)
+                # set the context here, inside the method
+                self._process_shot_attempt(agent_id, context)
 
             temp_context[agent_id] = context
 
-        # Step 2: Update ball possession if tackle/save successful
+        # Step 2: Handle possession changes (tackle/save/dive)
         for agent_id, context in temp_context.items():
-            if context.get("tackle_success", False):
+            if context.get("tackle_success", False) or context.get("blocked", False):
+                print("BELLA")
                 self.ball.set_owner(agent_id)
-            elif context.get("save_success", False) and context.get("new_owner") == agent_id:
-                self.ball.set_owner(agent_id)
+                self._reset_shot_context()
+            if context.get("deflected", False):
+                self._reset_shot_context()
 
-        # Step 3: Ball physics
-        update_ball_state(self.ball, self.players, actions, self.time_step)
+        # Step 3: Ball movement
+        update_ball_state(
+            ball=self.ball,
+            players=self.players,
+            pitch=self.pitch,
+            actions=actions,
+            time_step=self.time_step,
+            shot_context=self.shot_context
+        )
 
-        # Step 4: Check goal / out
-        ball_x, ball_y = self.ball.get_position(denormalized=True)
-        goal_owner = shot_owner if self._is_goal(ball_x, ball_y) else None
-        ball_out_by = shot_owner if self._is_ball_completely_out(ball_x, ball_y) else None
+        print("BALL OWNER:", self.ball.get_owner(), "SHOT OWNER:", self.shot_owner)
+        # Assign ball to a nearby player if unowned
+        self._assign_ball_if_nearby()
 
-        # Step 5: Add global context for each agent
+        # Step 4: Check goal or out
+        ball_x, ball_y = denormalize(*self.ball.get_position())
+        goal_owner = self.shot_owner if self._is_goal(ball_x, ball_y) else None
+        ball_out_by = self.shot_owner if self._is_ball_completely_out(ball_x, ball_y) else None
+
+        # Step 5: Build agent info and shot context
         for agent_id in self.agents:
             context = temp_context[agent_id]
+            deflection_power = np.linalg.norm(self.ball.get_velocity()) if context.get("deflected") else 0.0
 
-            # If the goalkeeper deflected the ball, calculate deflection power
-            deflection_power = 0.0
-            if context.get("deflected", False):
-                deflection_power = np.linalg.norm(self.ball.get_velocity())
-
-            # Update context with global information
             context.update({
                 "goal_scored": goal_owner == agent_id,
                 "goal_team": self.players[goal_owner].team if goal_owner else None,
                 "ball_out_by": ball_out_by,
-                "start_shot_bonus": (agent_id == shot_owner and shot_just_started),
+                "start_shot_bonus": agent_id == self.shot_owner and self.shot_just_started,
                 "possession_lost": self._check_possession_loss(agent_id),
                 "deflection_power": deflection_power
             })
@@ -229,7 +227,13 @@ class FootballMultiEnv(ParallelEnv):
         # Step 6: Reward calculation
         for agent_id in self.agents:
             role = self.players[agent_id].get_role()
-            rewards[agent_id] = get_reward(self.players[agent_id], infos[agent_id], self.reward_grids[role])
+            rewards[agent_id] = get_reward(
+                player=self.players[agent_id],
+                ball=self.ball,
+                pitch=self.pitch,
+                reward_grid=self.reward_grids[role],
+                context=infos[agent_id]
+    )
 
         # Step 7: Observations
         for agent_id in self.agents:
@@ -241,7 +245,47 @@ class FootballMultiEnv(ParallelEnv):
             truncations[agent_id] = self.episode_step >= self.max_steps
 
         return observations, rewards, terminations, truncations, infos
+    
+    def _reset_shot_context(self):
+        """
+        Reset the shot context after a shot attempt.
+        """
+        self.shot_context = {"shot_by": None, "direction": None, "power": 0.0}
+        self.shot_owner = None
+        self.shot_just_started = False
 
+    def _process_shot_attempt(self, agent_id: str, context: dict):
+        """
+        Process a shot attempt by an agent.
+        Args:
+            agent_id (str): ID of the agent attempting the shot.
+            context (dict): Context dictionary containing shot details.
+        """
+        if self.ball.get_owner() == agent_id and context.get("fov_visible", False):
+            self.shot_context.update({
+                "shot_by": agent_id,
+                "direction": context.get("shot_direction"),
+                "power": context.get("shot_power")
+            })
+            self.shot_owner = agent_id
+            self.shot_just_started = True
+        else:
+            context["invalid_shot_attempt"] = True
+            context["shot_power"] = 0.0
+            context["shot_direction"] = None
+            context["shot_attempted"] = False
+
+    def _assign_ball_if_nearby(self, threshold: float = 0.004):
+        if self.ball.get_owner() is not None:
+            return  # Already owned
+
+        ball_pos = np.array(self.ball.get_position())
+        for agent_id, player in self.players.items():
+            player_pos = np.array(player.get_position())
+            distance = np.linalg.norm(player_pos - ball_pos)
+            if distance < threshold:  # If player is close enough to the ball (0.004 normalized units ~0.5 meters)
+                self.ball.set_owner(agent_id)
+                break  # Only assign to the first one found
 
     def _check_possession_loss(self, agent_id: str) -> bool:
         """
@@ -279,6 +323,8 @@ class FootballMultiEnv(ParallelEnv):
             ball_y_m < 0 - margin_m or
             ball_y_m > self.pitch.height + margin_m):
             return True
+        
+       
 
         return False
 

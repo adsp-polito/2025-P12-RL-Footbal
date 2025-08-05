@@ -83,6 +83,12 @@ class BasePlayer(ABC):
         """
         return tuple(self.position)
     
+    def get_agent_id(self) -> str:
+        """
+        Get the unique identifier for this player instance.
+        """
+        return self.agent_id
+    
     def is_direction_visible(self, desired_direction):
         """
         Check whether the desired direction is within the player's current field of view.
@@ -243,6 +249,7 @@ class BasePlayer(ABC):
         shot_quality = x_factor * y_factor * self.shooting
 
         return shot_quality, shot_direction, shot_power
+
 
 
 

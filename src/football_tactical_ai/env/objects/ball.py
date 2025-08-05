@@ -121,6 +121,24 @@ class Ball:
             np.ndarray: Velocity vector [vx, vy].
         """
         return self.velocity
+    
+    def set_owner(self, owner):
+        """
+        Set the owner of the player currently possessing the ball.
+        Args:
+            owner (str): The ID of the player who owns the ball.
+        """
+        self.owner = owner
+
+    def get_owner(self):
+        """
+        Get the ID of the player currently possessing the ball.
+
+        Returns:
+            str or None: Player ID if possessed, None if free.
+        """
+        return self.owner
+    
 
     def update(self, time_step):
         """
@@ -165,5 +183,5 @@ class Ball:
         new_ball = Ball()
         new_ball.position = self.position.copy()
         new_ball.velocity = self.velocity.copy()
-        new_ball.owner = self.owner.copy() if self.owner else None
+        new_ball.owner = self.owner
         return new_ball

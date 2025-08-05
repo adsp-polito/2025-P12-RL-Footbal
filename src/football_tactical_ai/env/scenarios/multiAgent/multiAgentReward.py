@@ -10,8 +10,7 @@ from football_tactical_ai.helpers.helperFunctions import denormalize
 _last_grid_reward = {}
 
 
-def get_reward(agent_id: str,
-               player: BasePlayer,
+def get_reward(player: BasePlayer,
                ball: Ball,
                pitch: Pitch,
                reward_grid: np.ndarray,
@@ -27,16 +26,17 @@ def get_reward(agent_id: str,
         reward_grid (np.ndarray): Grid with position-based reward for this role.
         context (Dict): Action result context (e.g. {'shot': True}, {'tackle': success}).
     """
+
     role = player.get_role()
+    agent_id = player.get_agent_id()
 
     # Convert normalized player position to meters
     x_norm, y_norm = player.get_position()
-    x_m = denormalize(x_norm, pitch.x_min, pitch.x_max)
-    y_m = denormalize(y_norm, pitch.y_min, pitch.y_max)
+    norm_xy = denormalize(x_norm, y_norm)
 
     # Retrieve reward from spatial grid
     pos_reward = get_position_reward_from_grid(
-        pitch, reward_grid, x_m, y_m, agent_id
+        pitch, reward_grid, norm_xy[0], norm_xy[1], agent_id
     )
 
     # Dispatch logic by role
@@ -124,7 +124,7 @@ def attacker_reward(agent_id, player, ball, pitch, pos_reward, context):
         reward -= 0.25
 
     # Penalize if shot was attempted but not by the owner
-    if context.get("not_owner_shot_attempt", False):
+    if context.get("invalid_shot_attempt", False):
         reward -= 0.5
 
     # Angle reward (dot product with goal direction)
@@ -167,7 +167,7 @@ def defender_reward(agent_id, player, ball, pitch, pos_reward, context):
         reward -= 5.0  # team conceded
 
     # Penalize if shot was attempted but not by the owner
-    if context.get("not_owner_shot_attempt", False):
+    if context.get("invalid_shot_attempt", False):
         reward -= 0.5
 
     # Penalize bad shot direction
@@ -194,17 +194,16 @@ def goalkeeper_reward(agent_id, player, ball, pitch, pos_reward, context):
     reward += pos_reward
 
     # Save success
-    if context.get("save_success", False):
+    if context.get("blocked", False):
         reward += 10.0
 
     # Reward for successful dive
-    if context.get("dive_success", False):
-        reward += 5.0
+    if context.get("dive_score") is not None:
+        reward += context.get("dive_score", 0.0) * 5.0  # scale dive success
 
     # Bonus for deflection
     if context.get("deflected", False):
-        deflection_power = context.get("deflection_power", 0.0)
-        reward += 2.0 * deflection_power  # scale based on power
+        reward += 5.0
 
     # Reward if ball is out of bounds
     if context.get("ball_out_by") is not None:
@@ -217,7 +216,7 @@ def goalkeeper_reward(agent_id, player, ball, pitch, pos_reward, context):
         reward -= 5.0  # team conceded
 
     # Penalize if shot was attempted but not by the owner
-    if context.get("not_owner_shot_attempt", False):
+    if context.get("invalid_shot_attempt", False):
         reward -= 0.5
 
     # Penalize bad shot direction

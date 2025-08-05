@@ -14,7 +14,6 @@ import numpy as np
 # x_absolute = x_normalized * (X_MAX - X_MIN) + X_MIN
 # y_absolute = y_normalized * (Y_MAX - Y_MIN) + Y_MIN
 
-
 def render_episode_singleAgent(states, pitch, save_path=None, fps=24, stripes=False, full_pitch=False,
                    show_grid=False, show_heatmap=False, show_rewards=False, reward_grid=None,
                    rewards_per_frame=None, show_info=True, show_fov = False):
@@ -350,6 +349,19 @@ def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=Fal
     ball_circle = Circle((0, 0), radius=0.5, color='white', ec='black', lw=1, zorder=6)
     ax.add_patch(ball_circle)
 
+    # Dictionary to hold references to info text objects (for updating/removal)
+    info_texts = {
+    'frame_only': ax.text(
+        0.5, 1.1, "",
+        transform=ax.transAxes,
+        fontsize=24,
+        fontweight='bold',
+        verticalalignment='top',
+        horizontalalignment='center',
+        color='black',
+    )
+}
+
     def update(frame_idx):
         state = states[frame_idx]
 
@@ -396,24 +408,9 @@ def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=Fal
         # Calculate total frames count
         total_frames = len(states)-1
         
-        # Dictionary to hold references to info text objects (for updating/removal)
-        info_texts = {
-            'frame_only': None,
-        }
-
-        center_x = 0.5
-        base_y = 1.1
-        fontsize = 24
+        # Update info text with current frame
         line_text = f"Frame: {frame_idx}/{total_frames}"
-        info_texts['frame_only'] = ax.text(
-            center_x, base_y, line_text,
-            transform=ax.transAxes,
-            fontsize=fontsize,
-            fontweight='bold',
-            verticalalignment='top',
-            horizontalalignment='center',
-            color='black',
-        )
+        info_texts['frame_only'].set_text(line_text)
 
         return list(player_patches.values()) + list(fov_patches.values()) + [ball_circle]
 

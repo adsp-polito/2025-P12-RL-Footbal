@@ -1,6 +1,7 @@
 import numpy as np
 from football_tactical_ai.env.objects.ball import Ball
 from football_tactical_ai.players.playerBase import BasePlayer
+from football_tactical_ai.helpers.helperFunctions import denormalize
 from typing import Any
 
 class PlayerDefender(BasePlayer):
@@ -13,6 +14,8 @@ class PlayerDefender(BasePlayer):
                  fov_angle: float = 0.5,
                  fov_range: float = 0.5,
                  role: str = "DEF",
+                 agent_id: str = "def_0",
+                 team: str = "B",
                  **kwargs: Any):  
         """
         Initialize a defending player with technical and physical attributes.
@@ -24,9 +27,12 @@ class PlayerDefender(BasePlayer):
             fov_angle (float): Field of view angle as a fraction of max angle [0, 1].
             fov_range (float): Field of view range as a fraction of max range [0, 1].
             role (str): Player role, default is "DEF".
+            agent_id (str): Unique identifier for the defender.
+            team (str): Team identifier, default is "B".
+            
         Physical maxima are inherited from BasePlayer, but can be overridden.
         """
-        super().__init__(agent_id=None, team=None, role=role, **kwargs)
+        super().__init__(agent_id=agent_id, team=team, role=role, **kwargs)
 
         # Technical skills
         self.tackling      = tackling
@@ -82,15 +88,13 @@ class PlayerDefender(BasePlayer):
             return False
 
         # Get distance to ball
-        ball_x, ball_y = ball.get_position(denormalized=True)
-        self_x, self_y = self.get_position(denormalized=True)
+        ball_x, ball_y = denormalize(ball.get_position()[0], ball.get_position()[1])
+        self_x, self_y = denormalize(self.get_position()[0], self.get_position()[1])
         dist = np.linalg.norm([ball_x - self_x, ball_y - self_y])
 
         if dist <= self.tackle_range:
             self.tackle_timer = self.tackle_cooldown_time  # Reset cooldown
             success = np.random.rand() < self.tackling
-            if success:
-                ball.set_owner(self.agent_id)
             return success
 
         return False
@@ -171,7 +175,7 @@ class PlayerDefender(BasePlayer):
                 "shot_quality": shot_quality,
                 "shot_direction": shot_direction,
                 "shot_power": shot_power,
-                "not_owner_shot_attempt": self.agent_id != ball.get_owner(),
+                "invalid_shot_attempt": self.agent_id != ball.get_owner(),
                 "invalid_shot_direction": np.allclose(shot_direction, [0.0, 0.0]),
                 "fov_visible": fov_visible
             })

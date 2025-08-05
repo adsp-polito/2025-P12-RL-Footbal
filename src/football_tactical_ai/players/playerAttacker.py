@@ -13,6 +13,8 @@ class PlayerAttacker(BasePlayer):
              fov_angle: float = 0.5,
              fov_range: float = 0.5,
              role: str = "ATT",
+             agent_id: str = "att_0",
+             team: str = "A",
              **kwargs: Any):
         
         """
@@ -26,9 +28,12 @@ class PlayerAttacker(BasePlayer):
             fov_angle (float): Field of view angle as a fraction of max angle [0, 1].
             fov_range (float): Field of view range as a fraction of max range [0, 1].
             role (str): Player role, default is "ATT".
+            agent_id (str): Unique identifier for the attacker.
+            team (str): Team identifier, default is "A".
+            
         Physical maxima are inherited from BasePlayer, but can be overridden.
         """
-        super().__init__(agent_id=None, team=None, role=role, **kwargs)
+        super().__init__(agent_id=agent_id, team=team, role=role, **kwargs)
 
         # Technical skills
         self.shooting  = shooting
@@ -141,7 +146,6 @@ class PlayerAttacker(BasePlayer):
                 "shot_direction": shot_direction,
                 "fov_visible": is_visible,
                 "invalid_shot_direction": not is_visible,
-                "not_owner_shot_attempt": ball.get_owner() != self.agent_id,
                 "shot_alignment": alignment,
                 "start_shot_bonus": True,
                 "shot_positional_quality": positional_quality,
