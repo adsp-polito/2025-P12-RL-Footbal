@@ -71,8 +71,9 @@ class PlayerDefender(BasePlayer):
     
     def attempt_tackle(self, ball: Ball, time_step: float) -> bool:
         """
-        Attempt a tackle based on cooldown, distance, and probability.
-        
+        Attempt a tackle regardless of distance or cooldown.
+        Cooldown is tracked but not enforced.
+
         Args:
             ball (Ball): The current ball object.
             time_step (float): Time elapsed since last step.
@@ -80,32 +81,30 @@ class PlayerDefender(BasePlayer):
         Returns:
             bool: True if tackle was successful, False otherwise.
         """
-        # Update tackle cooldown
+
+        # Update internal tackle timer
         self.tackle_timer = max(0.0, self.tackle_timer - time_step)
 
-        # Can't tackle yet
-        if self.tackle_timer > 0.0:
-            return False
-
-        # Get distance to ball
+        # Compute distance to ball (denormalized)
         ball_x, ball_y = denormalize(ball.get_position()[0], ball.get_position()[1])
         self_x, self_y = denormalize(self.get_position()[0], self.get_position()[1])
         dist = np.linalg.norm([ball_x - self_x, ball_y - self_y])
 
-        if dist <= self.tackle_range:
-            self.tackle_timer = self.tackle_cooldown_time  # Reset cooldown
-            success = np.random.rand() < self.tackling
-            return success
+        # Save timestamp of tackle (if useful later)
+        self.tackle_timer = self.tackle_cooldown_time  # Always reset cooldown
 
-        return False
+        # Attempt tackle: success probability based on skill, regardless of distance
+        success = np.random.rand() < self.tackling
+        return success, dist
+
 
     
     def execute_action(self, 
-                       action: np.ndarray, 
-                       time_step: float, 
-                       x_range: float, 
-                       y_range: float, 
-                       ball: Ball = None) -> dict:
+                   action: np.ndarray, 
+                   time_step: float, 
+                   x_range: float, 
+                   y_range: float, 
+                   ball: Ball = None) -> dict:
         """
         Executes a continuous action for a defensive player, including movement, tackle, and shooting.
 
@@ -123,8 +122,9 @@ class PlayerDefender(BasePlayer):
 
         context = {
             "tackle_success": False,
+            "fake_tackle": False,  
             "shot_attempted": False,
-            "not_owner_shot_attempt": False,
+            "invalid_shot_attempt": False,
             "invalid_shot_direction": False,
             "fov_visible": None,
             "shot_quality": None,
@@ -137,27 +137,32 @@ class PlayerDefender(BasePlayer):
         direction = np.array([dx, dy])
         norm = np.linalg.norm(direction)
 
-        # Default visibility check result
         fov_visible = None
-
-        # If agent is moving, update direction and check FOV
         if norm > 1e-6:
-            direction /= norm  # Normalize
+            direction /= norm
             self.last_action_direction = direction
             fov_visible = self.is_direction_visible(direction)
         else:
             direction = np.array([0.0, 0.0])
-            fov_visible = None  # No movement
+            fov_visible = None
 
         # Movement
         super().execute_action(action, time_step, x_range, y_range)
 
-        # Update tackle timer
+        # Cooldown tracking only
         self.tackle_timer = max(0.0, self.tackle_timer - time_step)
 
         # Attempt tackle
         if len(action) >= 3 and action[2] > 0.5:
-            context["tackle_success"] = self.attempt_tackle(ball, time_step)
+
+            # Attempt tackle
+            context["tackle_success"], distance = self.attempt_tackle(ball, time_step)
+
+            # Tackle is fake if too far or if cooldown is active
+            # in this case, tackle is not successful
+            if distance > self.tackle_range or self.tackle_timer > 0.0:
+                context["fake_tackle"] = True
+                context["tackle_success"] = False
 
         # Shooting
         if len(action) >= 7 and action[3] > 0.5:
@@ -181,6 +186,7 @@ class PlayerDefender(BasePlayer):
             })
 
         return context
+
 
     def copy(self):
         """

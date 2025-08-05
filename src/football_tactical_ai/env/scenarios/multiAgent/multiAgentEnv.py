@@ -171,7 +171,6 @@ class FootballMultiEnv(ParallelEnv):
                 ball=self.ball
             )
 
-
              # Check if this agent attempted a shot
             if context.get("shot_attempted", False):
                 # Verify if the shot is valid (agent owns the ball and has visibility)
@@ -183,7 +182,6 @@ class FootballMultiEnv(ParallelEnv):
         # Step 2: Handle possession changes (tackle/save/dive)
         for agent_id, context in temp_context.items():
             if context.get("tackle_success", False) or context.get("blocked", False):
-                print("BELLA")
                 self.ball.set_owner(agent_id)
                 self._reset_shot_context()
             if context.get("deflected", False):
@@ -269,6 +267,7 @@ class FootballMultiEnv(ParallelEnv):
             })
             self.shot_owner = agent_id
             self.shot_just_started = True
+            self.ball.set_owner(None)
         else:
             context["invalid_shot_attempt"] = True
             context["shot_power"] = 0.0

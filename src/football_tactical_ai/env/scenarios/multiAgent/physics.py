@@ -46,7 +46,6 @@ def update_ball_state(ball: Ball,
             velocity_real[1] / pitch_height
         ])
         ball.set_velocity(velocity_norm)
-        ball.set_owner(None)
 
         ball.update(time_step)
         return  # skip dribbling/physics this frame since a shot overrides it

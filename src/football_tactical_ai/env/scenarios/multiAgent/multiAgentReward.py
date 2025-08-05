@@ -156,15 +156,20 @@ def defender_reward(agent_id, player, ball, pitch, pos_reward, context):
     if context.get("tackle_success", False):
         reward += 10.0
 
+    # Fake tackle penalty
+    if context.get("fake_tackle", False):
+        reward -= 2.0
+
     # Reward if ball is out of bounds
     if context.get("ball_out_by") is not None:
         reward += 2.5
         if context.get("ball_out_by") == agent_id:
             reward += 1.0
 
-    # Penalty if attacker scores (indirect defensive failure)
-    if context.get("goal_team") and context.get("goal_team") != player.team:
-        reward -= 5.0  # team conceded
+    # Penalty if goal is conceded
+    if context.get("goal_scored", False):
+        if context.get("goal_team") != player.team:
+            reward -= 5.0
 
     # Penalize if shot was attempted but not by the owner
     if context.get("invalid_shot_attempt", False):
@@ -197,9 +202,14 @@ def goalkeeper_reward(agent_id, player, ball, pitch, pos_reward, context):
     if context.get("blocked", False):
         reward += 10.0
 
-    # Reward for successful dive
-    if context.get("dive_score") is not None:
+    # Reward for dive even if not successful
+    # This encourages goalkeepers to attempt saves
+    if context.get("dive_score") is not None and not context.get("wasted_dive", False):
         reward += context.get("dive_score", 0.0) * 5.0  # scale dive success
+
+    # Penalty for wasted dive
+    if context.get("wasted_dive", False):
+        reward -= 2.0
 
     # Bonus for deflection
     if context.get("deflected", False):
@@ -211,9 +221,10 @@ def goalkeeper_reward(agent_id, player, ball, pitch, pos_reward, context):
         if context.get("ball_out_by") == agent_id:
             reward += 1.0
 
-    # Penalty if attacker scores (indirect defensive failure)
-    if context.get("goal_scored") and context.get("goal_team") != player.team:
-        reward -= 5.0  # team conceded
+    # Penalty if goal is conceded
+    if context.get("goal_scored", False):
+        if context.get("goal_team") != player.team:
+            reward -= 5.0
 
     # Penalize if shot was attempted but not by the owner
     if context.get("invalid_shot_attempt", False):

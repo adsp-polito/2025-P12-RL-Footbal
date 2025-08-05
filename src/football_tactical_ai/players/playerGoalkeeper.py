@@ -72,7 +72,7 @@ class PlayerGoalkeeper(BasePlayer):
             }
         """
         if direction not in {"left", "right"}:
-            return {"dive_score": 0.0, "blocked": False, "deflected": False}
+            return {"dive_score": 0.0, "blocked": False, "deflected": False, "wasted_dive": True}
 
         # Dive effectiveness based on reflexes and reach
         dive_score = 0.5 * self.reflexes + 0.5 * self.reach
@@ -83,19 +83,19 @@ class PlayerGoalkeeper(BasePlayer):
         distance = np.linalg.norm([ball_x - self_x, ball_y - self_y])
         reachable = distance <= (0.5 + self.reach)
 
-        if not reachable:
-            return {"dive_score": 0.0, "blocked": False, "deflected": False}
-
         # Attempt to stop the shot
         dive_successful = np.random.rand() < dive_score
 
+        if not reachable:
+            return {"dive_score": dive_score, "blocked": False, "deflected": False, "wasted_dive": True}
+
         if not dive_successful:
-            return {"dive_score": dive_score, "blocked": False, "deflected": False}
+            return {"dive_score": dive_score, "blocked": False, "deflected": False, "wasted_dive": False}
 
         # CASE 1: Catch and stop
         if np.random.rand() < self.catching:
             ball.set_owner(self.agent_id)
-            return {"dive_score": dive_score, "blocked": True, "deflected": False}
+            return {"dive_score": dive_score, "blocked": True, "deflected": False, "wasted_dive": False}
 
         # CASE 2: Deflection
         incoming_velocity = np.array(ball.get_velocity())
@@ -123,7 +123,7 @@ class PlayerGoalkeeper(BasePlayer):
         ball.set_velocity(final_velocity)
         ball.set_owner(None)
 
-        return {"dive_score": dive_score, "blocked": False, "deflected": True}
+        return {"dive_score": dive_score, "blocked": False, "deflected": True, "wasted_dive": False}
 
     def get_parameters(self):
         """Return technical attributes for logging or debugging."""
@@ -134,7 +134,10 @@ class PlayerGoalkeeper(BasePlayer):
             "fov_range": self.fov_range,
             "reflexes": self.reflexes,
             "reach": self.reach,
-            "blocking": self.blocking
+            "catching": self.catching,
+            "shooting": self.shooting,
+            "precision": self.precision,
+            "punch_power": self.punch_power
         }
     
     def execute_action(self, 
@@ -157,6 +160,7 @@ class PlayerGoalkeeper(BasePlayer):
             "dive_score": None,
             "blocked": False,
             "deflected": False,
+            "wasted_dive": False,
             "shot_attempted": False,
             "invalid_shot_attempt": False,
             "invalid_shot_direction": False,
@@ -194,6 +198,7 @@ class PlayerGoalkeeper(BasePlayer):
             context["dive_score"] = dive_result.get("dive_score", 0.0)
             context["blocked"] = dive_result.get("blocked", False)
             context["deflected"] = dive_result.get("deflected", False)
+            context["wasted_dive"] = dive_result.get("wasted_dive", False)
 
         # SHOOTING (goal kick or pass)
         if len(action) >= 8 and action[4] > 0.5:
