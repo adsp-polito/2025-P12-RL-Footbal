@@ -1,10 +1,12 @@
 import numpy as np
 from pettingzoo import ParallelEnv
 from typing import Dict, Any
+from gymnasium import spaces
 
 from football_tactical_ai.players.playerAttacker import PlayerAttacker
 from football_tactical_ai.players.playerDefender import PlayerDefender
 from football_tactical_ai.players.playerGoalkeeper import PlayerGoalkeeper
+from football_tactical_ai.env.scenarios.multiAgent.physics import update_ball_state
 from football_tactical_ai.env.objects.ball import Ball
 from football_tactical_ai.env.objects.pitch import Pitch
 from football_tactical_ai.configs.multiAgentEnvConfig import get_config
@@ -14,9 +16,22 @@ from football_tactical_ai.env.scenarios.multiAgent.rewardGrids import (
     build_defender_grid,
     build_goalkeeper_grid,
 )
-
 from football_tactical_ai.env.scenarios.multiAgent.multiAgentReward import get_reward
-# physics.py da integrare se userai update_ball, collisioni, ecc.
+
+
+"""
+Action space for each player:
+
+- Attacker (ATT): [dx, dy, shoot_flag, power, dir_x, dir_y]
+- Defender (DEF):  [dx, dy, tackle_flag, shoot_flag, power, dir_x, dir_y]
+- Goalkeeper (GK):    [dx, dy, dive_left, dive_right, shoot_flag, power, dir_x, dir_y]
+
+All values are normalized:
+- dx, dy ∈ [-1, 1]
+- power ∈ [0, 1]
+- flag > 0.5 → activate action
+"""
+
 
 # This is a multi-agent environment for a football tactical AI scenario
 class FootballMultiEnv(ParallelEnv):
@@ -57,6 +72,22 @@ class FootballMultiEnv(ParallelEnv):
             "gk_0": PlayerGoalkeeper(agent_id="gk_0", team="B", role="GK"),
         }
 
+        # Action spaces per agent
+        self.action_spaces = {
+            "att_0": spaces.Box(low=-1.0, high=1.0, shape=(6,), dtype=np.float32),
+            "def_0": spaces.Box(low=-1.0, high=1.0, shape=(7,), dtype=np.float32),
+            "gk_0":  spaces.Box(low=-1.0, high=1.0, shape=(8,), dtype=np.float32),
+        }
+
+        # Observation spaces per agent
+        self.observation_spaces = {
+            agent_id: spaces.Box(low=0.0, high=1.0, shape=(4,), dtype=np.float32)
+            for agent_id in self.agents
+        }
+
+        # Roles mapping
+        self.roles = {aid: self.players[aid].get_role() for aid in self.agents}
+
         # Ball and initial ownership
         self.ball = Ball()
         self.episode_step = 0
@@ -68,6 +99,14 @@ class FootballMultiEnv(ParallelEnv):
             "GK":  build_goalkeeper_grid(self.pitch),
         }
 
+    # PettingZoo interface methods (required for multi-agent environments)
+    @property
+    def observation_space(self):
+        return self.observation_spaces
+
+    @property
+    def action_space(self):
+        return self.action_spaces
 
     def reset(self, seed=None, options=None):
         """
@@ -93,52 +132,117 @@ class FootballMultiEnv(ParallelEnv):
         self.players["def_0"].reset_position(normalize(110, 40))
         self.players["gk_0"].reset_position(normalize(120, 40))
 
-
         observations = {
             agent_id: self._get_observation(agent_id)
             for agent_id in self.agents
         }
 
-        return observations
+        return observations, {}
 
-    def _build_context(self, agent_id, player, shot_owner, shot_just_started, goal_owner, ball_out_by) -> dict:
+    def step(self, actions: Dict[str, np.ndarray]):
         """
-        Build the context dictionary for the current action.
+        Advance the environment by one timestep using the actions of all agents.
+
         Args:
-            agent_id (str): ID of the agent performing the action.
-            player (BasePlayer): Player instance for the agent.
-            shot_owner (str): ID of the player who attempted the shot.
-            shot_just_started (bool): Whether the shot was just initiated.
-            goal_owner (str): ID of the player who scored a goal, if any.
-            ball_out_by (str): ID of the player who caused the ball to go out, if applicable.
+            actions (dict): Dictionary of actions for each agent.
+
         Returns:
-            dict: Contextual information about the action taken.
+            Observations, rewards, terminations, truncations, infos:
+                - observations (dict): Observations for each agent.
+                - rewards (dict): Rewards for each agent.
+                - terminations (dict): Termination flags for each agent.
+                - truncations (dict): Truncation flags for each agent.
+                - infos (dict): Additional information for each agent.
         """
-        
-        goal_team = self.players[goal_owner].team if goal_owner else None
 
-        return {
-            "goal_scored": goal_owner == agent_id,
-            "goal_team": goal_team,
-            "ball_out_by": ball_out_by,
-            "start_shot_bonus": (agent_id == shot_owner and shot_just_started),
-            "possession_lost": self._check_possession_loss(agent_id),
+        # Step 0: Action validation
+        if not isinstance(actions, dict):
+            raise ValueError("Actions must be a dictionary mapping agent IDs to actions.")
+        if not all(agent in actions for agent in self.agents):
+            raise ValueError("All agents must provide an action.")
 
-            # default-safe entries for reward logic
-            "shot_attempted": False,
-            "shot_quality": None,
-            "not_owner_shot_attempt": False,
-            "invalid_shot_direction": False,
-            "shot_alignment": None,
-            "fov_visible": None,
-            "tackle_success": False,
-            "save_success": False,
-            "shot_positional_quality": 0.0,
-        }
+        # Increment episode step
+        self.episode_step += 1
+
+        # Initialize containers for observations, rewards, terminations, truncations, and infos
+        observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
+
+        # Temporary context for actions
+        temp_context = {}
+        shot_owner = None
+        shot_just_started = False
+
+        # Step 1: Action execution + context saving
+        for agent_id, action in actions.items():
+            player = self.players[agent_id]
+            context = player.execute_action(
+                action=action,
+                time_step=self.time_step,
+                x_range=self.x_range,
+                y_range=self.y_range,
+                ball=self.ball
+            )
+
+            # Shot attempted by this agent
+            if context.get("shot_attempted", False):
+                shot_owner = agent_id
+                shot_just_started = True
+
+            temp_context[agent_id] = context
+
+        # Step 2: Update ball possession if tackle/save successful
+        for agent_id, context in temp_context.items():
+            if context.get("tackle_success", False):
+                self.ball.set_owner(agent_id)
+            elif context.get("save_success", False) and context.get("new_owner") == agent_id:
+                self.ball.set_owner(agent_id)
+
+        # Step 3: Ball physics
+        update_ball_state(self.ball, self.players, actions, self.time_step)
+
+        # Step 4: Check goal / out
+        ball_x, ball_y = self.ball.get_position(denormalized=True)
+        goal_owner = shot_owner if self._is_goal(ball_x, ball_y) else None
+        ball_out_by = shot_owner if self._is_ball_completely_out(ball_x, ball_y) else None
+
+        # Step 5: Add global context for each agent
+        for agent_id in self.agents:
+            context = temp_context[agent_id]
+
+            # If the goalkeeper deflected the ball, calculate deflection power
+            deflection_power = 0.0
+            if context.get("deflected", False):
+                deflection_power = np.linalg.norm(self.ball.get_velocity())
+
+            # Update context with global information
+            context.update({
+                "goal_scored": goal_owner == agent_id,
+                "goal_team": self.players[goal_owner].team if goal_owner else None,
+                "ball_out_by": ball_out_by,
+                "start_shot_bonus": (agent_id == shot_owner and shot_just_started),
+                "possession_lost": self._check_possession_loss(agent_id),
+                "deflection_power": deflection_power
+            })
+
+            infos[agent_id] = context
+
+        # Step 6: Reward calculation
+        for agent_id in self.agents:
+            role = self.players[agent_id].get_role()
+            rewards[agent_id] = get_reward(self.players[agent_id], infos[agent_id], self.reward_grids[role])
+
+        # Step 7: Observations
+        for agent_id in self.agents:
+            observations[agent_id] = self._get_observation(agent_id)
+
+        # Step 8: Termination / Truncation
+        for agent_id in self.agents:
+            terminations[agent_id] = goal_owner is not None or ball_out_by is not None
+            truncations[agent_id] = self.episode_step >= self.max_steps
+
+        return observations, rewards, terminations, truncations, infos
 
 
-
-    
     def _check_possession_loss(self, agent_id: str) -> bool:
         """
         Check if the attacker has lost possession to a defender or goalkeeper.
@@ -177,7 +281,6 @@ class FootballMultiEnv(ParallelEnv):
             return True
 
         return False
-
 
     def _is_goal(self, x, y):
         """

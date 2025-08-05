@@ -1,20 +1,19 @@
-
 import os
-from football_tactical_ai.env.scenarios.singleAgent.shot import OffensiveScenarioShotSingleAgent
-from football_tactical_ai.helpers.visuals import render_episode
+from football_tactical_ai.env.scenarios.singleAgent.view import OffensiveScenarioViewSingleAgent
+from football_tactical_ai.helpers.visuals import render_episode_singleAgent
 from time import time
 from football_tactical_ai.env.objects.pitch import Pitch
 
-# Initialize the pitch object
+# Create the pitch object and verify coordinate system consistency
 pitch = Pitch()
 
 # Instantiate the environment with the pitch
-env = OffensiveScenarioShotSingleAgent(pitch=pitch)
+env = OffensiveScenarioViewSingleAgent(pitch=pitch)
 
-# Reset the environment and get initial observation and info
+# Reset the environment and retrieve initial observation
 obs, info = env.reset()
 
-# Lists to store states and rewards for later rendering
+# Initialize storage for rendering and reward tracking
 states = []
 rewards = []
 
@@ -31,15 +30,17 @@ states.append({
 
 rewards.append(0.0)  # No reward yet for frame 0
 
+
 terminated = truncated = False
+
 
 # Main interaction loop: run episode until terminated or truncated
 while not terminated and not truncated:
 
     # Sample a random action from the environment's action space
     action = env.action_space.sample()
-    # action = np.array([0.0, 0.0, 1.0, 1.0, 1.0, 0.0])  # no movement, shot_flag=1, max power direction towards positive x (goal)
     obs, reward, terminated, truncated, info = env.step(action)
+
 
     # Create deep copies of the current attacker, defender, and ball states for visualization
     attacker_copy = env.attacker.copy()
@@ -64,7 +65,7 @@ time_start = time()
 print("\nRendering episode...")
 
 # Render the entire episode with the collected states and rewards
-anim = render_episode(
+anim = render_episode_singleAgent(
     states,
     pitch=pitch,
     fps=env.fps,
@@ -73,10 +74,10 @@ anim = render_episode(
     show_heatmap=False,
     show_rewards=False,
     reward_grid=env.reward_grid,
-    save_path="test/videoTest/testShot.mp4",  # Output video file path
+    save_path="test/videoTest/testView_SA.mp4",  # Output video file path
     rewards_per_frame=rewards,
     show_info=True,
-    show_fov=False
+    show_fov=True
 )
 
 
@@ -84,3 +85,4 @@ anim = render_episode(
 time_end = time()
 print("Rendering complete. Animation saved in the 'videoTest' directory.")
 print(f"Rendering took {time_end - time_start:.2f} seconds.\n")
+

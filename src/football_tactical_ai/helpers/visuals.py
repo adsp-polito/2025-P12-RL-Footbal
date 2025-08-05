@@ -3,6 +3,7 @@ import matplotlib.animation as animation
 from matplotlib.patches import Circle, Wedge
 import numpy as np
 
+
 # COORDINATE SYSTEMS AND NORMALIZATION
 # The environment works on a normalized coordinate system [0, 1] × [0, 1],
 # while the pitch visualization uses real physical units (meters).
@@ -14,7 +15,7 @@ import numpy as np
 # y_absolute = y_normalized * (Y_MAX - Y_MIN) + Y_MIN
 
 
-def render_episode(states, pitch, save_path=None, fps=24, stripes=False, full_pitch=False,
+def render_episode_singleAgent(states, pitch, save_path=None, fps=24, stripes=False, full_pitch=False,
                    show_grid=False, show_heatmap=False, show_rewards=False, reward_grid=None,
                    rewards_per_frame=None, show_info=True, show_fov = False):
     """
@@ -33,7 +34,7 @@ def render_episode(states, pitch, save_path=None, fps=24, stripes=False, full_pi
         show_rewards (bool): Display numeric reward values on grid cells if True.
         reward_grid (np.ndarray or None): Reward grid for heatmap coloring.
         rewards_per_frame (list or np.ndarray or None): Rewards for each frame.
-        show_info (bool): Show detailed info lines above pitch if True.
+        show_info (bool): Show detailed info lines above pitch if True (only for single Agent).
         show_fov (bool): Show field of view cone for the player if True.
 
     Returns:
@@ -290,3 +291,139 @@ def render_episode(states, pitch, save_path=None, fps=24, stripes=False, full_pi
             anim.save(save_path, writer='ffmpeg', fps=fps)
 
     return anim
+
+def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=False, full_pitch=True,
+                               show_grid=False, show_heatmap=False, show_rewards=False, reward_grid=None,
+                               show_fov=False):
+    """
+    Render an animated soccer episode with multiple agents (attackers, defenders, goalkeeper).
+    
+    Parameters:
+        states (list): List of dicts with keys 'players' (dict of agent_id:player), 'ball' (Ball object).
+        pitch (Pitch): Pitch object responsible for drawing pitch and grids.
+        save_path (str or None): Path to save animation as gif/mp4. No save if None.
+        fps (int): Frames per second for animation speed.
+        stripes (bool): Whether to draw mowing stripes on pitch.
+        full_pitch (bool): True to render full pitch, False for half pitch.
+        show_grid (bool): Overlay grid lines if True.
+        show_heatmap (bool): Show reward heatmap colors if True.
+        show_rewards (bool): Display numeric reward values on grid cells if True.
+        reward_grid (np.ndarray or None): Reward grid for heatmap coloring (if applicable).
+        show_fov (bool): Show FOV cones per agent if True.
+
+    Returns:
+        matplotlib.animation.FuncAnimation: The animation object.
+    """
+
+      # Create figure and axis, draw pitch (full or half) with optional overlays
+    if full_pitch:
+        fig, ax = plt.subplots(figsize=(12, 8))
+        pitch.draw_pitch(ax=ax, stripes=stripes, show_grid=show_grid,
+                         show_heatmap=show_heatmap, show_rewards=show_rewards, reward_grid=reward_grid)
+    else:
+        fig, ax = plt.subplots(figsize=(6, 8))
+        pitch.draw_half_pitch(ax=ax, stripes=stripes, show_grid=show_grid,
+                              show_heatmap=show_heatmap, show_rewards=show_rewards, reward_grid=reward_grid)
+
+    # Create player and FOV objects
+    player_patches = {}
+    fov_patches = {}
+    colors_by_role = {"ATT": "crimson", "DEF": "dodgerblue", "GK": "darkorange"}
+
+    # Infer all possible agent_ids
+    all_agent_ids = list(states[0].get("players", {}).keys())
+    for agent_id in all_agent_ids:
+        player = states[0]["players"][agent_id]
+        role = player.get_role()
+        color = colors_by_role.get(role, "gray")
+
+        circle = Circle((0, 0), radius=1.0, color=color, ec='black', lw=1, zorder=5)
+        wedge = Wedge(center=(0, 0), r=20, theta1=0, theta2=0, color=color, alpha=0.15, zorder=3)
+
+        ax.add_patch(circle)
+        ax.add_patch(wedge)
+
+        player_patches[agent_id] = circle
+        fov_patches[agent_id] = wedge
+
+    # Create the ball
+    ball_circle = Circle((0, 0), radius=0.5, color='white', ec='black', lw=1, zorder=6)
+    ax.add_patch(ball_circle)
+
+    def update(frame_idx):
+        state = states[frame_idx]
+
+        # Update players
+        for agent_id, player in state.get("players", {}).items():
+            px, py = player.get_position()
+            px = px * (pitch.x_max - pitch.x_min) + pitch.x_min
+            py = py * (pitch.y_max - pitch.y_min) + pitch.y_min
+            player_patches[agent_id].set_center((px, py))
+            player_patches[agent_id].set_visible(True)
+
+            if show_fov:
+                direction = getattr(player, "last_action_direction", np.array([1.0, 0.0]))
+                norm = np.linalg.norm(direction)
+                direction = direction / norm if norm > 0 else np.array([1.0, 0.0])
+                angle_deg = np.degrees(np.arctan2(direction[1], direction[0]))
+
+                view_range = getattr(player, "fov_range", 0.5)
+                max_range = getattr(player, "max_fov_range", 90.0)
+                radius = view_range * max_range
+
+                fov_factor = getattr(player, "fov_angle", 0.5)
+                max_angle = getattr(player, "max_fov_angle", 180.0)
+                fov_angle = fov_factor * max_angle
+
+                fov_patches[agent_id].set_center((px, py))
+                fov_patches[agent_id].theta1 = angle_deg - fov_angle / 2
+                fov_patches[agent_id].theta2 = angle_deg + fov_angle / 2
+                fov_patches[agent_id].set_radius(radius)
+                fov_patches[agent_id].set_visible(True)
+            else:
+                fov_patches[agent_id].set_visible(False)
+
+        # Update ball
+        if 'ball' in state and state['ball']:
+            bx, by = state['ball'].get_position()
+            bx = bx * (pitch.x_max - pitch.x_min) + pitch.x_min
+            by = by * (pitch.y_max - pitch.y_min) + pitch.y_min
+            ball_circle.set_center((bx, by))
+            ball_circle.set_visible(True)
+        else:
+            ball_circle.set_visible(False)
+
+        # Calculate total frames count
+        total_frames = len(states)-1
+        
+        # Dictionary to hold references to info text objects (for updating/removal)
+        info_texts = {
+            'frame_only': None,
+        }
+
+        center_x = 0.5
+        base_y = 1.1
+        fontsize = 24
+        line_text = f"Frame: {frame_idx}/{total_frames}"
+        info_texts['frame_only'] = ax.text(
+            center_x, base_y, line_text,
+            transform=ax.transAxes,
+            fontsize=fontsize,
+            fontweight='bold',
+            verticalalignment='top',
+            horizontalalignment='center',
+            color='black',
+        )
+
+        return list(player_patches.values()) + list(fov_patches.values()) + [ball_circle]
+
+    anim = animation.FuncAnimation(fig, update, frames=len(states), interval=1000/fps, blit=True, repeat=False)
+
+    if save_path:
+        if save_path.endswith(".gif"):
+            anim.save(save_path, writer='pillow', fps=fps)
+        elif save_path.endswith(".mp4"):
+            anim.save(save_path, writer='ffmpeg', fps=fps)
+
+    return anim
+

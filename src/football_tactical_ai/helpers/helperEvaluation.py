@@ -1,4 +1,4 @@
-from football_tactical_ai.helpers.visuals import render_episode
+from football_tactical_ai.helpers.visuals import render_episode_singleAgent
 
 def evaluate_and_render(model, env, pitch, save_path=None, episode=0, fps=24,
                         show_grid=False, show_heatmap=False,
@@ -70,7 +70,7 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0, fps=24,
 
     # Final state after episode ends
     if save_path:
-        render_episode(
+        render_episode_singleAgent(
             states,
             pitch=pitch,
             save_path=save_path,

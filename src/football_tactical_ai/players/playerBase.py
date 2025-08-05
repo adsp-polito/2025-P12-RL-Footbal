@@ -183,6 +183,66 @@ class BasePlayer(ABC):
         # This base implementation does not include a ny extra action
         # (e.g. shooting, tackling) – these must be handled by child classes
         return None
+    
+    def shoot(self, desired_direction, desired_power, enable_fov=True):
+        """
+        Attempt to shoot in a given direction, only if it's within the field of view.
+
+        Args:
+            desired_direction (np.array): 2D vector representing the shot direction.
+            desired_power (float): Desired shot power in range [0, 1].
+
+        Returns:
+            tuple: (shot_quality, shot_direction, shot_power)
+                - shot_quality (float): Estimated probability of a successful shot (0 to 1).
+                - shot_direction (np.array): Actual 2D unit vector of the shot after applying noise.
+                - shot_power (float): Final shot power (velocity) in meters per second.
+                - enable_fov (bool): Whether to check if the shot direction is within the player's field of view.
+        """
+
+        # Check if the desired direction is within the player's field of view
+        # If not, the shot is invalid and returns zeroed output
+        if not self.is_direction_visible(desired_direction) and enable_fov:
+            return 0.0, np.array([0.0, 0.0]), 0.0
+        
+        # Normalize the desired direction to a unit vector
+        norm = np.linalg.norm(desired_direction)
+        if norm > 0:
+            desired_dir_norm = desired_direction / norm
+        else:
+            # Default to straight forward if direction is zero
+            desired_dir_norm = np.array([1.0, 0.0])
+
+        # Add noise to the shot direction based on the player's precision
+        # The less precise, the more deviation from the intended angle
+        max_noise_radians = 0.1  # Maximum angular noise (~5.7 degrees)
+        noise_strength = (1 - self.precision) * max_noise_radians
+        angle_noise = np.random.uniform(-noise_strength, noise_strength)
+        cos_a, sin_a = np.cos(angle_noise), np.sin(angle_noise)
+
+        # Apply rotation to simulate directional inaccuracy
+        shot_direction = np.array([
+            cos_a * desired_dir_norm[0] - sin_a * desired_dir_norm[1],
+            sin_a * desired_dir_norm[0] + cos_a * desired_dir_norm[1]
+        ])
+
+        # Clamp power input to [0, 1]
+        desired_power = np.clip(desired_power, 0.0, 1.0)
+
+        # Scale the shot power based on player shooting skill and max power
+        # Add a minimum base power to avoid zero-velocity shots
+        shot_power = self.max_power * (0.5 + 0.5 * self.shooting * desired_power)
+
+        # Estimate shot quality based on player position and shooting skill
+        x_pos, y_pos = self.position
+        x_factor = 0.2 + 0.8 * x_pos         # Better angle as player moves closer to goal (x direction)
+        y_dist = abs(y_pos - 0.5)            # Distance from vertical center line
+        y_factor = max(0.5, 1 - 2 * y_dist)  # Penalize wide-angle shots near sidelines
+
+        # Final shot quality combines skill and positional advantage
+        shot_quality = x_factor * y_factor * self.shooting
+
+        return shot_quality, shot_direction, shot_power
 
 
 
@@ -205,4 +265,4 @@ class BasePlayer(ABC):
         Used for cloning in simulations or training.
         """
         ...
-   
+

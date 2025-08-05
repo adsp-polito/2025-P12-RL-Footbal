@@ -1,6 +1,6 @@
 import os
 from football_tactical_ai.env.scenarios.singleAgent.move import OffensiveScenarioMoveSingleAgent
-from football_tactical_ai.helpers.visuals import render_episode
+from football_tactical_ai.helpers.visuals import render_episode_singleAgent
 from time import time
 from football_tactical_ai.env.objects.pitch import Pitch
 
@@ -57,7 +57,7 @@ time_start = time()
 print("\nRendering episode...")
 
 # Render the episode and save as .mp4
-anim = render_episode(
+anim = render_episode_singleAgent(
     states,
     pitch=pitch,
     fps=env.fps,
@@ -66,7 +66,7 @@ anim = render_episode(
     show_heatmap=False,
     show_rewards=False,
     reward_grid=env.reward_grid,
-    save_path="test/videoTest/testMove.mp4",
+    save_path="test/videoTest/testMove_SA.mp4",
     rewards_per_frame=rewards,
     show_info=True,
     show_fov=False
