@@ -83,7 +83,7 @@ class PlayerAttacker(BasePlayer):
             time_step (float): Duration of simulation step in seconds (e.g. 1 / FPS)
             x_range (float): Field width in meters
             y_range (float): Field height in meters
-            ball (Ball): The ball object representing the current state of the ball.
+            ball (Ball): The ball object representing the current state of the ball
         Returns:
             dict: Contextual information about the action taken.
         """

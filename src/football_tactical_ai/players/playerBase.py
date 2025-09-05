@@ -39,13 +39,16 @@ class BasePlayer(ABC):
         self.max_fov_range  = float(max_fov_range)
 
         # default values for the attributes that are shared by all players
-        self.position: List[float] = [0.0, 0.0]   # normalised [0, 1]
+        self.position: List[float] = [0.0, 0.0]   # normalized [0, 1]
         self.last_action_direction: np.ndarray = np.array([1.0, 0.0])  # last action direction
 
         # attributes for the player instance (for multi agent scenarios)
         self.agent_id = kwargs.get("agent_id", None)  # Example: "att_0"
         self.team = kwargs.get("team", None)          # Example: "A" or "B"
         self.role = kwargs.get("role", "GENERIC")     # Example: "ATT", "DEF", "GK"
+
+        # Current action for observation purposes
+        self.current_action = "idle"                  # e.g. "move", "shoot", "tackle", "dive", etc.
 
     # SHARED METHODS
     def reset_position(self, position: List[float]) -> None:
@@ -186,6 +189,8 @@ class BasePlayer(ABC):
             enable_fov=True
         )
 
+        self.current_action = self._infer_action_type(action)
+
         # This base implementation does not include a ny extra action
         # (e.g. shooting, tackling) – these must be handled by child classes
         return None
@@ -249,8 +254,44 @@ class BasePlayer(ABC):
         shot_quality = x_factor * y_factor * self.shooting
 
         return shot_quality, shot_direction, shot_power
+    
+    def _infer_action_type(self, action):
+        """
+        Infer action type from raw action vector.
+        """
+        if len(action) == 6:  # attacker
+            if action[2] > 0.5:  # shoot_flag
+                return "shoot"
+            elif np.linalg.norm(action[:2]) > 0.1:
+                return "move"
+            else:
+                return "idle"
+        elif len(action) == 7:  # defender
+            if action[2] > 0.5:
+                return "tackle"
+            elif action[3] > 0.5:
+                return "shoot"
+            elif np.linalg.norm(action[:2]) > 0.1:
+                return "move"
+            else:
+                return "idle"
+        elif len(action) == 8:  # goalkeeper
+            if action[2] > 0.5 or action[3] > 0.5:
+                return "dive"
+            elif action[4] > 0.5:
+                return "shoot"
+            elif np.linalg.norm(action[:2]) > 0.1:
+                return "move"
+            else:
+                return "idle"
+        return "idle"
 
-
+    def get_current_action_code(self):
+        """
+        Return the integer code for the current action.
+        """
+        mapping = {"idle": 0, "move": 1, "pass": 2, "shoot": 3, "tackle": 4, "dive": 5}
+        return mapping.get(self.current_action, 0)
 
 
     # ABSTRACT METHODS

@@ -116,12 +116,20 @@ class FootballMultiEnv(ParallelEnv):
 
         # Observation spaces
         # Each agent observes:
-        # [player_x, player_y, ball_x, ball_y] → shape (4,)
-        # All values are normalized ∈ [0, 1]
+        # [self_x, self_y, ball_x, ball_y] +
+        # For each other player:
+        #   [player_x, player_y, action_code, visible_flag]
+        #
+        # action_code = one-hot or discrete integer (e.g., 0=idle, 1=move, 2=pass, 3=shoot, 4=tackle, ...)
+        # visible_flag = 1 if in FOV, 0 otherwise (if 0, coords are last known or padding)
+    
+        obs_dim = 4 + (len(self.agents)-1) * 4
+
         self.observation_spaces = {
-            agent_id: spaces.Box(low=0.0, high=1.0, shape=(4,), dtype=np.float32)
+            agent_id: spaces.Box(low=0.0, high=1.0, shape=(obs_dim,), dtype=np.float32)
             for agent_id in self.agents
         }
+
 
         # Roles mapping
         self.roles = {aid: self.players[aid].get_role() for aid in self.agents}
@@ -382,13 +390,82 @@ class FootballMultiEnv(ParallelEnv):
         GOAL_MIN_Y = self.pitch.center_y - self.pitch.goal_width / 2
         GOAL_MAX_Y = self.pitch.center_y + self.pitch.goal_width / 2
         return x > self.pitch.width and GOAL_MIN_Y <= y <= GOAL_MAX_Y
+    
+    def _is_in_fov(self, observer, target):
+        """
+        Check if target is inside the field of view of observer,
+        using the observer's last_action_direction as facing vector.
+        """
+        ox, oy = observer.get_position()
+        tx, ty = target.get_position()
+
+        # Direction the observer is facing (must be normalized)
+        dir_x, dir_y = observer.last_action_direction
+        if np.linalg.norm([dir_x, dir_y]) == 0:
+            dir_x, dir_y = 1.0, 0.0  # default facing right if idle
+
+        # Vector to target
+        vec_x, vec_y = tx - ox, ty - oy
+        distance = np.linalg.norm([vec_x, vec_y])
+
+        # Check max FOV distance
+        if distance > observer.fov_range:
+            return False
+
+        # Angle between facing direction and target vector
+        dot = dir_x * vec_x + dir_y * vec_y
+        norm = np.linalg.norm([dir_x, dir_y]) * np.linalg.norm([vec_x, vec_y])
+        if norm == 0:
+            return False
+
+        angle = np.degrees(np.arccos(dot / norm))
+
+        return angle <= observer.fov_angle / 2
+
 
     def _get_observation(self, agent_id: str):
         """
-        Build the observation for a given agent.
-        """
-        player = self.players[agent_id]
-        px, py = player.get_position()
-        bx, by = self.ball.get_position()
+        Build the observation vector for a given agent.
 
-        return np.array([px, py, bx, by], dtype=np.float32)
+        Structure:
+        [self_x, self_y, ball_x, ball_y] +
+        For each other player:
+            [player_x, player_y, action_code, visible_flag]
+
+        Notes:
+        - visible_flag = 1 if agent is in the FOV, else 0
+        - if not visible now but seen before -> last known position
+        - if never seen -> padding with zeros
+        """
+
+        player = self.players[agent_id]
+        self_x, self_y = player.get_position()
+        ball_x, ball_y = self.ball.get_position()
+
+        # Start with own position and ball position
+        obs = [self_x, self_y, ball_x, ball_y]
+
+        # Ensure we have memory for last known positions
+        if not hasattr(self, "last_known_positions"):
+            self.last_known_positions = {aid: None for aid in self.agents}
+
+        for other_id, other in self.players.items():
+            if other_id == agent_id:
+                continue  # skip self
+
+            # Check visibility using FOV
+            visible = self._is_in_fov(player, other)
+
+            if visible:
+                ox, oy = other.get_position()
+                action_code = other.get_current_action_code()  # must be defined in Player
+                self.last_known_positions[other_id] = (ox, oy, action_code)
+                obs.extend([ox, oy, action_code, 1.0])  # visible
+            else:
+                if self.last_known_positions[other_id] is not None:
+                    ox, oy, action_code = self.last_known_positions[other_id]
+                    obs.extend([ox, oy, action_code, 0.0])  # not visible but known
+                else:
+                    obs.extend([0.0, 0.0, 0.0, 0.0])  # never seen
+
+        return np.array(obs, dtype=np.float32)
