@@ -108,7 +108,25 @@ def attacker_reward(agent_id, player, ball, pitch, pos_reward, context):
     if context.get("ball_out_by") == agent_id:
         reward -= 2.5
 
-    # FOV + Shot logic unchanged
+    # Bonus for starting a pass and positional quality
+    if context.get("start_pass_bonus", False):
+        reward += 1.5
+
+    # Scaled reward by pass quality 
+    if context.get("pass_quality") is not None:
+        reward += 2.0 * context.get("pass_quality") 
+
+    # Penalize bad pass direction
+    if context.get("invalid_pass_attempt", False):
+        reward -= 0.5
+
+    # Bonus for completed pass
+    if context.get("pass_completed", False):
+        reward += 5.0  
+
+    # Extra penalty if pass led to ball out
+    if context.get("ball_out_by") == agent_id and context.get("pass_attempted", False):
+        reward -= 1.5  
 
     # Bonus for starting a shot and positional quality
     if context.get("start_shot_bonus", False):
@@ -165,6 +183,10 @@ def defender_reward(agent_id, player, ball, pitch, pos_reward, context):
         reward += 2.5
         if context.get("ball_out_by") == agent_id:
             reward += 1.0
+
+    # Reward for interception success
+    if context.get("interception_success", False):
+        reward += 6.0
 
     # Penalty if goal is conceded
     if context.get("goal_scored", False):

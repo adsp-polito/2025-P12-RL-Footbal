@@ -23,14 +23,14 @@ from football_tactical_ai.env.scenarios.multiAgent.multiAgentReward import get_r
 """
 Action space for each player:
 
-- Attacker (ATT): [dx, dy, shoot_flag, power, dir_x, dir_y]
-- Defender (DEF):  [dx, dy, tackle_flag, shoot_flag, power, dir_x, dir_y]
-- Goalkeeper (GK):    [dx, dy, dive_left, dive_right, shoot_flag, power, dir_x, dir_y]
+- Attacker (ATT): [dx, dy, pass_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
+- Defender (DEF): [dx, dy, tackle_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
+- Goalkeeper (GK): [dx, dy, dive_left, dive_right, shoot_flag, power, dir_x, dir_y] → shape (8,)
 
 All values are normalized:
-- dx, dy ∈ [-1, 1]
-- power ∈ [0, 1]
-- flag > 0.5 → activate action
+- dx, dy ∈ [-1, 1] (movement direction)
+- power ∈ [0, 1]   (kick strength)
+- flag > 0.5 → action is triggered
 """
 
 
@@ -99,7 +99,7 @@ class FootballMultiEnv(ParallelEnv):
 
         # Action spaces
         # Each role has a different action vector:
-        # - Attacker: [dx, dy, shoot_flag, power, dir_x, dir_y] → shape (6,)
+        # - Attacker: [dx, dy, pass_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
         # - Defender: [dx, dy, tackle_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
         # - Goalkeeper: [dx, dy, dive_left, dive_right, shoot_flag, power, dir_x, dir_y] → shape (8,)
         #
@@ -108,7 +108,7 @@ class FootballMultiEnv(ParallelEnv):
         # Flags are binary actions (activated if > 0.5)
         self.action_spaces = {}
         for aid in self.attacker_ids:
-            self.action_spaces[aid] = spaces.Box(low=-1.0, high=1.0, shape=(6,), dtype=np.float32)
+            self.action_spaces[aid] = spaces.Box(low=-1.0, high=1.0, shape=(7,), dtype=np.float32)
         for did in self.defender_ids:
             self.action_spaces[did] = spaces.Box(low=-1.0, high=1.0, shape=(7,), dtype=np.float32)
         for gid in self.gk_ids:
@@ -150,6 +150,10 @@ class FootballMultiEnv(ParallelEnv):
         # Shot context
         self.shot_owner = None
         self.shot_just_started = False
+
+        # Pass context
+        self.pass_owner = None
+        self.pass_just_started = False
 
 
     # PettingZoo interface methods (required for multi-agent environments)
@@ -200,11 +204,14 @@ class FootballMultiEnv(ParallelEnv):
         # Reset shot context
         self._reset_shot_context()
 
+        # Reset pass context
+        self._reset_pass_context()
+
         return observations, {}
 
     def step(self, actions: Dict[str, np.ndarray]):
         """
-        Advance the environment by one timestep using the actions of all agents.
+        Advance the environment by one timestep using the actions of all agents
         """
 
         # Step 0: Validate input
@@ -217,7 +224,7 @@ class FootballMultiEnv(ParallelEnv):
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
         temp_context = {}
 
-        # Step 1: Execute actions and handle shooting
+        # Step 1: Execute actions (movement, pass, shot, tackle, dive)
         for agent_id, action in actions.items():
             player = self.players[agent_id]
             context = player.execute_action(
@@ -228,21 +235,34 @@ class FootballMultiEnv(ParallelEnv):
                 ball=self.ball
             )
 
-             # Check if this agent attempted a shot
+            # Check if this agent attempted a shot
             if context.get("shot_attempted", False):
+
                 # Verify if the shot is valid (agent owns the ball and has visibility)
-                # set the context here, inside the method
                 self._process_shot_attempt(agent_id, context)
+
+            # Check if this agent attempted a pass
+            if context.get("pass_attempted", False):
+
+                # Verify if the pass is valid (agent owns the ball and has visibility)
+                self._process_pass_attempt(agent_id, context)
 
             temp_context[agent_id] = context
 
-        # Step 2: Handle possession changes (tackle/save/dive)
+        # Step 2: Handle possession changes (tackle/save/dive/deflection)
         for agent_id, context in temp_context.items():
             if context.get("tackle_success", False) or context.get("blocked", False):
                 self.ball.set_owner(agent_id)
                 self._reset_shot_context()
+                self._reset_pass_context()
+
+                # Mark interception if the player is DEF
+                if self.players[agent_id].get_role() in {"DEF"}:
+                    context["interception_success"] = True
+
             if context.get("deflected", False):
                 self._reset_shot_context()
+                self._reset_pass_context()
 
         # Step 3: Ball movement
         update_ball_state(
@@ -251,27 +271,60 @@ class FootballMultiEnv(ParallelEnv):
             pitch=self.pitch,
             actions=actions,
             time_step=self.time_step,
-            shot_context=self.shot_context
+            shot_context=self.shot_context,
+            pass_context=self.pass_context
         )
 
         # Assign ball to a nearby player if unowned
-        self._assign_ball_if_nearby()
+        new_owner = self._assign_ball_if_nearby()
+
+        # Step 3b: Check for possession loss by attackers
+        if new_owner:
+            
+            new_owner_team = self.players[new_owner].team
+
+            if self.pass_owner and new_owner_team != self.players[self.pass_owner].team:
+                temp_context[new_owner]["interception_success"] = True 
+                self.pass_owner = None  # reset pass owner after interception
+
+            elif self.pass_owner and new_owner_team == self.players[self.pass_owner].team and new_owner != self.pass_owner:
+                temp_context[new_owner]["pass_completed"] = True
+                self.pass_owner = None  # reset pass owner after successful pass
+
 
         # Step 4: Check goal or out
         ball_x, ball_y = denormalize(*self.ball.get_position())
         goal_owner = self.shot_owner if self._is_goal(ball_x, ball_y) else None
-        ball_out_by = self.shot_owner if self._is_ball_completely_out(ball_x, ball_y) else None
+        ball_out_by = None
+        if self._is_ball_completely_out(ball_x, ball_y):
+            if self.shot_owner:
+                ball_out_by = self.shot_owner
+            elif self.pass_owner:
+                ball_out_by = self.pass_owner
 
-        # Step 5: Build agent info and shot context
+
+        # Step 5: Build agent info and contextual updates
         for agent_id in self.agents:
             context = temp_context[agent_id]
             deflection_power = np.linalg.norm(self.ball.get_velocity()) if context.get("deflected") else 0.0
 
+            if goal_owner:
+                scorer_team = self.players[goal_owner].team
+                # Assign goal to the opposite team if the scorer is DEF or GK
+                role = self.players[goal_owner].get_role()
+                if role in {"DEF", "GK"}:
+                    goal_team = "A" if scorer_team == "B" else "B"
+                else:
+                    goal_team = scorer_team
+            else:
+                goal_team = None
+
             context.update({
                 "goal_scored": goal_owner == agent_id,
-                "goal_team": self.players[goal_owner].team if goal_owner else None,
+                "goal_team": goal_team,
                 "ball_out_by": ball_out_by,
                 "start_shot_bonus": agent_id == self.shot_owner and self.shot_just_started,
+                "start_pass_bonus": agent_id == self.pass_owner and self.pass_just_started,
                 "possession_lost": self._check_possession_loss(agent_id),
                 "deflection_power": deflection_power
             })
@@ -287,7 +340,7 @@ class FootballMultiEnv(ParallelEnv):
                 pitch=self.pitch,
                 reward_grid=self.reward_grids[role],
                 context=infos[agent_id]
-    )
+            )
 
         # Step 7: Observations
         for agent_id in self.agents:
@@ -298,7 +351,12 @@ class FootballMultiEnv(ParallelEnv):
             terminations[agent_id] = goal_owner is not None or ball_out_by is not None
             truncations[agent_id] = self.episode_step >= self.max_steps
 
+        # Step 9: Cleanup for next step
+        self._reset_shot_context()
+        self._reset_pass_context()
+
         return observations, rewards, terminations, truncations, infos
+
     
     def _reset_shot_context(self):
         """
@@ -308,6 +366,14 @@ class FootballMultiEnv(ParallelEnv):
         self.shot_owner = None
         self.shot_just_started = False
 
+    def _reset_pass_context(self):
+        """
+        Reset the pass context after a pass attempt.
+        """
+        self.pass_context = {"pass_by": None, "direction": None, "power": 0.0}
+        self.pass_owner = None
+        self.pass_just_started = False
+
     def _process_shot_attempt(self, agent_id: str, context: dict):
         """
         Process a shot attempt by an agent.
@@ -315,6 +381,7 @@ class FootballMultiEnv(ParallelEnv):
             agent_id (str): ID of the agent attempting the shot.
             context (dict): Context dictionary containing shot details.
         """
+
         if self.ball.get_owner() == agent_id and context.get("fov_visible", False):
             self.shot_context.update({
                 "shot_by": agent_id,
@@ -324,23 +391,52 @@ class FootballMultiEnv(ParallelEnv):
             self.shot_owner = agent_id
             self.shot_just_started = True
             self.ball.set_owner(None)
+
         else:
             context["invalid_shot_attempt"] = True
             context["shot_power"] = 0.0
             context["shot_direction"] = None
             context["shot_attempted"] = False
 
+    def _process_pass_attempt(self, agent_id: str, context: dict):
+        """
+        Process a pass attempt by an agent.
+        Args:
+            agent_id (str): ID of the agent attempting the pass.
+            context (dict): Context dictionary containing pass details.
+        """
+
+        if self.ball.get_owner() == agent_id and context.get("fov_visible", False):
+            self.pass_context.update({
+                "pass_by": agent_id,
+                "direction": context.get("pass_direction"),
+                "power": context.get("pass_power")
+            })
+            self.pass_owner = agent_id
+            self.pass_just_started = True
+            self.ball.set_owner(None)  # ball now travels
+
+        else:
+            context["invalid_pass_attempt"] = True
+            context["pass_power"] = 0.0
+            context["pass_direction"] = None
+            context["pass_attempted"] = False
+
+
     def _assign_ball_if_nearby(self, threshold: float = 0.004):
         if self.ball.get_owner() is not None:
-            return  # Already owned
+            return None  # Already owned
 
         ball_pos = np.array(self.ball.get_position())
         for agent_id, player in self.players.items():
             player_pos = np.array(player.get_position())
             distance = np.linalg.norm(player_pos - ball_pos)
-            if distance < threshold:  # If player is close enough to the ball (0.004 normalized units ~0.5 meters)
+
+            if distance < threshold:
                 self.ball.set_owner(agent_id)
-                break  # Only assign to the first one found
+                return agent_id  # return the new owner
+        return None
+
 
     def _check_possession_loss(self, agent_id: str) -> bool:
         """
@@ -378,9 +474,6 @@ class FootballMultiEnv(ParallelEnv):
             ball_y_m < 0 - margin_m or
             ball_y_m > self.pitch.height + margin_m):
             return True
-        
-       
-
         return False
 
     def _is_goal(self, x, y):
@@ -418,7 +511,7 @@ class FootballMultiEnv(ParallelEnv):
         if norm == 0:
             return False
 
-        angle = np.degrees(np.arccos(dot / norm))
+        angle = np.degrees(np.arccos(np.clip(dot / norm, -1.0, 1.0)))
 
         return angle <= observer.fov_angle / 2
 

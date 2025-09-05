@@ -68,93 +68,152 @@ class PlayerAttacker(BasePlayer):
         return "ATT"
     
     def execute_action(self, 
-                       action: np.ndarray, 
-                       time_step: float, 
-                       x_range: float, 
-                       y_range: float, 
-                       ball: Ball = None) -> dict:
+                    action: np.ndarray, 
+                    time_step: float, 
+                    x_range: float, 
+                    y_range: float, 
+                    ball: Ball = None) -> dict:
         """
-        Executes a continuous action for an attacking player. The attacker can move 
-        and optionally shoot, depending on the action vector.
+        Executes a continuous action for an attacking player
+        The attacker can move, pass, or shoot depending on the action vector
 
         Args:
             action (np.ndarray): Action vector of the form:
-                [dx, dy, shoot_flag, shot_power, shot_dir_x, shot_dir_y]
+                [dx, dy, pass_flag, shoot_flag, power, dir_x, dir_y]
+                - dx, dy: movement deltas in [-1, 1]
+                - pass_flag: >0.5 means attempt a pass
+                - shoot_flag: >0.5 means attempt a shot
+                - power: normalized power [0, 1]
+                - dir_x, dir_y: direction vector for pass/shot
             time_step (float): Duration of simulation step in seconds (e.g. 1 / FPS)
             x_range (float): Field width in meters
             y_range (float): Field height in meters
             ball (Ball): The ball object representing the current state of the ball
+
         Returns:
-            dict: Contextual information about the action taken.
+            dict: Contextual information about the action taken (for reward calculation).
         """
-                
-        # Extract movement vector
+
+        # 1. MOVEMENT
         dx, dy = action[0], action[1]
         direction = np.array([dx, dy])
         norm = np.linalg.norm(direction)
 
-        # Default visibility check result
+        # Default FOV visibility
         fov_visible = None
 
-        # If agent is moving, update direction and check FOV
         if norm > 1e-6:
             direction /= norm  # Normalize
             self.last_action_direction = direction
             fov_visible = self.is_direction_visible(direction)
         else:
             direction = np.array([0.0, 0.0])
-            fov_visible = None  # No movement
 
-        # Movement part (dx, dy)
+        # Apply actual movement (handled by BasePlayer)
         super().execute_action(action, time_step, x_range, y_range)
 
-        # Shooting logic
-        if len(action) >= 6 and action[2] > 0.5:
+        # 2. COMMON PARAMETERS
+        pass_flag = action[2] if len(action) >= 7 else 0.0
+        shoot_flag = action[3] if len(action) >= 7 else 0.0
+        desired_power = np.clip(action[4], 0.0, 1.0) if len(action) >= 7 else 0.0
+        desired_direction = np.array(action[5:7]) if len(action) >= 7 else np.array([0.0, 0.0])
 
-            # Extract shot parameters
-            desired_power = np.clip(action[3], 0.0, 1.0)
-            desired_direction = np.array(action[4:6])
+        context = {
+            "fov_visible": fov_visible,   # will be updated for pass/shot
+            "shot_attempted": False,
+            "pass_attempted": False,
+        }
 
-            # FOV visibility check
-            is_visible = self.is_direction_visible(desired_direction)
-            
-            # Perform the shot
+
+        # If the player does not own the ball, skip shooting/passing
+        if ball is None or ball.get_owner() != self.agent_id:
+            return context
+
+        # 3. INVALID ACTION CHECK
+        if pass_flag > 0.5 and shoot_flag > 0.5:
+            self.current_action = "idle"
+            context.update({
+                "invalid_action": True,
+                "pass_attempted": False,
+                "shot_attempted": False,
+                "pass_power": 0.0,
+                "shot_power": 0.0
+            })
+            return context
+        
+        # 4. PASSING LOGIC
+        if pass_flag > 0.5:
+            self.current_action = "pass"
+
+            # Recalculate FOV visibility using pass direction (not movement)
+            fov_visible_pass = self.is_direction_visible(desired_direction)
+
+            pass_quality, pass_direction, pass_power = self.passage(
+                desired_direction=desired_direction,
+                desired_power=desired_power,
+                enable_fov=True
+            )
+
+            context.update({
+                "pass_attempted": True,
+                "pass_quality": pass_quality,
+                "pass_power": pass_power,
+                "pass_direction": pass_direction,
+                "invalid_pass_direction": not fov_visible_pass,
+                "start_pass_bonus": True,
+                "fov_visible": fov_visible_pass,   # override with pass visibility
+            })
+
+            return context  
+
+        # 5. SHOOTING LOGIC
+        if shoot_flag > 0.5:
+            self.current_action = "shoot"
+
+            # Recalculate FOV visibility using shot direction
+            fov_visible_shot = self.is_direction_visible(desired_direction)
+
             shot_quality, shot_direction, shot_power = self.shoot(
                 desired_direction=desired_direction,
                 desired_power=desired_power,
                 enable_fov=True
             )
 
-            # Compute shot alignment with goal
+            # Compute alignment with goal (simplified target = center of goal)
             goal_direction = np.array([1.0, 0.5]) - np.array(self.position)
-            goal_direction /= np.linalg.norm(goal_direction) if np.linalg.norm(goal_direction) > 1e-6 else 1
-            alignment = np.dot(shot_direction, goal_direction)
-            alignment = (alignment + 1) / 2.0  # [0, 1]
+            goal_norm = np.linalg.norm(goal_direction)
+            if goal_norm > 1e-6:
+                goal_direction /= goal_norm
+            else:
+                goal_direction = np.array([1.0, 0.0])
+            alignment = (np.dot(shot_direction, goal_direction) + 1) / 2.0  # ∈ [0, 1]
 
-            # Compute positional quality
+            # Positional quality factors
             x_pos, y_pos = self.position
             x_factor = 0.2 + 0.8 * x_pos
             y_dist = abs(y_pos - 0.5)
             y_factor = max(0.5, 1 - 2 * y_dist)
             positional_quality = x_factor * y_factor
 
-            # Return full context for reward system
-            return {
+            context.update({
                 "shot_attempted": True,
                 "shot_quality": shot_quality,
                 "shot_power": shot_power,
                 "shot_direction": shot_direction,
-                "fov_visible": is_visible,
-                "invalid_shot_direction": not is_visible,
+                "invalid_shot_direction": not fov_visible_shot,
                 "shot_alignment": alignment,
                 "start_shot_bonus": True,
                 "shot_positional_quality": positional_quality,
-            }
+                "fov_visible": fov_visible_shot,   # override with shot visibility
+            })
 
-        return {
-            "fov_visible": fov_visible,
-            "shot_attempted": False,
-        }
+            return context
+
+        # 6. DEFAULT CASE → movement only
+        self.current_action = "move"
+        return context
+
+
 
 
     def copy(self):

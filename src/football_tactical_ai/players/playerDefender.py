@@ -100,29 +100,31 @@ class PlayerDefender(BasePlayer):
 
     
     def execute_action(self, 
-                   action: np.ndarray, 
-                   time_step: float, 
-                   x_range: float, 
-                   y_range: float, 
-                   ball: Ball = None) -> dict:
+                    action: np.ndarray, 
+                    time_step: float, 
+                    x_range: float, 
+                    y_range: float, 
+                    ball: Ball = None) -> dict:
         """
-        Executes a continuous action for a defensive player, including movement, tackle, and shooting.
+        Executes a continuous action for a defensive player (movement, tackle, optional shooting).
 
         Args:
-            action (np.ndarray): Action vector:
+            action (np.ndarray): Action vector of shape (7,):
                 [dx, dy, tackle_flag, shoot_flag, power, dir_x, dir_y]
             time_step (float): Duration of simulation step in seconds
             x_range (float): Field width in meters
             y_range (float): Field height in meters
-            ball (Ball): The ball object representing the current state of the ball.
+            ball (Ball): Current ball object
 
         Returns:
-            dict: Information about the actions executed, including tackle and shot context.
+            dict: Contextual information about the executed actions
         """
 
+        # Initialize context
         context = {
             "tackle_success": False,
-            "fake_tackle": False,  
+            "fake_tackle": False,
+            "interception_success": False,   # will be set True if tackle/interception succeeds
             "shot_attempted": False,
             "invalid_shot_attempt": False,
             "invalid_shot_direction": False,
@@ -132,7 +134,7 @@ class PlayerDefender(BasePlayer):
             "shot_power": None
         }
 
-        # Extract movement vector
+        # Movement setup
         dx, dy = action[0], action[1]
         direction = np.array([dx, dy])
         norm = np.linalg.norm(direction)
@@ -146,26 +148,36 @@ class PlayerDefender(BasePlayer):
             direction = np.array([0.0, 0.0])
             fov_visible = None
 
-        # Movement
+        # Apply movement from BasePlayer
         super().execute_action(action, time_step, x_range, y_range)
 
-        # Cooldown tracking only
-        self.tackle_timer = max(0.0, self.tackle_timer - time_step)
+        # Save fov info in context
+        context["fov_visible"] = fov_visible
 
-        # Attempt tackle
-        if len(action) >= 3 and action[2] > 0.5:
+        # Tackle attempt
+        self.tackle_timer = max(0.0, self.tackle_timer - time_step)  # cooldown update
 
-            # Attempt tackle
-            context["tackle_success"], distance = self.attempt_tackle(ball, time_step)
+        if len(action) >= 3 and action[2] > 0.5:  # tackle_flag
 
-            # Tackle is fake if too far or if cooldown is active
-            # in this case, tackle is not successful
+            self.current_action = "tackle"
+
+            success, distance = self.attempt_tackle(ball, time_step)
+            context["tackle_success"] = success
+
+            # Fake tackle → too far or cooldown active
             if distance > self.tackle_range or self.tackle_timer > 0.0:
                 context["fake_tackle"] = True
                 context["tackle_success"] = False
 
-        # Shooting
-        if len(action) >= 7 and action[3] > 0.5:
+            # If tackle was actually successful → mark interception
+            if context["tackle_success"]:
+                context["interception_success"] = True
+
+        # Shooting attempt (clearance / emergency shot)
+        elif len(action) >= 7 and action[3] > 0.5:  # shoot_flag
+
+            self.current_action = "shoot"
+
             power = np.clip(action[4], 0.0, 1.0)
             direction = np.array(action[5:7])
 
@@ -182,10 +194,18 @@ class PlayerDefender(BasePlayer):
                 "shot_power": shot_power,
                 "invalid_shot_attempt": self.agent_id != ball.get_owner(),
                 "invalid_shot_direction": np.allclose(shot_direction, [0.0, 0.0]),
-                "fov_visible": fov_visible
             })
 
+        # Default case → movement or idle
+        else:
+            if norm > 1e-6:
+                self.current_action = "move"
+            else:
+                self.current_action = "idle"
+
         return context
+
+
 
 
     def copy(self):

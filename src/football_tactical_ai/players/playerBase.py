@@ -255,36 +255,94 @@ class BasePlayer(ABC):
 
         return shot_quality, shot_direction, shot_power
     
-    def _infer_action_type(self, action):
+    def passage(self, desired_direction, desired_power, enable_fov=True):
         """
-        Infer action type from raw action vector.
+        Attempt to pass in a given direction, only if it's within the field of view.
+
+        Args:
+            desired_direction (np.array): 2D vector representing the pass direction.
+            desired_power (float): Desired pass power in range [0, 1].
+            enable_fov (bool): Whether to check if the pass direction is within FOV.
+
+        Returns:
+            tuple: (pass_quality, pass_direction, pass_power)
         """
-        if len(action) == 6:  # attacker
-            if action[2] > 0.5:  # shoot_flag
+
+        # Check if the desired direction is within the player's field of view
+        # If not, the pass is invalid and returns zeroed output
+        if not self.is_direction_visible(desired_direction) and enable_fov:
+            return 0.0, np.array([0.0, 0.0]), 0.0
+
+        # Normalize direction
+        norm = np.linalg.norm(desired_direction)
+        if norm > 0:
+            dir_norm = desired_direction / norm
+        else:
+            dir_norm = np.array([1.0, 0.0])
+
+        # Add noise to the shot direction based on the player's precision
+        # The less precise, the more deviation from the intended angle
+        max_noise_radians = 0.05  # smaller than shot (~2.9 degrees)
+        noise_strength = (1 - self.precision) * max_noise_radians
+        angle_noise = np.random.uniform(-noise_strength, noise_strength)
+        cos_a, sin_a = np.cos(angle_noise), np.sin(angle_noise)
+
+        # Apply rotation to simulate directional inaccuracy
+        pass_direction = np.array([
+            cos_a * dir_norm[0] - sin_a * dir_norm[1],
+            sin_a * dir_norm[0] + cos_a * dir_norm[1]
+        ])
+
+        # Clamp power
+        desired_power = np.clip(desired_power, 0.0, 1.0)
+
+        # Scale to ball velocity (lower than shot)
+        # based on passing skill
+        pass_power = self.max_power * (0.4 + 0.5 * self.passing * desired_power)
+
+        # Pass quality (simplified: skill + closeness to center)
+        x_pos, y_pos = self.position
+        x_factor = 0.2 + 0.8 * x_pos         # Better angle as player moves closer to goal (x direction)
+        y_dist = abs(y_pos - 0.5)
+        y_factor = max(0.5, 1 - 2 * y_dist)
+
+        pass_quality = x_factor * y_factor * self.passing
+
+        return pass_quality, pass_direction, pass_power
+
+    
+    def _infer_action_type(self, action: np.ndarray) -> str:
+        """
+        Infer action type from the raw action vector.
+        Returns one of: "idle", "move", "pass", "shoot", "tackle", "dive".
+        """
+        role = self.role
+
+        # Movement
+        dx, dy = action[0], action[1]
+        if np.linalg.norm([dx, dy]) > 1e-6:
+            return "move"
+
+        if role == "ATT":
+            if len(action) >= 3 and action[2] > 0.5:  # pass_flag
+                return "pass"
+            if len(action) >= 4 and action[3] > 0.5:  # shoot_flag
                 return "shoot"
-            elif np.linalg.norm(action[:2]) > 0.1:
-                return "move"
-            else:
-                return "idle"
-        elif len(action) == 7:  # defender
-            if action[2] > 0.5:
+
+        elif role == "DEF":
+            if len(action) >= 3 and action[2] > 0.5:  # tackle_flag
                 return "tackle"
-            elif action[3] > 0.5:
+            if len(action) >= 4 and action[3] > 0.5:  # shoot_flag
                 return "shoot"
-            elif np.linalg.norm(action[:2]) > 0.1:
-                return "move"
-            else:
-                return "idle"
-        elif len(action) == 8:  # goalkeeper
-            if action[2] > 0.5 or action[3] > 0.5:
+
+        elif role == "GK":
+            if len(action) >= 3 and (action[2] > 0.5 or action[3] > 0.5):  # dive flags
                 return "dive"
-            elif action[4] > 0.5:
+            if len(action) >= 5 and action[4] > 0.5:  # shoot_flag
                 return "shoot"
-            elif np.linalg.norm(action[:2]) > 0.1:
-                return "move"
-            else:
-                return "idle"
+
         return "idle"
+
 
     def get_current_action_code(self):
         """

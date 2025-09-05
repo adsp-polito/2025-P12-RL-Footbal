@@ -141,11 +141,11 @@ class PlayerGoalkeeper(BasePlayer):
         }
     
     def execute_action(self, 
-                   action: np.ndarray, 
-                   time_step: float, 
-                   x_range: float, 
-                   y_range: float, 
-                   ball: Ball = None) -> dict:
+                    action: np.ndarray, 
+                    time_step: float, 
+                    x_range: float, 
+                    y_range: float, 
+                    ball: Ball = None) -> dict:
         """
         Executes a continuous action for a goalkeeper, including movement, dive, and shoot.
 
@@ -156,6 +156,7 @@ class PlayerGoalkeeper(BasePlayer):
             dict: Contextual information about the action taken.
         """
 
+        # Initialize context
         context = {
             "dive_score": None,
             "blocked": False,
@@ -183,15 +184,17 @@ class PlayerGoalkeeper(BasePlayer):
             direction = np.array([0.0, 0.0])
             context["fov_visible"] = None
 
-        # Apply movement
+        # Apply movement from BasePlayer
         super().execute_action(action, time_step, x_range, y_range)
 
         # DIVE ACTION
         dive_result = None
         if len(action) >= 4:
             if action[2] > 0.5:
+                self.current_action = "dive"
                 dive_result = self.dive("left", ball)
             elif action[3] > 0.5:
+                self.current_action = "dive"
                 dive_result = self.dive("right", ball)
 
         if dive_result:
@@ -201,7 +204,9 @@ class PlayerGoalkeeper(BasePlayer):
             context["wasted_dive"] = dive_result.get("wasted_dive", False)
 
         # SHOOTING (goal kick or pass)
-        if len(action) >= 8 and action[4] > 0.5:
+        elif len(action) >= 8 and action[4] > 0.5:
+            self.current_action = "shoot"
+
             power = np.clip(action[5], 0.0, 1.0)
             shoot_direction = np.array(action[6:8])
 
@@ -220,7 +225,15 @@ class PlayerGoalkeeper(BasePlayer):
                 "invalid_shot_direction": np.allclose(actual_direction, [0.0, 0.0])
             })
 
+        # Default case → movement or idle
+        else:
+            if norm > 1e-6:
+                self.current_action = "move"
+            else:
+                self.current_action = "idle"
+
         return context
+
 
     def get_role(self):
         """Return role name as string for rendering or role-based logic."""
