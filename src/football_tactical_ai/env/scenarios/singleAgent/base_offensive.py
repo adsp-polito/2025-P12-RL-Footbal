@@ -15,7 +15,8 @@ Child classes MAY override
 import gymnasium as gym
 import numpy as np
 
-from football_tactical_ai.env.objects import Ball, Pitch
+from football_tactical_ai.env.objects.ball import Ball
+from football_tactical_ai.env.objects.pitch import Pitch
 from football_tactical_ai.players.playerAttacker import PlayerAttacker
 from football_tactical_ai.players.playerDefender import PlayerDefender
 from football_tactical_ai.helpers.helperFunctions import normalize

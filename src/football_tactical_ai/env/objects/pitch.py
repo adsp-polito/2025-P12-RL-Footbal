@@ -233,6 +233,9 @@ class Pitch:
         # Draw the center circle
         ax.add_patch(Circle((self.width // 2, self.center_y), self.center_circle_radius, color=lc, fill=False, linewidth=2, zorder=2))
 
+        # Draw the center spot
+        ax.plot([self.width // 2], [self.center_y], marker='o', markersize=5, color=lc, zorder=2)
+
         # Draw penalty areas and goals on both sides
         for side in ['left', 'right']:
             self._draw_penalty_area(ax, side, lc)

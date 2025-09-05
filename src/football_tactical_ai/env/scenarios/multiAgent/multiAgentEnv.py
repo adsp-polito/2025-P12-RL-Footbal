@@ -47,40 +47,77 @@ class FootballMultiEnv(ParallelEnv):
         
         Args:
             config (dict, optional): Custom configuration dictionary. 
-                                    If None, defaults will be used from get_config().
+                                    If None, defaults will be loaded from get_config().
         """
-        # Load configuration
+        # Load configuration parameters
         self.config = config or get_config()
-
-        # Time and simulation parameters
         self.fps = self.config["fps"]
         self.time_step = self.config["time_step"]
         self.max_steps = self.config["max_steps"]
 
-        # Pitch and dimensions
-        self.pitch: Pitch = Pitch()
+        # Pitch setup
+        self.pitch = Pitch()
         self.x_range = self.pitch.width
         self.y_range = self.pitch.height
 
-        # Agents and roles
-        self.agents = ["att_0", "def_0", "gk_0"]
-        self.possible_agents = self.agents[:]  # PettingZoo requirement
+        # Define agents (IDs)
 
-        # Instantiate players (IDs and roles)
-        self.players = {
-            "att_0": PlayerAttacker(agent_id="att_0", team="A", role="ATT"),
-            "def_0": PlayerDefender(agent_id="def_0", team="B", role="DEF"),
-            "gk_0": PlayerGoalkeeper(agent_id="gk_0", team="B", role="GK"),
-        }
+        # Attacking team: 3 attackers (att_1, att_2, att_3)
+        self.attacker_ids = [f"att_{i}" for i in range(1, 4)]
 
-        # Action spaces per agent
-        self.action_spaces = {
-            "att_0": spaces.Box(low=-1.0, high=1.0, shape=(6,), dtype=np.float32),
-            "def_0": spaces.Box(low=-1.0, high=1.0, shape=(7,), dtype=np.float32),
-            "gk_0":  spaces.Box(low=-1.0, high=1.0, shape=(8,), dtype=np.float32),
-        }
+        # Defending team: 2 defenders (def_1, def_2)
+        self.defender_ids = [f"def_{i}" for i in range(1, 3)]
 
-        # Observation spaces per agent
+        # Defending team: 1 goalkeeper (gk_1)
+        self.gk_ids = ["gk_1"]
+
+        # Complete agent list (PettingZoo requirement)
+        self.agents = self.attacker_ids + self.defender_ids + self.gk_ids
+        self.possible_agents = self.agents[:]
+
+        # Instantiate players
+        players = {}
+
+        # Attackers
+        players.update({
+            aid: PlayerAttacker(agent_id=aid, team="A", role="ATT")
+            for aid in self.attacker_ids
+        })
+
+        # Defenders
+        players.update({
+            did: PlayerDefender(agent_id=did, team="B", role="DEF")
+            for did in self.defender_ids
+        })
+
+        # Goalkeeper
+        players.update({
+            "gk_1": PlayerGoalkeeper(agent_id="gk_1", team="B", role="GK")
+        })
+
+        self.players = players
+
+        # Action spaces
+        # Each role has a different action vector:
+        # - Attacker: [dx, dy, shoot_flag, power, dir_x, dir_y] → shape (6,)
+        # - Defender: [dx, dy, tackle_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
+        # - Goalkeeper: [dx, dy, dive_left, dive_right, shoot_flag, power, dir_x, dir_y] → shape (8,)
+        #
+        # dx, dy ∈ [-1, 1] represent movement direction (normalized)
+        # power ∈ [0, 1] represents shooting/tackling power
+        # Flags are binary actions (activated if > 0.5)
+        self.action_spaces = {}
+        for aid in self.attacker_ids:
+            self.action_spaces[aid] = spaces.Box(low=-1.0, high=1.0, shape=(6,), dtype=np.float32)
+        for did in self.defender_ids:
+            self.action_spaces[did] = spaces.Box(low=-1.0, high=1.0, shape=(7,), dtype=np.float32)
+        for gid in self.gk_ids:
+            self.action_spaces[gid] = spaces.Box(low=-1.0, high=1.0, shape=(8,), dtype=np.float32)
+
+        # Observation spaces
+        # Each agent observes:
+        # [player_x, player_y, ball_x, ball_y] → shape (4,)
+        # All values are normalized ∈ [0, 1]
         self.observation_spaces = {
             agent_id: spaces.Box(low=0.0, high=1.0, shape=(4,), dtype=np.float32)
             for agent_id in self.agents
@@ -89,21 +126,23 @@ class FootballMultiEnv(ParallelEnv):
         # Roles mapping
         self.roles = {aid: self.players[aid].get_role() for aid in self.agents}
 
-        # Ball and initial ownership
+        # Ball setup
         self.ball = Ball()
         self.episode_step = 0
-        self.ball.set_owner("att_0")  # Initial ball ownership
+        self.ball.set_owner("att_1")  # First attacker starts with possession
 
-        # Reward grids for each role
+        # Reward grids
+        # Each role has its own spatial reward grid
         self.reward_grids = {
             "ATT": build_attacker_grid(self.pitch),
             "DEF": build_defender_grid(self.pitch),
-            "GK":  build_goalkeeper_grid(self.pitch),
+            "GK": build_goalkeeper_grid(self.pitch),
         }
 
-        # Initialize shot context
+        # Shot context
         self.shot_owner = None
         self.shot_just_started = False
+
 
     # PettingZoo interface methods (required for multi-agent environments)
     @property
@@ -128,12 +167,22 @@ class FootballMultiEnv(ParallelEnv):
         self.agents = self.possible_agents[:]
         self.episode_step = 0
         self.ball.reset()
-        self.ball.set_owner("att_0")  # Initial ball ownership
+        self.ball.set_owner("att_1")  # Initial ball ownership
 
         # Reset positions
-        self.players["att_0"].reset_position(normalize(60, 40))
-        self.players["def_0"].reset_position(normalize(110, 40))
-        self.players["gk_0"].reset_position(normalize(120, 40))
+        start_positions = {
+            "att_1": (60, 40),
+            "att_2": (60, 30),
+            "att_3": (60, 50),
+            "def_1": (100, 30),
+            "def_2": (100, 50),
+            "gk_1":  (120, 40)
+        }
+
+        for aid, player in self.players.items():
+            if aid in start_positions:
+                x, y = start_positions[aid]
+                player.reset_position(normalize(x, y))
 
         observations = {
             agent_id: self._get_observation(agent_id)

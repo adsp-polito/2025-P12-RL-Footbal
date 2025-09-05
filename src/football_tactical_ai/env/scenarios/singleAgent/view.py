@@ -52,7 +52,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             dtype=np.float32
         )
 
-        # Observation space: normalized player positions, ball position, and shooting state
+        # Observation space: normalized player positions (x,y), ball position (x,y), and shooting state (direction x,y + power)
         self.observation_space = spaces.Box(
             low=0.0,
             high=1.0,
