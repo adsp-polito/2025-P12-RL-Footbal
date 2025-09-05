@@ -12,8 +12,8 @@ from typing import Literal
 def get_config(
     fps: int = 24,
     seconds: int = 10,
-    n_attackers: int = 1,
-    n_defenders: int = 1,
+    n_attackers: int = 3,
+    n_defenders: int = 2,
     include_goalkeeper: bool = True,
 ) -> dict:
     """

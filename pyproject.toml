@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "RL football environments"
 requires-python = ">=3.10"
 dependencies = [
-  "gymnasium==0.29",
+  "gymnasium==0.29.1",
   "torch==2.0.0",
   "stable-baselines3==2.0.0",
   "tianshou==1.1.0",
@@ -24,7 +24,9 @@ dependencies = [
   "seaborn",
   "networkx",
   "scipy>=1.11",
-  "torchvision>=0.15"
+  "torchvision>=0.15",
+  "pettingzoo>=1.23.0",
+  "supersuit>=3.4.0"
 ]
 
 [tool.setuptools.packages.find]

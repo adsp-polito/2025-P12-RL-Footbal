@@ -10,7 +10,7 @@ from football_tactical_ai.env.scenarios.multiAgent.physics import update_ball_st
 from football_tactical_ai.helpers.helperFunctions import denormalize
 from football_tactical_ai.env.objects.ball import Ball
 from football_tactical_ai.env.objects.pitch import Pitch
-from football_tactical_ai.configs.multiAgentEnvConfig import get_config
+from football_tactical_ai.configs.configMultiAgentEnv import get_config
 from football_tactical_ai.helpers.helperFunctions import normalize
 from football_tactical_ai.env.scenarios.multiAgent.rewardGrids import (
     build_attacker_grid,
@@ -25,7 +25,7 @@ Action space for each player:
 
 - Attacker (ATT): [dx, dy, pass_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
 - Defender (DEF): [dx, dy, tackle_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
-- Goalkeeper (GK): [dx, dy, dive_left, dive_right, shoot_flag, power, dir_x, dir_y] → shape (8,)
+- Goalkeeper (GK): [dx, dy, dive_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
 
 All values are normalized:
 - dx, dy ∈ [-1, 1] (movement direction)
@@ -41,6 +41,13 @@ class FootballMultiEnv(ParallelEnv):
     This environment simulates a simple football game with attackers, defenders, and a goalkeeper.
     """
 
+    # Environment metadata
+    # This metadata is used by the PettingZoo library
+    metadata = {
+        "render_modes": ["human", "rgb_array"],
+        "name": "football_multi_env",
+    }
+
     def __init__(self, config: Dict[str, Any] = None):
         """
         Initialize the multi-agent football environment.
@@ -49,6 +56,10 @@ class FootballMultiEnv(ParallelEnv):
             config (dict, optional): Custom configuration dictionary. 
                                     If None, defaults will be loaded from get_config().
         """
+
+        # Rendering mode (not implemented)
+        self.render_mode = None
+
         # Load configuration parameters
         self.config = config or get_config()
         self.fps = self.config["fps"]
@@ -101,7 +112,7 @@ class FootballMultiEnv(ParallelEnv):
         # Each role has a different action vector:
         # - Attacker: [dx, dy, pass_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
         # - Defender: [dx, dy, tackle_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
-        # - Goalkeeper: [dx, dy, dive_left, dive_right, shoot_flag, power, dir_x, dir_y] → shape (8,)
+        # - Goalkeeper: [dx, dy, dive, shoot_flag, power, dir_x, dir_y] → shape (8,)
         #
         # dx, dy ∈ [-1, 1] represent movement direction (normalized)
         # power ∈ [0, 1] represents shooting/tackling power
@@ -112,7 +123,7 @@ class FootballMultiEnv(ParallelEnv):
         for did in self.defender_ids:
             self.action_spaces[did] = spaces.Box(low=-1.0, high=1.0, shape=(7,), dtype=np.float32)
         for gid in self.gk_ids:
-            self.action_spaces[gid] = spaces.Box(low=-1.0, high=1.0, shape=(8,), dtype=np.float32)
+            self.action_spaces[gid] = spaces.Box(low=-1.0, high=1.0, shape=(7,), dtype=np.float32)
 
         # Observation spaces
         # Each agent observes:
@@ -157,13 +168,11 @@ class FootballMultiEnv(ParallelEnv):
 
 
     # PettingZoo interface methods (required for multi-agent environments)
-    @property
-    def observation_space(self):
-        return self.observation_spaces
+    def observation_space(self, agent_id):
+        return self.observation_spaces[agent_id]
 
-    @property
-    def action_space(self):
-        return self.action_spaces
+    def action_space(self, agent_id):
+        return self.action_spaces[agent_id]
 
     def reset(self, seed=None, options=None):
         """
@@ -483,6 +492,20 @@ class FootballMultiEnv(ParallelEnv):
         GOAL_MIN_Y = self.pitch.center_y - self.pitch.goal_width / 2
         GOAL_MAX_Y = self.pitch.center_y + self.pitch.goal_width / 2
         return x > self.pitch.width and GOAL_MIN_Y <= y <= GOAL_MAX_Y
+    
+    def get_render_state(self):
+        """
+        Export the current environment state for rendering.
+        Returns:
+            dict: {
+                "players": {agent_id: player_copy},
+                "ball": ball_copy
+            }
+        """
+        return {
+            "players": {agent: self.players[agent].copy() for agent in self.agents},
+            "ball": self.ball.copy()
+    }
     
     def _is_in_fov(self, observer, target):
         """

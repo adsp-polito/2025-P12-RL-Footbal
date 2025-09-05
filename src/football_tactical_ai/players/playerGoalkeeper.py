@@ -56,24 +56,22 @@ class PlayerGoalkeeper(BasePlayer):
         self.last_action_direction = np.array([1.0, 0.0])  # last action direction
 
 
-    def dive(self, direction: str, ball: Ball) -> dict:
+    def dive(self, direction: np.ndarray, ball: Ball) -> dict:
         """
-        Attempt a dive and evaluate if the shot is blocked or deflected.
+        Attempt a dive in the given direction and evaluate if the shot is blocked or deflected.
 
         Args:
-            direction (str): 'left' or 'right'
+            direction (np.ndarray): Dive direction vector (normalized).
             ball (Ball): The ball object.
 
         Returns:
             dict: {
                 'dive_score': float,   # Reflex + reach effectiveness
                 'blocked': bool,       # True if shot was caught and stopped
-                'deflected': bool      # True if shot was parried away
+                'deflected': bool,     # True if shot was parried away
+                'wasted_dive': bool    # True if dive was too far
             }
         """
-        if direction not in {"left", "right"}:
-            return {"dive_score": 0.0, "blocked": False, "deflected": False, "wasted_dive": True}
-
         # Dive effectiveness based on reflexes and reach
         dive_score = 0.5 * self.reflexes + 0.5 * self.reach
 
@@ -83,7 +81,6 @@ class PlayerGoalkeeper(BasePlayer):
         distance = np.linalg.norm([ball_x - self_x, ball_y - self_y])
         reachable = distance <= (0.5 + self.reach)
 
-        # Attempt to stop the shot
         dive_successful = np.random.rand() < dive_score
 
         if not reachable:
@@ -97,7 +94,7 @@ class PlayerGoalkeeper(BasePlayer):
             ball.set_owner(self.agent_id)
             return {"dive_score": dive_score, "blocked": True, "deflected": False, "wasted_dive": False}
 
-        # CASE 2: Deflection
+        # CASE 2: Deflection (redirect ball)
         incoming_velocity = np.array(ball.get_velocity())
         speed = np.linalg.norm(incoming_velocity)
         if speed < 1e-6:
@@ -105,21 +102,14 @@ class PlayerGoalkeeper(BasePlayer):
         else:
             incoming_dir = incoming_velocity / speed
 
-        # Rotate incoming direction slightly
-        if direction == "left":
-            rot_matrix = np.array([[0.95, -0.3], [0.3, 0.95]])
+        # Use dive direction (normalized)
+        if np.linalg.norm(direction) > 1e-6:
+            dive_dir = direction / np.linalg.norm(direction)
         else:
-            rot_matrix = np.array([[0.95, 0.3], [-0.3, 0.95]])
+            dive_dir = np.array([1.0, 0.0])  # default
 
-        deflected_dir = rot_matrix @ incoming_dir
-
-        # Add small random noise for realism
-        deflected_dir += np.random.normal(0, 0.05, size=2)
-        deflected_dir /= np.linalg.norm(deflected_dir)
-
-        # Final velocity scaled by original speed and punch power
-        final_velocity = deflected_dir * speed * self.punch_power
-
+        # Deflected ball velocity
+        final_velocity = dive_dir * speed * self.punch_power
         ball.set_velocity(final_velocity)
         ball.set_owner(None)
 
@@ -141,37 +131,33 @@ class PlayerGoalkeeper(BasePlayer):
         }
     
     def execute_action(self, 
-                    action: np.ndarray, 
-                    time_step: float, 
-                    x_range: float, 
-                    y_range: float, 
-                    ball: Ball = None) -> dict:
+        action: np.ndarray, 
+        time_step: float, 
+        x_range: float, 
+        y_range: float, 
+        ball: Ball = None) -> dict:
         """
         Executes a continuous action for a goalkeeper, including movement, dive, and shoot.
 
         Action vector format:
-            [dx, dy, dive_left, dive_right, shoot_flag, power, dir_x, dir_y]
-
-        Returns:
-            dict: Contextual information about the action taken.
+        [dx, dy, dive_flag, shoot_flag, power, dir_x, dir_y]
         """
 
-        # Initialize context
         context = {
-            "dive_score": None,
-            "blocked": False,
-            "deflected": False,
-            "wasted_dive": False,
-            "shot_attempted": False,
-            "invalid_shot_attempt": False,
-            "invalid_shot_direction": False,
-            "fov_visible": None,
-            "shot_quality": None,
-            "shot_direction": None,
-            "shot_power": None,
+        "dive_score": None,
+        "blocked": False,
+        "deflected": False,
+        "wasted_dive": False,
+        "shot_attempted": False,
+        "invalid_shot_attempt": False,
+        "invalid_shot_direction": False,
+        "fov_visible": None,
+        "shot_quality": None,
+        "shot_direction": None,
+        "shot_power": None,
         }
 
-        # Extract and normalize movement direction
+        # Movement
         dx, dy = action[0], action[1]
         direction = np.array([dx, dy])
         norm = np.linalg.norm(direction)
@@ -184,55 +170,42 @@ class PlayerGoalkeeper(BasePlayer):
             direction = np.array([0.0, 0.0])
             context["fov_visible"] = None
 
-        # Apply movement from BasePlayer
         super().execute_action(action, time_step, x_range, y_range)
 
-        # DIVE ACTION
-        dive_result = None
-        if len(action) >= 4:
-            if action[2] > 0.5:
-                self.current_action = "dive"
-                dive_result = self.dive("left", ball)
-            elif action[3] > 0.5:
-                self.current_action = "dive"
-                dive_result = self.dive("right", ball)
+        # DIVE
+        dive_flag = action[2] > 0.5
+        if dive_flag:
+            self.current_action = "dive"
+            dive_dir = np.array([action[5], action[6]])
+            dive_result = self.dive(dive_dir, ball)
+            context.update(dive_result)
 
-        if dive_result:
-            context["dive_score"] = dive_result.get("dive_score", 0.0)
-            context["blocked"] = dive_result.get("blocked", False)
-            context["deflected"] = dive_result.get("deflected", False)
-            context["wasted_dive"] = dive_result.get("wasted_dive", False)
-
-        # SHOOTING (goal kick or pass)
-        elif len(action) >= 8 and action[4] > 0.5:
+        # SHOOT (goal kick or pass)
+        elif action[3] > 0.5:
             self.current_action = "shoot"
-
-            power = np.clip(action[5], 0.0, 1.0)
-            shoot_direction = np.array(action[6:8])
+            power = np.clip(action[4], 0.0, 1.0)
+            shoot_direction = np.array([action[5], action[6]])
 
             shot_quality, actual_direction, actual_power = self.shoot(
-                desired_direction=shoot_direction,
-                desired_power=power,
-                enable_fov=True
+            desired_direction=shoot_direction,
+            desired_power=power,
+            enable_fov=True
             )
 
             context.update({
-                "shot_attempted": True,
-                "shot_quality": shot_quality,
-                "shot_direction": actual_direction,
-                "shot_power": actual_power,
-                "invalid_shot_attempt": self.agent_id != ball.get_owner(),
-                "invalid_shot_direction": np.allclose(actual_direction, [0.0, 0.0])
+            "shot_attempted": True,
+            "shot_quality": shot_quality,
+            "shot_direction": actual_direction,
+            "shot_power": actual_power,
+            "invalid_shot_attempt": self.agent_id != ball.get_owner(),
+            "invalid_shot_direction": np.allclose(actual_direction, [0.0, 0.0])
             })
 
-        # Default case → movement or idle
         else:
-            if norm > 1e-6:
-                self.current_action = "move"
-            else:
-                self.current_action = "idle"
+            self.current_action = "move" if norm > 1e-6 else "idle"
 
         return context
+
 
 
     def get_role(self):
