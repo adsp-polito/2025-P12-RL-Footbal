@@ -310,7 +310,8 @@ class FootballMultiEnv(ParallelEnv):
                 ball_out_by = self.shot_owner
             elif self.pass_owner:
                 ball_out_by = self.pass_owner
-
+            elif self.ball.get_owner():
+                ball_out_by = self.ball.get_owner()
 
         # Step 5: Build agent info and contextual updates
         for agent_id in self.agents:
@@ -360,12 +361,17 @@ class FootballMultiEnv(ParallelEnv):
             terminations[agent_id] = goal_owner is not None or ball_out_by is not None
             truncations[agent_id] = self.episode_step >= self.max_steps
 
+        # If ANY agent is done (terminated or truncated), end episode for ALL
+        if any(terminations.values()) or any(truncations.values()):
+            for agent_id in self.agents:
+                terminations[agent_id] = True
+                truncations[agent_id] = truncations[agent_id] or self.episode_step >= self.max_steps
+
         # Step 9: Cleanup for next step
         self._reset_shot_context()
         self._reset_pass_context()
 
         return observations, rewards, terminations, truncations, infos
-
     
     def _reset_shot_context(self):
         """
