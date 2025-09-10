@@ -89,19 +89,37 @@ class FootballMultiEnv(ParallelEnv):
         # Instantiate players
         players = {}
 
-        # Attackers
+        # Attacker roles assignment
+        if len(self.attacker_ids) == 3:
+            attacker_roles = ["LW", "CF", "RW"]
+        elif len(self.attacker_ids) == 2:
+            attacker_roles = ["LCF", "RCF"]
+        elif len(self.attacker_ids) == 1:
+            attacker_roles = ["CF"]
+        else:
+            raise ValueError("Unsupported number of attackers")
+
         players.update({
-            aid: PlayerAttacker(agent_id=aid, team="A", role="ATT")
-            for aid in self.attacker_ids
+            aid: PlayerAttacker(agent_id=aid, team="A", role=role)
+            for aid, role in zip(self.attacker_ids, attacker_roles)
         })
 
-        # Defenders
+
+        # Defender roles assignment
+        if len(self.defender_ids) == 2:
+            defender_roles = ["LCB", "RCB"]
+        elif len(self.defender_ids) == 1:
+            defender_roles = ["CB"]  # fallback generic central back
+        else:
+            raise ValueError("Unsupported number of defenders")
+
         players.update({
-            did: PlayerDefender(agent_id=did, team="B", role="DEF")
-            for did in self.defender_ids
+            did: PlayerDefender(agent_id=did, team="B", role=role)
+            for did, role in zip(self.defender_ids, defender_roles)
         })
 
-        # Goalkeeper
+
+        # Goalkeeper (always 1 for now)
         players.update({
             "gk_1": PlayerGoalkeeper(agent_id="gk_1", team="B", role="GK")
         })
@@ -112,7 +130,7 @@ class FootballMultiEnv(ParallelEnv):
         # Each role has a different action vector:
         # - Attacker: [dx, dy, pass_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
         # - Defender: [dx, dy, tackle_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
-        # - Goalkeeper: [dx, dy, dive, shoot_flag, power, dir_x, dir_y] → shape (8,)
+        # - Goalkeeper: [dx, dy, dive_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
         #
         # dx, dy ∈ [-1, 1] represent movement direction (normalized)
         # power ∈ [0, 1] represents shooting/tackling power
@@ -133,14 +151,12 @@ class FootballMultiEnv(ParallelEnv):
         #
         # action_code = one-hot or discrete integer (e.g., 0=idle, 1=move, 2=pass, 3=shoot, 4=tackle, ...)
         # visible_flag = 1 if in FOV, 0 otherwise (if 0, coords are last known or padding)
-    
         obs_dim = 4 + (len(self.agents)-1) * 4
 
         self.observation_spaces = {
             agent_id: spaces.Box(low=0.0, high=1.0, shape=(obs_dim,), dtype=np.float32)
             for agent_id in self.agents
         }
-
 
         # Roles mapping
         self.roles = {aid: self.players[aid].get_role() for aid in self.agents}
@@ -150,13 +166,20 @@ class FootballMultiEnv(ParallelEnv):
         self.episode_step = 0
         self.ball.set_owner("att_1")  # First attacker starts with possession
 
-        # Reward grids
-        # Each role has its own spatial reward grid
-        self.reward_grids = {
-            "ATT": build_attacker_grid(self.pitch),
-            "DEF": build_defender_grid(self.pitch),
-            "GK": build_goalkeeper_grid(self.pitch),
-        }
+        # Reward grids per agent
+        self.reward_grids = {}
+        for agent_id, player in self.players.items():
+            role = player.get_role()
+            if role in {"LW", "RW", "CF", "LCF", "RCF"}:
+                self.reward_grids[agent_id] = build_attacker_grid(self.pitch, role=role)
+            elif role in {"LCB", "RCB"}:
+                self.reward_grids[agent_id] = build_defender_grid(self.pitch, role=role)
+            elif role == "CB":  # fallback if only 1 defender
+                self.reward_grids[agent_id] = build_defender_grid(self.pitch)  # no specific role
+            elif role == "GK":
+                self.reward_grids[agent_id] = build_goalkeeper_grid(self.pitch)
+            else:
+                raise ValueError(f"Unknown role {role} for agent {agent_id}")
 
         # Shot context
         self.shot_owner = None
@@ -348,10 +371,9 @@ class FootballMultiEnv(ParallelEnv):
                 player=self.players[agent_id],
                 ball=self.ball,
                 pitch=self.pitch,
-                reward_grid=self.reward_grids[role],
+                reward_grid=self.reward_grids[agent_id],  
                 context=infos[agent_id]
             )
-
         # Step 7: Observations
         for agent_id in self.agents:
             observations[agent_id] = self._get_observation(agent_id)

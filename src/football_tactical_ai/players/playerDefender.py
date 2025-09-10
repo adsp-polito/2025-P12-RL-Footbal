@@ -67,7 +67,7 @@ class PlayerDefender(BasePlayer):
 
     def get_role(self):
         """Return role name as string for rendering or role-based logic."""
-        return "DEF"
+        return "DEF" if self.role is None else self.role
     
     def attempt_tackle(self, ball: Ball, time_step: float) -> bool:
         """

@@ -45,7 +45,7 @@ class BasePlayer(ABC):
         # attributes for the player instance (for multi agent scenarios)
         self.agent_id = kwargs.get("agent_id", None)  # Example: "att_0"
         self.team = kwargs.get("team", None)          # Example: "A" or "B"
-        self.role = kwargs.get("role", "GENERIC")     # Example: "ATT", "DEF", "GK"
+        self.role = kwargs.get("role", "GENERIC")     # Example: "ATT", "DEF", "GK" or "CF", "LCB", etc.
 
         # Current action for observation purposes
         self.current_action = "idle"                  # e.g. "move", "shoot", "tackle", "dive", etc.
@@ -323,13 +323,17 @@ class BasePlayer(ABC):
         if np.linalg.norm([dx, dy]) > 1e-6:
             return "move"
 
-        if role == "ATT":
+        # Role-specific actions
+        
+        # Manage also "ATT" for retrocompatibility
+        if role == "ATT" or role == "LW" or role == "RW" or role == "CF" or role == "LCF" or role == "RCF":
             if len(action) >= 3 and action[2] > 0.5:  # pass_flag
                 return "pass"
             if len(action) >= 4 and action[3] > 0.5:  # shoot_flag
                 return "shoot"
 
-        elif role == "DEF":
+        # Manage also "DEF" for retrocompatibility
+        elif role == "DEF" or role == "LCB" or role == "RCB":
             if len(action) >= 3 and action[2] > 0.5:  # tackle_flag
                 return "tackle"
             if len(action) >= 4 and action[3] > 0.5:  # shoot_flag

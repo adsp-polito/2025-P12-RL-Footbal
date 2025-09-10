@@ -16,7 +16,7 @@ def plot_roles(roles_to_plot):
 
     for ax, role in zip(axes, roles_to_plot):
         if role not in heatmaps:
-            print(f"⚠️ Role {role} not found in heatmaps")
+            print(f"Role {role} not found in heatmaps")
             continue
 
         grid = heatmaps[role]
@@ -46,4 +46,4 @@ def plot_roles(roles_to_plot):
 
 if __name__ == "__main__":
     # Esempio: plot per tre ruoli
-    plot_roles(["Centre Forward", "Left Back", "Goalkeeper"])
+    plot_roles(["Center Forward", "Left Back", "Goalkeeper"])

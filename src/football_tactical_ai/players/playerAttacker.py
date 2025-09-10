@@ -65,7 +65,7 @@ class PlayerAttacker(BasePlayer):
 
     def get_role(self):
         """Return the player role name as string."""
-        return "ATT"
+        return "CF" if self.role is None else self.role
     
     def execute_action(self, 
                     action: np.ndarray, 

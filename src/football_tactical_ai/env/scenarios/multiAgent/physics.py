@@ -36,7 +36,7 @@ def update_ball_state(ball: Ball,
     dribble_offset = 0.01  # distance in front of owner
     owner_id = ball.get_owner()
 
-    # 1. Shot impulse
+    # 1. Shot
     if (shot_context and 
         shot_context.get("shot_by") and 
         shot_context.get("direction") is not None and 
@@ -94,7 +94,7 @@ def update_ball_state(ball: Ball,
 
     # 4. Free physics
     else:
-        # Ball has no owner → let velocity continue with decay
+        # Ball has no owner → let velocity continue
         vx, vy = ball.get_velocity()
         ball.set_velocity([vx, vy])
 
