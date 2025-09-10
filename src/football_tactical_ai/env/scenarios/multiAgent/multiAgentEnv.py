@@ -1,5 +1,5 @@
 import numpy as np
-from pettingzoo import ParallelEnv
+from ray.rllib.env import MultiAgentEnv
 from typing import Dict, Any
 from gymnasium import spaces
 
@@ -35,7 +35,7 @@ All values are normalized:
 
 
 # This is a multi-agent environment for a football tactical AI scenario
-class FootballMultiEnv(ParallelEnv):
+class FootballMultiEnv(MultiAgentEnv):
     """
     A multi-agent environment for football tactical AI scenarios.
     This environment simulates a simple football game with attackers, defenders, and a goalkeeper.
@@ -56,6 +56,9 @@ class FootballMultiEnv(ParallelEnv):
             config (dict, optional): Custom configuration dictionary. 
                                     If None, defaults will be loaded from get_config().
         """
+
+        # Initialize parent class
+        super().__init__()
 
         # Rendering mode (not implemented)
         self.render_mode = None
@@ -249,7 +252,10 @@ class FootballMultiEnv(ParallelEnv):
         # Reset pass context
         self._reset_pass_context()
 
-        return observations, {}
+        # Info dict
+        infos = {agent_id: {} for agent_id in self.agents}
+
+        return observations, infos
 
     def step(self, actions: Dict[str, np.ndarray]):
         """
@@ -299,7 +305,7 @@ class FootballMultiEnv(ParallelEnv):
                 self._reset_pass_context()
 
                 # Mark interception if the player is DEF
-                if self.players[agent_id].get_role() in {"DEF"}:
+                if self.players[agent_id].get_role() in {"DEF", "LCB", "RCB", "CB"}:
                     context["interception_success"] = True
 
             if context.get("deflected", False):
@@ -339,11 +345,11 @@ class FootballMultiEnv(ParallelEnv):
         goal_owner = self.shot_owner if self._is_goal(ball_x, ball_y) else None
         ball_out_by = None
         if self._is_ball_completely_out(ball_x, ball_y):
-            if self.shot_owner:
+            if self.shot_owner is not None:
                 ball_out_by = self.shot_owner
-            elif self.pass_owner:
+            elif self.pass_owner is not None:
                 ball_out_by = self.pass_owner
-            elif self.ball.get_owner():
+            elif self.ball.get_owner() is not None:
                 ball_out_by = self.ball.get_owner()
 
         # Step 5: Build agent info and contextual updates
@@ -355,7 +361,7 @@ class FootballMultiEnv(ParallelEnv):
                 scorer_team = self.players[goal_owner].team
                 # Assign goal to the opposite team if the scorer is DEF or GK
                 role = self.players[goal_owner].get_role()
-                if role in {"DEF", "GK"}:
+                if role in {"DEF", "LCB", "RCB", "CB", "GK"}:
                     goal_team = "A" if scorer_team == "B" else "B"
                 else:
                     goal_team = scorer_team
@@ -389,19 +395,33 @@ class FootballMultiEnv(ParallelEnv):
             observations[agent_id] = self._get_observation(agent_id)
 
         # Step 8: Termination / Truncation
-        for agent_id in self.agents:
-            terminations[agent_id] = goal_owner is not None or ball_out_by is not None
-            truncations[agent_id] = self.episode_step >= self.max_steps
+        terminated_event = goal_owner is not None or ball_out_by is not None
+        timeout_event = self.episode_step >= self.max_steps
 
-        # If ANY agent is done (terminated or truncated), end episode for ALL
-        if any(terminations.values()) or any(truncations.values()):
+        if terminated_event:
+            # Episode closed by goal or out of bounds
             for agent_id in self.agents:
                 terminations[agent_id] = True
-                truncations[agent_id] = truncations[agent_id] or self.episode_step >= self.max_steps
+                truncations[agent_id] = False
+        elif timeout_event:
+            # Episode closed by timeout
+            for agent_id in self.agents:
+                terminations[agent_id] = False
+                truncations[agent_id] = True
+        else:
+            # Episode still ongoing
+            for agent_id in self.agents:
+                terminations[agent_id] = False
+                truncations[agent_id] = False
+
+        # Global termination / truncation (for RLib compliance)
+        terminations["__all__"] = any(terminations.values())
+        truncations["__all__"]  = any(truncations.values())
+
 
         # Step 9: Cleanup for next step
-        self._reset_shot_context()
-        self._reset_pass_context()
+        self.shot_just_started = False
+        self.pass_just_started = False
 
         return observations, rewards, terminations, truncations, infos
     
@@ -498,8 +518,8 @@ class FootballMultiEnv(ParallelEnv):
 
         # Check if the new owner is a defender or goalkeeper
         role = self.players.get(new_owner, None).get_role() if new_owner in self.players else None
-        return role in {"DEF", "GK"}
-    
+        return role in {"DEF", "LCB", "RCB", "CB", "GK"}
+
     def _is_ball_completely_out(self, ball_x_m, ball_y_m):
         """
         Simple check if ball is outside the real field plus margin, using denormalized coordinates.
@@ -645,5 +665,11 @@ class FootballMultiEnv(ParallelEnv):
                     obs.extend([ox, oy, action_code, 0.0, team_flag, has_ball_flag])  # not visible but known
                 else:
                     obs.extend([0.0, 0.0, 0.0, 0.0, team_flag, has_ball_flag])  # never seen
+
+        expected_dim = self.observation_spaces[agent_id].shape[0]
+        assert len(obs) == expected_dim, (
+            f"Observation length mismatch for {agent_id}: "
+            f"got {len(obs)}, expected {expected_dim}"
+        )
 
         return np.array(obs, dtype=np.float32)

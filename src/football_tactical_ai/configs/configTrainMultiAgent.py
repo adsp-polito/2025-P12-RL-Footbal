@@ -10,7 +10,6 @@ Usage:
 from .configMultiAgentEnv import get_config
 
 SCENARIOS: dict[str, dict] = {
-    # MULTIAGENT scenario configuration
     "multiagent": {
         "env_class": (
             "football_tactical_ai.env.scenarios.multiAgent."
@@ -18,9 +17,9 @@ SCENARIOS: dict[str, dict] = {
         ),
         "seconds_per_episode": 10,
         "fps": 24,
-        "episodes": 1000,
-        "eval_every": 50,
-        "render": {
+        "episodes": 100,
+        "eval_every": 20,
+         "render": {
             "show_grid": False,
             "show_heatmap": False,
             "show_rewards": False,
@@ -32,30 +31,28 @@ SCENARIOS: dict[str, dict] = {
             "save_render_dir": "training/renders/MultiAgent",
             "plot_path": "training/renders/MultiAgent/MultiAgentRewards.png"
         },
-        "ppo": {
-            "batch_size": 128,          # larger batch size respect to single agent because of multiple agents
-            "learning_rate": 5e-4,      # slightly lower for stability
-            "gamma": 0.99,
-            "gae_lambda": 0.95,
-            "ent_coef": 0.01,
-            "device": "cpu",
-            "seed": None,
-            "verbose": 0,
-        },
-
-         "env_config": get_config(
+        "env_config": get_config(
             fps=24,
             seconds=10,
             n_attackers=3,
             n_defenders=2,
             include_goalkeeper=True
         ),
+        "num_envs": 4,
 
-        "num_envs": 4,  # parallel environments
+        # RLlib config
+        "rllib": {
+            "framework": "torch",
+            "lr": 1e-3,
+            "gamma": 0.99,
+            "lambda": 0.95,
+            "entropy_coeff": 0.01,
+            "train_batch_size": 4000,
+            "rollout_fragment_length": 200,
+            "minibatch_size": 256,
+            "num_epochs": 10,
+            "num_workers": 2,
+            "model": {"fcnet_hiddens": [256, 256]}
+        }
     }
 }
-
-# Automatically compute n_steps and max_steps for the scenario
-for cfg in SCENARIOS.values():
-    cfg["ppo"]["n_steps"] = cfg["seconds_per_episode"] * cfg["fps"]
-    cfg["max_steps"] = cfg["ppo"]["n_steps"]

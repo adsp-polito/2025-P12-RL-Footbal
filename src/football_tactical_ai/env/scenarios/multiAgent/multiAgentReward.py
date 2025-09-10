@@ -6,10 +6,6 @@ from football_tactical_ai.env.objects.ball import Ball
 from football_tactical_ai.env.objects.pitch import Pitch
 from football_tactical_ai.helpers.helperFunctions import denormalize
 
-# Memory of last grid rewards for each agent
-_last_grid_reward = {}
-
-
 def get_reward(player: BasePlayer,
                ball: Ball,
                pitch: Pitch,
@@ -35,7 +31,7 @@ def get_reward(player: BasePlayer,
 
     # Retrieve reward from spatial grid
     pos_reward = get_position_reward_from_grid(
-        pitch, reward_grid, norm_xy[0], norm_xy[1], agent_id
+        pitch, reward_grid, norm_xy[0], norm_xy[1]
     )
 
     # Group roles into macro categories
@@ -45,11 +41,11 @@ def get_reward(player: BasePlayer,
 
     # Dispatch logic
     if role in attacker_roles:
-        return attacker_reward(agent_id, player, ball, pitch, pos_reward, context)
+        return attacker_reward(agent_id, player, pos_reward, context)
     elif role in defender_roles:
-        return defender_reward(agent_id, player, ball, pitch, pos_reward, context)
+        return defender_reward(agent_id, player, pos_reward, context)
     elif role in goalkeeper_roles:
-        return goalkeeper_reward(agent_id, player, ball, pitch, pos_reward, context)
+        return goalkeeper_reward(agent_id, player, pos_reward, context)
     else:
         # Unknown role → neutral reward
         return 0.0
@@ -59,25 +55,19 @@ def get_reward(player: BasePlayer,
 def get_position_reward_from_grid(pitch: Pitch,
                                   reward_grid: np.ndarray,
                                   x_m: float,
-                                  y_m: float,
-                                  agent_id: str,
-                                  idle_penalty: float = -0.25) -> float:
+                                  y_m: float) -> float:
     """
-    Get reward from grid, penalize if agent is stuck on same reward value.
+    Get reward from grid, safely handling boundary cases.
     """
     i = int((x_m - pitch.x_min) / pitch.cell_size)
     j = int((y_m - pitch.y_min) / pitch.cell_size)
 
-    # Current reward from grid
-    current_reward = reward_grid[i, j]
+    # Clamp indices to stay within grid bounds
+    i = max(0, min(i, reward_grid.shape[0] - 1))
+    j = max(0, min(j, reward_grid.shape[1] - 1))
 
-    # Check if same as previous
-    if agent_id in _last_grid_reward:
-        if np.isclose(current_reward, _last_grid_reward[agent_id], atol=1e-6):
-            return idle_penalty
+    return reward_grid[i, j]
 
-    _last_grid_reward[agent_id] = current_reward
-    return current_reward
 
 def attacker_reward(agent_id, player, pos_reward, context):
     """
@@ -126,7 +116,7 @@ def attacker_reward(agent_id, player, pos_reward, context):
 
     # Bonus for completed pass
     if context.get("pass_completed", False):
-        reward += 7.0  
+        reward += 5.0  
 
     # Extra penalty if pass led to ball out
     if context.get("ball_out_by") == agent_id and context.get("pass_attempted", False):
@@ -195,7 +185,7 @@ def defender_reward(agent_id, player, pos_reward, context):
     # Penalty if goal is conceded
     if context.get("goal_scored", False):
         if context.get("goal_team") != player.team:
-            reward -= 5.0
+            reward -= 10.0
 
     # Penalize if shot was attempted but not by the owner
     if context.get("invalid_shot_attempt", False):
@@ -250,7 +240,7 @@ def goalkeeper_reward(agent_id, player, pos_reward, context):
     # Penalty if goal is conceded
     if context.get("goal_scored", False):
         if context.get("goal_team") != player.team:
-            reward -= 5.0
+            reward -= 10.0
 
     # Penalize if shot was attempted but not by the owner
     if context.get("invalid_shot_attempt", False):

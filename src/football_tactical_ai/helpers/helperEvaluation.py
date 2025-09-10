@@ -1,5 +1,6 @@
 from football_tactical_ai.helpers.visuals import render_episode_singleAgent, render_episode_multiAgent
-import numpy as np
+import torch
+from ray.rllib.utils.numpy import convert_to_numpy
 
 def evaluate_and_render(model, env, pitch, save_path=None, episode=0, fps=24,
                         show_grid=False, show_heatmap=False,
@@ -88,8 +89,6 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0, fps=24,
 
     return cumulative_reward
 
-
-
 def evaluate_and_render_multi(
     model,
     env,
@@ -101,30 +100,19 @@ def evaluate_and_render_multi(
     show_heatmap=False,
     show_rewards=False,
     full_pitch=True,
-    show_info=True,
     show_fov=False,
+    deterministic=True,   # aggiunto flag per controllo greedy vs stochastic
+    debug=False           # se True, stampa le azioni con shape
 ):
     """
-    Evaluate a trained shared-policy PPO model in a multi-agent environment.
+    Evaluate a trained RLlib PPO model in a multi-agent environment.
 
-    - Each agent receives its own observation.
-    - All agents use the same SB3 policy to predict their actions.
-    - The episode is rendered to video if save_path is provided.
-
-    Args:
-        model: Trained PPO model (shared across agents).
-        env: FootballMultiEnv (PettingZoo ParallelEnv).
-        pitch: Pitch instance (for rendering).
-        save_path (str, optional): Path to save rendered video (mp4).
-        episode (int): Current episode index (for logging).
-        fps (int): Frames per second for rendering.
-        show_grid, show_heatmap, show_rewards: Rendering options.
-        full_pitch (bool): Whether to render full pitch or half pitch.
-        show_info (bool): Whether to overlay extra info (e.g. reward).
-        show_fov (bool): Whether to draw players' field of view.
+    - Attaccanti usano attacker_policy
+    - Difensori e portiere usano defender_policy
+    - Episode is rendered to video if save_path is provided.
 
     Returns:
-        float: Cumulative reward summed across all agents.
+        float: Total cumulative reward across all agents.
     """
 
     # Reset environment
@@ -148,11 +136,39 @@ def evaluate_and_render_multi(
     while not any(terminated.values()) and not any(truncated.values()):
         action_dict = {}
 
-        # Compute one action per agent
         for agent_id in env.agents:
-            obs_array = obs[agent_id]
-            action, _ = model.predict(obs_array, deterministic=True)
-            action_dict[agent_id] = action.squeeze()       # back to 1D
+            obs_array = torch.tensor(obs[agent_id], dtype=torch.float32).unsqueeze(0)
+
+            # Policy: attaccanti vs difensori/portiere
+            if agent_id.startswith("att"):
+                policy_id = "attacker_policy"
+            else:
+                policy_id = "defender_policy"
+
+            # RLModule per la policy
+            module = model.get_module(policy_id)
+
+            with torch.no_grad():
+                action_out = module.forward_inference({"obs": obs_array})
+
+            # Usa logits → distribuzione → sample
+            logits = action_out["action_dist_inputs"]
+            dist_class = module.get_train_action_dist_cls()
+            dist = dist_class.from_logits(logits)
+
+            if deterministic:
+                # Use the mean action (greedy)
+                action = dist.loc
+            else:
+                # Sample stochastically
+                action = dist.sample()
+
+            action = convert_to_numpy(action).squeeze()   # guarantee shape (7,)
+
+            if debug:
+                print(f"[{agent_id}] action shape={action.shape}, action={action}")
+
+            action_dict[agent_id] = action
 
         # Step the environment
         obs, rewards, terminated, truncated, infos = env.step(action_dict)
@@ -166,7 +182,7 @@ def evaluate_and_render_multi(
         if save_path:
             rewards_per_frame.append(sum(rewards.values()))
 
-    # Render the episode if required
+    # Render episode
     if save_path:
         anim = render_episode_multiAgent(
             states,
@@ -182,4 +198,4 @@ def evaluate_and_render_multi(
         )
         anim.save(save_path, writer="ffmpeg", fps=fps)
 
-    return sum(cumulative_rewards.values())
+    return cumulative_rewards.values()

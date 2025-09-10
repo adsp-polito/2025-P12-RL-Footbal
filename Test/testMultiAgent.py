@@ -33,7 +33,7 @@ def test_multiagent_render(save_path="test/videoTest/testMultiAgent.mp4"):
     truncated = {agent: False for agent in env.agents}
 
     # Main loop for multi-agent environment
-    while not all(terminated.values()) and not all(truncated.values()):
+    while not any(terminated.values()) and not any(truncated.values()):
         # Sample random actions for all agents
         actions = {
             agent_id: env.action_space(agent_id).sample()
@@ -56,6 +56,7 @@ def test_multiagent_render(save_path="test/videoTest/testMultiAgent.mp4"):
     # Rendering
     print("\nRendering multi-agent episode...")
     time_start = time()
+
 
     anim = render_episode_multiAgent(
         states,

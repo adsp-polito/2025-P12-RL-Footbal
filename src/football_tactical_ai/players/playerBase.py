@@ -61,7 +61,7 @@ class BasePlayer(ABC):
         if isinstance(position, list) and len(position) == 2:
             self.position[:] = position
         else:
-            raise ValueError("Position must be a list of two elements [x, y].")        
+            raise ValueError("Position must be a list of two elements [x, y]")        
 
     def move(self, delta_position):
         """

@@ -8,25 +8,40 @@ version = "0.1.0"
 description = "RL football environments"
 requires-python = ">=3.10"
 dependencies = [
-  "gymnasium==0.29.1",
-  "torch==2.0.0",
-  "stable-baselines3==2.0.0",
-  "tianshou==1.1.0",
-  "shimmy==1.3.0",
-  "tensorboard==2.14.1",
-  "tensorflow-macos==2.14.1",
+  # Core RL libs
+  "gymnasium>=0.29.1,<0.30",
+  "gym==0.26.2",  # for compatibility with Stable Baselines3
+  "torch>=2.0,<2.2",
+  "torchvision>=0.15,<0.17",
+  "stable-baselines3>=2.2.0,<3.0.0",
+  "tianshou>=1.1.0",
+  "pettingzoo>=1.23.0",
+  "supersuit>=3.4.0",
+  "shimmy>=1.3.0",
+
+  # Multi-agent / distributed RL
+  "ray[rllib]>=2.9.0",
+  "dm-tree>=0.1.8",
+
+  # Monitoring
+  "tensorboard>=2.14",
+
+  # Scientific stack
   "matplotlib>=3.7",
   "numpy>=1.25",
   "pandas>=2.1",
   "scikit-learn>=1.3",
-  "tqdm",
-  "statsbombpy",
-  "seaborn",
-  "networkx",
   "scipy>=1.11",
-  "torchvision>=0.15",
-  "pettingzoo>=1.23.0",
-  "supersuit>=3.4.0"
+
+  # Football-specific
+  "statsbombpy",
+]
+
+[project.optional-dependencies]
+dev = [
+  "tqdm",
+  "seaborn",
+  "networkx"
 ]
 
 [tool.setuptools.packages.find]

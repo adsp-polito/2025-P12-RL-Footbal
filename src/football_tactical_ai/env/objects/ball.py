@@ -49,9 +49,9 @@ class Ball:
 
     def set_owner(self, player):
         """
-        Set the player who currently possesses the ball.
+        Set the player who currently possesses the ball
         Args:
-            player (Player): The player object who owns the ball.
+            player (Player): The player object who owns the ball
         """
         self.owner = player
         if player is not None:
