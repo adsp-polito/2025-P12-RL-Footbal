@@ -19,7 +19,6 @@ def get_reward(player: BasePlayer,
     General reward dispatcher by role.
 
     Args:
-        agent_id (str): The agent's unique identifier.
         player (BasePlayer): Player instance (att, def, gk).
         ball (Ball): Ball instance.
         pitch (Pitch): Pitch instance.
@@ -39,15 +38,22 @@ def get_reward(player: BasePlayer,
         pitch, reward_grid, norm_xy[0], norm_xy[1], agent_id
     )
 
-    # Dispatch logic by role
-    if role == "ATT":
+    # Group roles into macro categories
+    attacker_roles = {"ATT", "LW", "RW", "CF", "LCF", "RCF", "SS"}
+    defender_roles = {"DEF", "LCB", "RCB", "CB"}
+    goalkeeper_roles = {"GK"}
+
+    # Dispatch logic
+    if role in attacker_roles:
         return attacker_reward(agent_id, player, ball, pitch, pos_reward, context)
-    elif role == "DEF":
+    elif role in defender_roles:
         return defender_reward(agent_id, player, ball, pitch, pos_reward, context)
-    elif role == "GK":
+    elif role in goalkeeper_roles:
         return goalkeeper_reward(agent_id, player, ball, pitch, pos_reward, context)
     else:
+        # Unknown role → neutral reward
         return 0.0
+
 
 
 def get_position_reward_from_grid(pitch: Pitch,
@@ -62,9 +68,7 @@ def get_position_reward_from_grid(pitch: Pitch,
     i = int((x_m - pitch.x_min) / pitch.cell_size)
     j = int((y_m - pitch.y_min) / pitch.cell_size)
 
-    if not (0 <= i < reward_grid.shape[0] and 0 <= j < reward_grid.shape[1]):
-        return -5.0
-
+    # Current reward from grid
     current_reward = reward_grid[i, j]
 
     # Check if same as previous
@@ -75,7 +79,7 @@ def get_position_reward_from_grid(pitch: Pitch,
     _last_grid_reward[agent_id] = current_reward
     return current_reward
 
-def attacker_reward(agent_id, player, ball, pitch, pos_reward, context):
+def attacker_reward(agent_id, player, pos_reward, context):
     """
     Advanced attacker logic: encourage movement, shooting, goal scoring, and positioning.
     Args:
@@ -94,7 +98,7 @@ def attacker_reward(agent_id, player, ball, pitch, pos_reward, context):
 
     # Penalize if possession is lost
     if context.get("possession_lost", False):
-        reward -= 1.0
+        reward -= 2.5
 
     # Individual reward if player scored
     if context.get("goal_scored", False):
@@ -102,7 +106,7 @@ def attacker_reward(agent_id, player, ball, pitch, pos_reward, context):
 
     # Team reward if any teammate scored
     if context.get("goal_team") == player.team:
-        reward += 8.0
+        reward += 7.5
 
     # Penalize if agent kicked the ball out
     if context.get("ball_out_by") == agent_id:
@@ -110,23 +114,23 @@ def attacker_reward(agent_id, player, ball, pitch, pos_reward, context):
 
     # Bonus for starting a pass and positional quality
     if context.get("start_pass_bonus", False):
-        reward += 1.5
+        reward += 2.5
 
     # Scaled reward by pass quality 
     if context.get("pass_quality") is not None:
         reward += 2.0 * context.get("pass_quality") 
 
-    # Penalize bad pass direction
+    # Penalize if pass was attempted but not by the owner
     if context.get("invalid_pass_attempt", False):
-        reward -= 0.5
+        reward -= 0.1
 
     # Bonus for completed pass
     if context.get("pass_completed", False):
-        reward += 5.0  
+        reward += 7.0  
 
     # Extra penalty if pass led to ball out
     if context.get("ball_out_by") == agent_id and context.get("pass_attempted", False):
-        reward -= 1.5  
+        reward -= 1.0
 
     # Bonus for starting a shot and positional quality
     if context.get("start_shot_bonus", False):
@@ -139,11 +143,11 @@ def attacker_reward(agent_id, player, ball, pitch, pos_reward, context):
 
     # Penalize bad shot direction
     if context.get("invalid_shot_direction", False):
-        reward -= 0.25
+        reward -= 0.1
 
     # Penalize if shot was attempted but not by the owner
     if context.get("invalid_shot_attempt", False):
-        reward -= 0.5
+        reward -= 0.1
 
     # Angle reward (dot product with goal direction)
     alignment = context.get("shot_alignment")
@@ -159,7 +163,7 @@ def attacker_reward(agent_id, player, ball, pitch, pos_reward, context):
     return reward
 
 
-def defender_reward(agent_id, player, ball, pitch, pos_reward, context):
+def defender_reward(agent_id, player, pos_reward, context):
     """
     Defender logic:
     - Reward good positioning (from grid)
@@ -170,13 +174,13 @@ def defender_reward(agent_id, player, ball, pitch, pos_reward, context):
     reward += pos_reward
     reward -= 0.02  # time penalty
 
-    # Tackle success
+    # Tackle success (stealing the ball/stopping opponent)
     if context.get("tackle_success", False):
         reward += 10.0
 
     # Fake tackle penalty
     if context.get("fake_tackle", False):
-        reward -= 2.0
+        reward -= 0.1
 
     # Reward if ball is out of bounds
     if context.get("ball_out_by") is not None:
@@ -184,9 +188,9 @@ def defender_reward(agent_id, player, ball, pitch, pos_reward, context):
         if context.get("ball_out_by") == agent_id:
             reward += 1.0
 
-    # Reward for interception success
+    # Reward for interception success (take possession or block pass)
     if context.get("interception_success", False):
-        reward += 6.0
+        reward += 8.0
 
     # Penalty if goal is conceded
     if context.get("goal_scored", False):
@@ -195,11 +199,11 @@ def defender_reward(agent_id, player, ball, pitch, pos_reward, context):
 
     # Penalize if shot was attempted but not by the owner
     if context.get("invalid_shot_attempt", False):
-        reward -= 0.5
+        reward -= 0.1
 
     # Penalize bad shot direction
     if context.get("invalid_shot_direction", False):
-        reward -= 0.25
+        reward -= 0.1
 
     # Field of view visibility
     if context.get("fov_visible") is True:
@@ -209,7 +213,7 @@ def defender_reward(agent_id, player, ball, pitch, pos_reward, context):
 
     return reward
 
-def goalkeeper_reward(agent_id, player, ball, pitch, pos_reward, context):
+def goalkeeper_reward(agent_id, player, pos_reward, context):
     """
     Goalkeeper logic:
     - Reward for staying in correct area (grid)
@@ -231,7 +235,7 @@ def goalkeeper_reward(agent_id, player, ball, pitch, pos_reward, context):
 
     # Penalty for wasted dive
     if context.get("wasted_dive", False):
-        reward -= 2.0
+        reward -= 0.1
 
     # Bonus for deflection
     if context.get("deflected", False):
@@ -250,11 +254,11 @@ def goalkeeper_reward(agent_id, player, ball, pitch, pos_reward, context):
 
     # Penalize if shot was attempted but not by the owner
     if context.get("invalid_shot_attempt", False):
-        reward -= 0.5
+        reward -= 0.1
 
     # Penalize bad shot direction
     if context.get("invalid_shot_direction", False):
-        reward -= 0.25
+        reward -= 0.1
 
     # Field of view visibility
     if context.get("fov_visible") is True:

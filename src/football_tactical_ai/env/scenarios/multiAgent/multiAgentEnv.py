@@ -145,13 +145,23 @@ class FootballMultiEnv(ParallelEnv):
 
         # Observation spaces
         # Each agent observes:
-        # [self_x, self_y, ball_x, ball_y] +
+        # [self_x, self_y, self_has_ball] +
+        # [ball_x, ball_y, ball_vx, ball_vy] +
+        # [goal_x, goal_y] +
         # For each other player:
-        #   [player_x, player_y, action_code, visible_flag]
+        #   [player_x, player_y, action_code, visible_flag, team_flag, has_ball_flag]
         #
         # action_code = one-hot or discrete integer (e.g., 0=idle, 1=move, 2=pass, 3=shoot, 4=tackle, ...)
-        # visible_flag = 1 if in FOV, 0 otherwise (if 0, coords are last known or padding)
-        obs_dim = 4 + (len(self.agents)-1) * 4
+        # visible_flag = 1 if in FOV, 0 otherwise
+        # team_flag = 1 if teammate, 0 if opponent
+        # has_ball_flag = 1 if this player has the ball
+
+        obs_dim = (
+            3 +   # self_x, self_y, self_has_ball
+            4 +   # ball_x, ball_y, ball_vx, ball_vy
+            2 +   # goal_x, goal_y
+            (len(self.agents) - 1) * 6  # other players info
+        )
 
         self.observation_spaces = {
             agent_id: spaces.Box(low=0.0, high=1.0, shape=(obs_dim,), dtype=np.float32)
@@ -572,22 +582,40 @@ class FootballMultiEnv(ParallelEnv):
         Build the observation vector for a given agent.
 
         Structure:
-        [self_x, self_y, ball_x, ball_y] +
+        [self_x, self_y, self_has_ball] +
+        [ball_x, ball_y, ball_vx, ball_vy] +
+        [goal_x, goal_y] +
         For each other player:
-            [player_x, player_y, action_code, visible_flag]
+            [player_x, player_y, action_code, visible_flag, team_flag, has_ball_flag]
 
         Notes:
         - visible_flag = 1 if agent is in the FOV, else 0
+        - team_flag = 1 if teammate, 0 if opponent
+        - has_ball_flag = 1 if that player is the current ball owner
         - if not visible now but seen before -> last known position
         - if never seen -> padding with zeros
         """
 
         player = self.players[agent_id]
         self_x, self_y = player.get_position()
-        ball_x, ball_y = self.ball.get_position()
 
-        # Start with own position and ball position
-        obs = [self_x, self_y, ball_x, ball_y]
+        # Self has ball?
+        self_has_ball = 1.0 if self.ball.get_owner() == agent_id else 0.0
+
+        # Ball position and velocity
+        ball_x, ball_y = self.ball.get_position()
+        ball_vx, ball_vy = self.ball.get_velocity()
+
+        # Goal position (attacker → opponent goal, defender/GK → own goal)
+        if player.team == "A":  # attacking team
+            goal_x, goal_y = self.pitch.width, self.pitch.center_y
+        else:  # defending team
+            goal_x, goal_y = 0.0, self.pitch.center_y
+
+        # Start observation vector
+        obs = [self_x, self_y, self_has_ball,
+            ball_x, ball_y, ball_vx, ball_vy,
+            goal_x, goal_y]
 
         # Ensure we have memory for last known positions
         if not hasattr(self, "last_known_positions"):
@@ -597,6 +625,12 @@ class FootballMultiEnv(ParallelEnv):
             if other_id == agent_id:
                 continue  # skip self
 
+            # Team flag (1 = teammate, 0 = opponent)
+            team_flag = 1.0 if other.team == player.team else 0.0
+
+            # Has ball flag
+            has_ball_flag = 1.0 if self.ball.get_owner() == other_id else 0.0
+
             # Check visibility using FOV
             visible = self._is_in_fov(player, other)
 
@@ -604,12 +638,12 @@ class FootballMultiEnv(ParallelEnv):
                 ox, oy = other.get_position()
                 action_code = other.get_current_action_code()  # must be defined in Player
                 self.last_known_positions[other_id] = (ox, oy, action_code)
-                obs.extend([ox, oy, action_code, 1.0])  # visible
+                obs.extend([ox, oy, action_code, 1.0, team_flag, has_ball_flag])  # visible
             else:
                 if self.last_known_positions[other_id] is not None:
                     ox, oy, action_code = self.last_known_positions[other_id]
-                    obs.extend([ox, oy, action_code, 0.0])  # not visible but known
+                    obs.extend([ox, oy, action_code, 0.0, team_flag, has_ball_flag])  # not visible but known
                 else:
-                    obs.extend([0.0, 0.0, 0.0, 0.0])  # never seen
+                    obs.extend([0.0, 0.0, 0.0, 0.0, team_flag, has_ball_flag])  # never seen
 
         return np.array(obs, dtype=np.float32)
