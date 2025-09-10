@@ -17,8 +17,8 @@ SCENARIOS: dict[str, dict] = {
         ),
         "seconds_per_episode": 10,
         "fps": 24,
-        "episodes": 100,
-        "eval_every": 20,
+        "episodes": 10000,
+        "eval_every": 2000,
          "render": {
             "show_grid": False,
             "show_heatmap": False,
@@ -51,7 +51,7 @@ SCENARIOS: dict[str, dict] = {
             "rollout_fragment_length": 200,
             "minibatch_size": 256,
             "num_epochs": 10,
-            "num_workers": 2,
+            "num_workers": 4,
             "model": {"fcnet_hiddens": [256, 256]}
         }
     }

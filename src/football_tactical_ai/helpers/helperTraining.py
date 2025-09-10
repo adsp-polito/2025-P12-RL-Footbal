@@ -226,12 +226,13 @@ def train_MultiAgent(scenario: str = "multiagent"):
                 **cfg["render"],
             )
 
-            print(f"[Episode {ep+1}] Eval cumulative reward: {cumulative_reward:.2f}")
+            print(f"[Episode {ep+1}] Cumulative reward per agent: {cumulative_reward}")
             eval_rewards.append(cumulative_reward)
             eval_episodes.append(ep+1)
 
     # Save model checkpoint
-    checkpoint_dir = algo.save(cfg["paths"]["save_model_path"])
+    save_model_path = os.path.abspath(cfg["paths"]["save_model_path"])
+    checkpoint_dir = algo.save(save_model_path)
     print(f"Model saved at {checkpoint_dir}")
 
     # Plot eval rewards
