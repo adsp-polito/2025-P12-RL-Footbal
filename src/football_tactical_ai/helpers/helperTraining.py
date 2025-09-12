@@ -201,12 +201,7 @@ def train_MultiAgent(scenario: str = "multiagent"):
                 else "goalkeeper_policy" if agent_id.startswith("gk")
                 else None
             ),
-            policies_to_train=["attacker_policy", "defender_policy", "goalkeeper_policy"],
-            policy_loss_weights={
-                "attacker_policy": 1.0,
-                "defender_policy": 0.75,
-                "goalkeeper_policy": 0.5
-            }
+            policies_to_train=["attacker_policy", "defender_policy", "goalkeeper_policy"]
         )
 
     )
