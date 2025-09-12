@@ -172,6 +172,7 @@ def train_MultiAgent(scenario: str = "multiagent"):
         )
         .env_runners(
             num_env_runners=cfg["rllib"]["num_workers"],
+            #rollout_fragment_length="auto",
             rollout_fragment_length=cfg["rllib"]["rollout_fragment_length"],
         )
         .multi_agent(

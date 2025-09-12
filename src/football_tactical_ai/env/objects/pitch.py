@@ -358,22 +358,19 @@ class Pitch:
 
     def _draw_heatmap(self, ax, reward_grid, show_grid=False):
         """
-        Draw a heatmap of rewards over the pitch based on a reward grid.
-
-        Parameters:
-            ax (matplotlib.axes.Axes): Matplotlib axis to draw on.
-            reward_grid (2D np.array): Grid of reward values.
-            show_grid (bool): Whether to overlay grid lines on top of the heatmap.
+        Draw a heatmap of rewards over the pitch using imshow, with the same
+        color normalization logic as the rectangle-based version.
         """
+
         # Get global min and max values for the reward grid
         global_min = reward_grid.min()
         global_max = reward_grid.max()
 
-        # Mask out cells that have the global min or max values to isolate internal cell values
+        # Mask out cells that have the global min or max values to isolate internal values
         mask_internal = (reward_grid != global_min) & (reward_grid != global_max)
         internal_values = reward_grid[mask_internal]
 
-        # Compute min and max excluding margin and goal cells, fallback to global min/max if none
+        # Compute min and max excluding margin/goal cells
         if internal_values.size > 0:
             internal_min = internal_values.min()
             internal_max = internal_values.max()
@@ -381,42 +378,43 @@ class Pitch:
             internal_min = global_min
             internal_max = global_max
 
-        # Iterate over each cell to draw the colored rectangle
+        # Normalize reward grid
+        norm_grid = np.zeros_like(reward_grid, dtype=float)
         for i in range(self.num_cells_x):
             for j in range(self.num_cells_y):
-                # Compute bottom-left corner coordinates of the cell in pitch meters
-                x0 = self.x_min + i * self.cell_size
-                y0 = self.y_min + j * self.cell_size
-
                 reward = reward_grid[i, j]
-
-                # Normalize reward to [0, 1] for colormap use
                 if reward == global_min:
-                    norm = 0.0  # Fixed color for margin cells
+                    norm = 0.0
                 elif reward == global_max:
-                    norm = 1.0  # Fixed color for goal cells
+                    norm = 1.0
                 else:
                     if internal_max == internal_min:
-                        norm = 0.5  # Avoid division by zero when all internal values equal
+                        norm = 0.5
                     else:
                         norm = (reward - internal_min) / (internal_max - internal_min)
                     norm = np.clip(norm, 0, 1)
+                norm_grid[i, j] = norm
 
-                # Map normalized reward to a color using a colormap
-                color = plt.cm.coolwarm(norm)
+        # Draw with imshow
+        im = ax.imshow(
+            norm_grid.T,  # transpose for orientation
+            origin="lower",
+            extent=[self.x_min, self.x_max, self.y_min, self.y_max],
+            cmap="coolwarm",
+            alpha=0.6,
+            interpolation="nearest"  # avoids blurred lines
+        )
 
-                # Create a rectangle patch for the heatmap cell
-                rect = Rectangle(
-                    (x0, y0),
-                    self.cell_size,
-                    self.cell_size,
-                    facecolor=color,
-                    edgecolor='black' if show_grid else 'none',  # Draw grid lines if requested
-                    linewidth=0.4,
-                    alpha=0.6, 
-                    zorder=1
-                )
-                ax.add_patch(rect)
+        # Optionally overlay grid lines
+        if show_grid:
+            ax.set_xticks(np.arange(self.x_min, self.x_max, self.cell_size), minor=False)
+            ax.set_yticks(np.arange(self.y_min, self.y_max, self.cell_size), minor=False)
+            ax.grid(color="black", linestyle="-", linewidth=0.4, alpha=0.5)
+
+        return im
+
+
+
 
 
     def _draw_rewards(self, ax, reward_grid):

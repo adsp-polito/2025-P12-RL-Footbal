@@ -183,16 +183,17 @@ class FootballMultiEnv(MultiAgentEnv):
         self.reward_grids = {}
         for agent_id, player in self.players.items():
             role = player.get_role()
-            if role in {"LW", "RW", "CF", "LCF", "RCF"}:
-                self.reward_grids[agent_id] = build_attacker_grid(self.pitch, role=role)
-            elif role in {"LCB", "RCB"}:
-                self.reward_grids[agent_id] = build_defender_grid(self.pitch, role=role)
-            elif role == "CB":  # fallback if only 1 defender
-                self.reward_grids[agent_id] = build_defender_grid(self.pitch)  # no specific role
+            team = player.team  # "A" or "B"
+
+            if role in {"LW", "RW", "CF", "LCF", "RCF", "SS", "ATT"}:
+                self.reward_grids[agent_id] = build_attacker_grid(self.pitch, role=role, team=team)
+            elif role in {"LCB", "RCB", "CB", "DEF"}:
+                self.reward_grids[agent_id] = build_defender_grid(self.pitch, role=role, team=team)
             elif role == "GK":
-                self.reward_grids[agent_id] = build_goalkeeper_grid(self.pitch)
+                self.reward_grids[agent_id] = build_goalkeeper_grid(self.pitch, team=team)
             else:
                 raise ValueError(f"Unknown role {role} for agent {agent_id}")
+
 
         # Shot context
         self.shot_owner = None
@@ -499,8 +500,9 @@ class FootballMultiEnv(MultiAgentEnv):
             player_pos = np.array(player.get_position())
             distance = np.linalg.norm(player_pos - ball_pos)
 
-            if distance < threshold:
+            if distance < threshold and agent_id != self.shot_owner and agent_id != self.pass_owner:
                 self.ball.set_owner(agent_id)
+                self.ball.set_position(player_pos)
                 return agent_id  # return the new owner
         return None
 
