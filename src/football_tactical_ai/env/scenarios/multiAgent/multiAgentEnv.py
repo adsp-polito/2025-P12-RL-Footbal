@@ -490,7 +490,7 @@ class FootballMultiEnv(MultiAgentEnv):
             context["pass_attempted"] = False
 
 
-    def _assign_ball_if_nearby(self, threshold: float = 0.004):
+    def _assign_ball_if_nearby(self, threshold: float = 0.0175):  # 0.0175 normalized ~ 2m
         if self.ball.get_owner() is not None:
             return None  # Already owned
 

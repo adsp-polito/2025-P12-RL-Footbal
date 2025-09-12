@@ -127,42 +127,48 @@ class BasePlayer(ABC):
 
     def move_with_action(self, action, time_per_step, x_range, y_range, enable_fov=True):
         """
-        Move player based on continuous action input and visual constraints.
+        Move the player based on a continuous action input.
 
-        The player will only move in the intended direction if it lies within
-        their field of view (FOV), defined by the player's vision angle.
+        The player can only move if the intended direction is inside their field of view (FOV),
+        unless `enable_fov` is set to False. Movement is computed in real meters per step,
+        then converted back to normalized [0, 1] coordinates.
 
         Args:
-            action (np.array): Array with x and y movement values in [-1, 1].
-            time_per_step (float): Duration of simulation step (seconds).
-            x_range (float): Width of pitch in meters.
-            y_range (float): Height of pitch in meters.
+            action (np.array): Array [dx, dy] with movement direction in [-1, 1].
+            time_per_step (float): Duration of one simulation step (seconds).
+            x_range (float): Pitch width in meters.
+            y_range (float): Pitch height in meters.
+            enable_fov (bool): If True, block movement outside player's FOV.
         """
 
-        # Block movement if direction is outside the player's field of view
-        # If action is zero vector, allow it
-        if np.linalg.norm(action) == 0:
-            return # No movement if action is zero vector
-
-
-        # Check if movement is allowed
-        if not self.is_direction_visible(action) and enable_fov == True:
+        # If the action is zero (idle), do not move
+        if np.linalg.norm(action) < 1e-6:
             return
 
-        # Normalize and save last direction
-        direction = np.array(action)
+        # Check if the movement direction is allowed (inside FOV)
+        if enable_fov and not self.is_direction_visible(action):
+            return
+
+        # Normalize direction and update last facing vector
+        direction = np.array(action, dtype=np.float32)
         norm = np.linalg.norm(direction)
         if norm > 0:
-            self.last_action_direction = direction / norm
+            direction /= norm
+            self.last_action_direction = direction
         else:
-            self.last_action_direction = np.array([1.0, 0.0])
+            direction = np.array([0.0, 0.0])
+            self.last_action_direction = np.array([1.0, 0.0])  # default facing right
 
-        # Scale the normalized action to movement deltas based on speed and field dimensions
-        dx = action[0] * self.speed * self.max_speed * time_per_step / x_range
-        dy = action[1] * self.speed * self.max_speed * time_per_step / y_range
+        # Compute how many meters the player should move in this step
+        meters_per_step = self.max_speed * self.speed * time_per_step
 
-        # Apply movement
+        # Convert displacement into normalized coordinates [0,1]
+        dx = (direction[0] * meters_per_step) / x_range
+        dy = (direction[1] * meters_per_step) / y_range
+
+        # Apply the movement update
         self.move([dx, dy])
+
 
     # Execute the action (to be overridden by subclasses)
     # This method is specifically used in multi-agent environments

@@ -198,4 +198,4 @@ def evaluate_and_render_multi(
         )
         anim.save(save_path, writer="ffmpeg", fps=fps)
 
-    return cumulative_rewards.values()
+    return cumulative_rewards

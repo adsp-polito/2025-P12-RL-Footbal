@@ -1,5 +1,6 @@
 import os
 import matplotlib.pyplot as plt
+import numpy as np
 import importlib
 from tqdm import trange
 from stable_baselines3 import PPO
@@ -187,10 +188,27 @@ def train_MultiAgent(scenario: str = "multiagent"):
                     base_env.action_space("def_1"),
                     {}
                 ),
+                "goalkeeper_policy": (
+                    None,
+                    base_env.observation_space("gk_1"),
+                    base_env.action_space("gk_1"),
+                    {}
+                ),
             },
-            policy_mapping_fn=lambda agent_id, *args, **kwargs:
-                "attacker_policy" if agent_id.startswith("att") else "defender_policy",
+            policy_mapping_fn=lambda agent_id, *args, **kwargs: (
+                "attacker_policy" if agent_id.startswith("att")
+                else "defender_policy" if agent_id.startswith("def")
+                else "goalkeeper_policy" if agent_id.startswith("gk")
+                else None
+            ),
+            policies_to_train=["attacker_policy", "defender_policy", "goalkeeper_policy"],
+            policy_loss_weights={
+                "attacker_policy": 1.0,
+                "defender_policy": 0.75,
+                "goalkeeper_policy": 0.5
+            }
         )
+
     )
 
     algo = config.build_algo() # build the RLlib algorithm
@@ -204,46 +222,93 @@ def train_MultiAgent(scenario: str = "multiagent"):
     print(f"{'Evaluation every:':25} {eval_every} episodes")
     print(f"{'FPS:':25} {fps}")
     print(f"{'Steps per episode:':25} {max_steps_per_episode}")
+    print(f"{'Total timesteps:':25} {episodes * max_steps_per_episode}")
+    print(f"{'Time per episode:':25} {cfg['seconds_per_episode']} seconds")
+    print(f"{'RLlib Framework:':25} {cfg['rllib']['framework']}")
     print("=" * 100 + "\n")
 
     eval_rewards, eval_episodes = [], []
 
     # Training loop
-    for ep in trange(episodes, desc="Episodes Progress"):
-        algo.train()
+    for ep in trange(1, episodes+1, desc="Episodes Progress", initial=1):
+        result = algo.train()
 
-        if (ep + 1) % eval_every == 0 or ep == 0:
+        # Periodic evaluation and rendering
+        if (ep) % eval_every == 0 or ep == 1:
             save_render = os.path.join(
-                cfg["paths"]["save_render_dir"], f"episode_{ep+1}.mp4"
+                cfg["paths"]["save_render_dir"], f"episode_{ep}.mp4"
             )
             eval_env = FootballMultiEnv(cfg["env_config"])
 
             cumulative_reward = evaluate_and_render_multi(
                 algo, eval_env, pitch,
                 save_path=save_render,
-                episode=ep+1,
+                episode=ep,
                 fps=fps,
                 **cfg["render"],
             )
 
-            print(f"[Episode {ep+1}] Cumulative reward per agent: {cumulative_reward}")
+            # Print per-agent rewards
+            print(f"\n[Episode {ep}] Evaluation results")
+            for agent_id, rew in cumulative_reward.items():
+                print(f"  {agent_id:10s} -> {rew: .2f}")
+
+            # Aggregate rewards per role
+            role_rewards = {"attacker": [], "defender": [], "goalkeeper": []}
+            for agent_id, rew in cumulative_reward.items():
+                if agent_id.startswith("att"):
+                    role_rewards["attacker"].append(rew)
+                elif agent_id.startswith("def"):
+                    role_rewards["defender"].append(rew)
+                elif agent_id.startswith("gk"):
+                    role_rewards["goalkeeper"].append(rew)
+
+            avg_role_rewards = {
+                role: np.mean(vals) if vals else 0.0
+                for role, vals in role_rewards.items()
+            }
+
+            print("\nAverage rewards by role:")
+            print(f"  ATT: {avg_role_rewards['attacker']: .2f}")
+            print(f"  DEF: {avg_role_rewards['defender']: .2f}")
+            print(f"  GK : {avg_role_rewards['goalkeeper']: .2f}")
+            print("-" * 80 + "\n")
+
+            # Save raw per-agent rewards
             eval_rewards.append(cumulative_reward)
-            eval_episodes.append(ep+1)
+            eval_episodes.append(ep)
 
     # Save model checkpoint
     save_model_path = os.path.abspath(cfg["paths"]["save_model_path"])
     checkpoint_dir = algo.save(save_model_path)
     print(f"Model saved at {checkpoint_dir}")
-
-    # Plot eval rewards
+    
+    # Plot evaluation rewards with one subplot per agent
     if eval_rewards:
         plt.close('all')
-        plt.figure(figsize=(10, 4))
-        plt.plot(eval_episodes, eval_rewards, marker='o')
-        plt.title(f"{scenario} - Cumulative Reward (Multi-Agent, RLlib)", fontsize=16)
-        plt.xlabel("Episodes")
-        plt.ylabel("Reward")
-        plt.grid(True)
+
+        agent_ids = list(eval_rewards[0].keys())
+        n_agents = len(agent_ids)
+
+        fig, axes = plt.subplots(n_agents, 1, figsize=(10, 4 * n_agents), sharex=True)
+
+        if n_agents == 1:
+            axes = [axes]  # Ensure axes is iterable when only one agent exists
+
+        for idx, agent_id in enumerate(agent_ids):
+            # Collect rewards for this specific agent across all evaluations
+            rewards_agent = [d[agent_id] for d in eval_rewards]
+
+            # Plot rewards in the corresponding subplot
+            axes[idx].plot(eval_episodes, rewards_agent, marker='o')
+            axes[idx].set_title(f"{scenario} - Cumulative Reward for {agent_id}", fontsize=14)
+            axes[idx].set_ylabel("Reward")
+            axes[idx].grid(True)
+
+        # Common xlabel at the bottom
+        axes[-1].set_xlabel("Episodes")
+
         plt.tight_layout()
         plt.savefig(cfg["paths"]["plot_path"])
         plt.show()
+

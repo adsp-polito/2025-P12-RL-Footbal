@@ -15,10 +15,10 @@ SCENARIOS: dict[str, dict] = {
             "football_tactical_ai.env.scenarios.multiAgent."
             "multiAgentEnv:FootballMultiEnv"
         ),
-        "seconds_per_episode": 10,
+        "seconds_per_episode": 20,
         "fps": 24,
-        "episodes": 10000,
-        "eval_every": 2000,
+        "episodes": 1000,
+        "eval_every": 200,
          "render": {
             "show_grid": False,
             "show_heatmap": False,
@@ -43,14 +43,14 @@ SCENARIOS: dict[str, dict] = {
         # RLlib config
         "rllib": {
             "framework": "torch",
-            "lr": 1e-3,
+            "lr": 1e-4,
             "gamma": 0.99,
             "lambda": 0.95,
             "entropy_coeff": 0.01,
-            "train_batch_size": 4000,
+            "train_batch_size": 2000,
             "rollout_fragment_length": 200,
             "minibatch_size": 256,
-            "num_epochs": 10,
+            "num_epochs": 5,
             "num_workers": 4,
             "model": {"fcnet_hiddens": [256, 256]}
         }
