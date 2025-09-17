@@ -92,23 +92,23 @@ def attacker_reward(agent_id, player, pos_reward, context):
 
     # Individual reward if player scored
     if context.get("goal_scored", False):
-        reward += 10.0 
+        reward += 25.0 
 
     # Team reward if any teammate scored
     if context.get("goal_team") == player.team:
-        reward += 5.0
+        reward += 15.0
 
     # Penalize if agent kicked the ball out
     if context.get("ball_out_by") == agent_id:
-        reward -= 2.5
+        reward -= 5.0
 
     # Bonus for starting a pass and positional quality
     if context.get("start_pass_bonus", False):
-        reward += 2.5
+        reward += 5
 
     # Scaled reward by pass quality 
     if context.get("pass_quality") is not None:
-        reward += 2.0 * context.get("pass_quality") 
+        reward += 2.5 * context.get("pass_quality") 
 
     # Penalize if pass was attempted but not by the owner
     if context.get("invalid_pass_attempt", False):
@@ -116,15 +116,15 @@ def attacker_reward(agent_id, player, pos_reward, context):
 
     # Bonus for completed pass
     if context.get("pass_completed", False):
-        reward += 7.5  
+        reward += 10
 
     # Extra penalty if pass led to ball out
     if context.get("ball_out_by") == agent_id and context.get("pass_attempted", False):
-        reward -= 1.0
+        reward -= 2.0
 
     # Bonus for starting a shot and positional quality
     if context.get("start_shot_bonus", False):
-        reward += 2.5
+        reward += 5
         reward += context.get("shot_positional_quality", 0.0)
 
     # Scaled reward by shot quality (0 to 1)
@@ -168,7 +168,7 @@ def defender_reward(agent_id, player, pos_reward, context):
 
     # Tackle success (stealing the ball/stopping opponent)
     if context.get("tackle_success", False):
-        reward += 12.0
+        reward += 15.0
 
     # Fake tackle penalty
     if context.get("fake_tackle", False):
@@ -176,18 +176,18 @@ def defender_reward(agent_id, player, pos_reward, context):
 
     # Reward if ball is out of bounds
     if context.get("ball_out_by") is not None:
-        reward += 2.5
+        reward += 5.0
         if context.get("ball_out_by") == agent_id:
-            reward += 1.0
+            reward += 2.5
 
     # Reward for interception success (take possession or block pass)
     if context.get("interception_success", False):
-        reward += 12.0
+        reward += 15.0
 
     # Penalty if goal is conceded
     if context.get("goal_scored", False):
         if context.get("goal_team") != player.team:
-            reward -= 5.0
+            reward -= 15.0
 
     # Penalize if shot was attempted but not by the owner
     if context.get("invalid_shot_attempt", False):
@@ -221,7 +221,7 @@ def goalkeeper_reward(agent_id, player, pos_reward, context):
 
     # Save success
     if context.get("blocked", False):
-        reward += 12.0
+        reward += 15.0
 
     # Reward for dive even if not successful
     # This encourages goalkeepers to attempt saves
@@ -234,16 +234,16 @@ def goalkeeper_reward(agent_id, player, pos_reward, context):
 
     # Bonus for deflection
     if context.get("deflected", False):
-        reward += 7.5
+        reward += 12.5
 
     # Reward if ball is out of bounds
     if context.get("ball_out_by") is not None:
-        reward += 2.5
+        reward += 5.0
 
     # Penalty if goal is conceded
     if context.get("goal_scored", False):
         if context.get("goal_team") != player.team:
-            reward -= 5.0
+            reward -= 15.0
 
     # Penalize if shot was attempted but not by the owner
     if context.get("invalid_shot_attempt", False):
