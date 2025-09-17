@@ -101,8 +101,9 @@ def evaluate_and_render_multi(
     show_rewards=False,
     full_pitch=True,
     show_fov=False,
-    deterministic=True,   # aggiunto flag per controllo greedy vs stochastic
-    debug=False           # se True, stampa le azioni con shape
+    show_names=False,     # if True, shows agent IDs above players
+    deterministic=True,   # if True, uses greedy actions
+    debug=False           # if True, prints debug info
 ):
     """
     Evaluate a trained RLlib PPO model in a multi-agent environment.
@@ -195,6 +196,7 @@ def evaluate_and_render_multi(
             show_rewards=show_rewards,
             reward_grid=None,
             show_fov=show_fov,
+            show_names=show_names
         )
         anim.save(save_path, writer="ffmpeg", fps=fps)
 

@@ -293,7 +293,7 @@ def render_episode_singleAgent(states, pitch, save_path=None, fps=24, stripes=Fa
 
 def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=False, full_pitch=True,
                                show_grid=False, show_heatmap=False, show_rewards=False, reward_grid=None,
-                               show_fov=False):
+                               show_fov=False, show_names = False):
     """
     Render an animated soccer episode with multiple agents (attackers, defenders, goalkeeper).
     
@@ -314,7 +314,7 @@ def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=Fal
         matplotlib.animation.FuncAnimation: The animation object.
     """
 
-      # Create figure and axis, draw pitch (full or half) with optional overlays
+    # Create figure and axis, draw pitch (full or half) with optional overlays
     if full_pitch:
         fig, ax = plt.subplots(figsize=(12, 8))
         pitch.draw_pitch(ax=ax, stripes=stripes, show_grid=show_grid,
@@ -327,6 +327,7 @@ def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=Fal
     # Create player and FOV objects
     player_patches = {}
     fov_patches = {}
+    player_labels = {}
     colors_by_role = {"ATT": "crimson", "DEF": "dodgerblue", "GK": "darkorange"}
 
     # Infer all possible agent_ids
@@ -344,6 +345,13 @@ def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=Fal
 
         player_patches[agent_id] = circle
         fov_patches[agent_id] = wedge
+
+        if show_names:
+            label = ax.text(
+                0, 0, f"{agent_id}", ha='center', va='top',
+                fontsize=10, fontweight='bold', color="black", zorder=10
+            )
+            player_labels[agent_id] = label
 
     # Create the ball
     ball_circle = Circle((0, 0), radius=0.5, color='white', ec='black', lw=1, zorder=6)
@@ -395,6 +403,11 @@ def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=Fal
             else:
                 fov_patches[agent_id].set_visible(False)
 
+            if show_names:
+                player_labels[agent_id].set_position((px, py - 5))
+                player_labels[agent_id].set_visible(True)
+
+
         # Update ball
         if 'ball' in state and state['ball']:
             bx, by = state['ball'].get_position()
@@ -405,6 +418,7 @@ def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=Fal
         else:
             ball_circle.set_visible(False)
 
+       
         # Calculate total frames count
         total_frames = len(states)-1
         
@@ -412,7 +426,9 @@ def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=Fal
         line_text = f"Frame: {frame_idx}/{total_frames}"
         info_texts['frame_only'].set_text(line_text)
 
-        return list(player_patches.values()) + list(fov_patches.values()) + [ball_circle]
+        return list(player_patches.values()) + list(fov_patches.values()) + [ball_circle] + \
+                ([info_texts['frame_only']] if info_texts else []) + \
+                (list(player_labels.values()) if show_names else [])
 
     anim = animation.FuncAnimation(fig, update, frames=len(states), interval=1000/fps, blit=True, repeat=False)
 

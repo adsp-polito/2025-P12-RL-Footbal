@@ -22,6 +22,7 @@ multiagent_params = {
         "show_rewards": False,
         "full_pitch": True,
         "show_fov": False,
+        "show_names": True,   # if True, shows agent IDs above players
     },
     "paths": {
         "save_model_path": "training/models/MultiAgentModel",

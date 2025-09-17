@@ -74,7 +74,8 @@ def test_shot_on_post(save_path="test/videoTest/test_shot_post.mp4", post="right
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     anim = render_episode_multiAgent(
         states, pitch=pitch, fps=env.fps,
-        full_pitch=True, show_grid=False, show_heatmap=False, show_rewards=False
+        full_pitch=True, show_grid=False, show_heatmap=False, show_rewards=False, reward_grid=None,
+        show_fov=False, show_names=True
     )
     anim.save(save_path, writer="ffmpeg", fps=env.fps)
     print(f"Video saved: {save_path}")

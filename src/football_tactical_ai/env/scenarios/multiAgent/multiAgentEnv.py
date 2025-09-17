@@ -94,11 +94,11 @@ class FootballMultiEnv(MultiAgentEnv):
 
         # Attacker roles assignment
         if len(self.attacker_ids) == 3:
-            attacker_roles = ["LW", "CF", "RW"]
+            attacker_roles = ["CF", "LW", "RW"]         # att_1=CF, att_2=LW, att_3=RW
         elif len(self.attacker_ids) == 2:
-            attacker_roles = ["LCF", "RCF"]
+            attacker_roles = ["LCF", "RCF"]             # att_1=LCF, att_2=RCF
         elif len(self.attacker_ids) == 1:
-            attacker_roles = ["CF"]
+            attacker_roles = ["CF"]                     # att_1=CF (fallback generic center forward)    
         else:
             raise ValueError("Unsupported number of attackers")
 
@@ -110,9 +110,9 @@ class FootballMultiEnv(MultiAgentEnv):
 
         # Defender roles assignment
         if len(self.defender_ids) == 2:
-            defender_roles = ["LCB", "RCB"]
+            defender_roles = ["RCB", "LCB"]                 # def_1=RCB, def_2=LCB
         elif len(self.defender_ids) == 1:
-            defender_roles = ["CB"]  # fallback generic central back
+            defender_roles = ["CB"]                         # def_1=CB (fallback generic center back)
         else:
             raise ValueError("Unsupported number of defenders")
 
