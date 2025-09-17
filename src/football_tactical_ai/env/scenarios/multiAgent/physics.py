@@ -97,9 +97,7 @@ def update_ball_state(ball: Ball,
         if pass_context is not None:
             pass_context.update({"pass_by": None, "direction": None, "power": 0.0})
 
-        ball.update(time_step)  # apply one more step with new velocity
-
-
+    return collision
 
 def _handle_post_collision(ball: Ball, pitch: Pitch, restitution: float = 0.8, prob_goal: float = 0.5) -> bool:
     """

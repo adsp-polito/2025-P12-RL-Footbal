@@ -38,6 +38,7 @@ def test_shot_on_post(save_path="test/videoTest/test_shot_post.mp4", post="right
     env.ball.set_position((shot_x, shot_y))
     env.ball.set_owner(attacker_id)
 
+
     # Compute shot direction towards the post
     att_x, att_y = env.players[attacker_id].get_position()
     dx, dy = target_xn - att_x, target_yn - att_y

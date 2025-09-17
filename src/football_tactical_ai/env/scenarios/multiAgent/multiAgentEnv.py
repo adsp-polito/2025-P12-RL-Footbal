@@ -314,7 +314,7 @@ class FootballMultiEnv(MultiAgentEnv):
                 self._reset_pass_context()
 
         # Step 3: Ball movement
-        update_ball_state(
+        collision = update_ball_state(
             ball=self.ball,
             players=self.players,
             pitch=self.pitch,
@@ -425,6 +425,10 @@ class FootballMultiEnv(MultiAgentEnv):
         self.shot_just_started = False
         self.pass_just_started = False
 
+        if collision:
+            self._reset_shot_context()
+            self._reset_pass_context()
+
 
         return observations, rewards, terminations, truncations, infos
     
@@ -493,7 +497,7 @@ class FootballMultiEnv(MultiAgentEnv):
             context["pass_attempted"] = False
 
 
-    def _assign_ball_if_nearby(self, threshold: float = 0.015):
+    def _assign_ball_if_nearby(self, threshold: float = 0.01):  # in normalized units ~ 1 meter
         if self.ball.get_owner() is not None:
             return None  # Already owned
 
@@ -508,7 +512,7 @@ class FootballMultiEnv(MultiAgentEnv):
                     continue  # ignore until cooldown expires
 
                 self.ball.set_owner(agent_id)
-                self.ball.set_position(player_pos)
+                #self.ball.set_position(player_pos)
 
                 # Reset contexts after real possession change
                 self._reset_shot_context()
