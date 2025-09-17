@@ -12,7 +12,8 @@ def update_ball_state(ball: Ball,
                       actions: Dict[str, np.ndarray],
                       time_step: float,
                       shot_context: Dict[str, bool] = None,
-                      pass_context: Dict[str, bool] = None):
+                      pass_context: Dict[str, bool] = None,
+                      collision: bool = False):
     """
     Update the ball's position based on possession and action.
     Handles dribbling, passing, shooting, free movement and post collisions.
@@ -26,7 +27,8 @@ def update_ball_state(ball: Ball,
         shot_context.get("shot_by") and 
         shot_context.get("direction") is not None and 
         np.linalg.norm(shot_context["direction"]) > 1e-6 and 
-        shot_context.get("power", 0.0) > 0.0):
+        shot_context.get("power", 0.0) > 0.0 and
+        collision == False):
 
         pitch_width = pitch.x_max - pitch.x_min
         pitch_height = pitch.y_max - pitch.y_min
@@ -49,7 +51,8 @@ def update_ball_state(ball: Ball,
           pass_context.get("pass_by") and 
           pass_context.get("direction") is not None and 
           np.linalg.norm(pass_context["direction"]) > 1e-6 and 
-          pass_context.get("power", 0.0) > 0.0):
+          pass_context.get("power", 0.0) > 0.0 and
+          collision == False):
 
         pitch_width = pitch.x_max - pitch.x_min
         pitch_height = pitch.y_max - pitch.y_min
@@ -85,70 +88,73 @@ def update_ball_state(ball: Ball,
     # Final update for ball position
     ball.update(time_step)
 
-    # Handle possible collision with goalposts
-    _handle_post_collision(ball, pitch, restitution=0.8)
+    collision = _handle_post_collision(ball, pitch)
+
+    if collision:
+        # Reset contexts if collision happens
+        if shot_context is not None:
+            shot_context.update({"shot_by": None, "direction": None, "power": 0.0})
+        if pass_context is not None:
+            pass_context.update({"pass_by": None, "direction": None, "power": 0.0})
+
+        ball.update(time_step)  # apply one more step with new velocity
 
 
-def _handle_post_collision(ball: Ball, pitch: Pitch, restitution: float = 0.8) -> bool:
+
+def _handle_post_collision(ball: Ball, pitch: Pitch, restitution: float = 0.8, prob_goal: float = 0.5) -> bool:
     """
-    Check if the ball collides with the goalposts (both goals) and handle bounce.
-
-    Args:
-        ball (Ball): Ball object
-        pitch (Pitch): Pitch object
-        restitution (float): Coefficient of restitution (0 = inelastic, 1 = elastic).
-
-    Returns:
-        bool: True if a collision occurred, False otherwise.
+    Simplified ball-post collision:
+    - On collision, ball can either bounce back or enter as a post-goal
+    - Bounce back: random angle towards the field
+    - Post-goal: redirected inside the net
     """
-    # Get ball position in meters (denormalized)
-    ball_x, ball_y = denormalize(*ball.get_position())
-    vx, vy = ball.get_velocity()
 
-    # Ball and post radii
-    r_ball = 0.11  # ball radius in meters
-    r_post = 0.06  # post radius in meters
+    bx, by = denormalize(*ball.get_position())
+    vx, vy = denormalize(*ball.get_velocity())
 
-    # Define post centers for both goals (left and right)
+    r_ball, r_post = ball.radius, 0.06  # meters
+
     posts = [
-        # Right goal (x = pitch.width)
-        (pitch.width, pitch.center_y - pitch.goal_width / 2),  # bottom post
-        (pitch.width, pitch.center_y + pitch.goal_width / 2),  # top post
-        # Left goal (x = 0)
-        (0.0, pitch.center_y - pitch.goal_width / 2),  # bottom post
-        (0.0, pitch.center_y + pitch.goal_width / 2),  # top post
+        (pitch.width, pitch.center_y - pitch.goal_width / 2),  # right bottom
+        (pitch.width, pitch.center_y + pitch.goal_width / 2),  # right top
+        (0.0, pitch.center_y - pitch.goal_width / 2),          # left bottom
+        (0.0, pitch.center_y + pitch.goal_width / 2),          # left top
     ]
 
-    # Check collision with each post
     for px, py in posts:
-        dx = ball_x - px
-        dy = ball_y - py
+        dx, dy = bx - px, by - py
         dist = np.sqrt(dx**2 + dy**2)
 
-        if dist < r_ball + r_post:  # collision detected
-            # Normal vector from post to ball
-            if dist == 0:
-                nx, ny = 1.0, 0.0
+        if dist < r_ball + r_post:
+            # Incoming speed
+            speed_in = np.linalg.norm([vx, vy])
+            if speed_in < 1e-6:
+                return False
+            speed_out = speed_in * restitution
+
+            # Decide if it's a goal or a bounce
+            if np.random.rand() < prob_goal:
+                # Force trajectory inside goal
+                if px < pitch.width / 2:  # left goal
+                    vx_new = speed_out  # goes right into the net
+                else:  # right goal
+                    vx_new = -speed_out  # goes left into the net
+                vy_new = 0.0
             else:
-                nx, ny = dx / dist, dy / dist
+                # Bounce back with random angle towards field
+                if px < pitch.width / 2:  # left goal post
+                    angle = np.random.uniform(-45, 225) * np.pi / 180
+                else:  # right goal post
+                    angle = np.random.uniform(-225, 45) * np.pi / 180
 
-            # Decompose velocity into normal and tangential components
-            v = np.array([vx, vy])
-            v_normal = np.dot(v, [nx, ny]) * np.array([nx, ny])
-            v_tangent = v - v_normal
+                vx_new = speed_out * np.cos(angle)
+                vy_new = speed_out * np.sin(angle)
 
-            # Reflect normal component to simulate bounce
-            v_reflected = v_tangent - restitution * v_normal
+            # Back to normalized
+            vx_norm = vx_new / (pitch.x_max - pitch.x_min)
+            vy_norm = vy_new / (pitch.y_max - pitch.y_min)
+            ball.set_velocity([vx_norm, vy_norm])
 
-            # Update ball velocity
-            ball.set_velocity(*v_reflected)
+            return True
 
-            # Push ball outside the post to avoid overlap ("unstick" it)
-            overlap = r_ball + r_post - dist
-            new_x = ball_x + nx * overlap
-            new_y = ball_y + ny * overlap
-            ball.set_position(normalize(new_x, new_y))
-
-            return True  # collision handled
-
-    return False  # no collision
+    return False

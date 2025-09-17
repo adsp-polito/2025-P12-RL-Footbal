@@ -14,8 +14,8 @@ multiagent_params = {
     ),
     "seconds_per_episode": 20,
     "fps": 24,
-    "episodes": 10000,
-    "eval_every": 1000,
+    "episodes": 1000,
+    "eval_every": 100,
     "render": {
         "show_grid": False,
         "show_heatmap": False,
@@ -29,7 +29,7 @@ multiagent_params = {
         "plot_path": "training/renders/MultiAgent/MultiAgentRewards.png",
     },
     "num_envs": 4,
-    # Custom environment settings (only those you care about)
+    # Custom environment settings for multi-agent scenario
     "env_settings": {
         "n_attackers": 3,
         "n_defenders": 2,
@@ -38,14 +38,16 @@ multiagent_params = {
     "rllib": {
         "framework": "torch",
         "lr": 1e-4,
+        "lr_schedule": [[0, 1e-4], [240000, 1e-5]],
         "gamma": 0.99,
         "lambda": 0.95,
         "entropy_coeff": 0.01,
-        "train_batch_size": 1600,
-        "rollout_fragment_length": "auto",
+        "train_batch_size": 4000,  
+        "rollout_fragment_length": 200,    
         "minibatch_size": 256,
         "num_epochs": 5,
-        "num_workers": 4,
+        "num_workers": 1,
+        "num_envs_per_worker": 1,
         "model": {"fcnet_hiddens": [256, 256]},
     },
 }

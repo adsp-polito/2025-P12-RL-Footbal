@@ -82,10 +82,40 @@ class BasePlayer(ABC):
 
     def get_position(self) -> Tuple[float, float]:
         """
-        Get the current position of the player as a tuple of normalized coordinates.
+        Get the current position of the player as a tuple of normalized coordinates
         """
         return tuple(self.position)
     
+    def set_position(self, position: Tuple[float, float]) -> None:
+        """
+        Set the player's position using a tuple of normalized coordinates
+        Args:
+            position (tuple): (x, y) in normalized coordinates
+        """
+        if isinstance(position, (list, tuple)) and len(position) == 2:
+            self.position[0] = float(position[0])
+            self.position[1] = float(position[1])
+            # Clamp position inside pitch boundaries
+            self.position[0] = max(0.0, min(1.0, self.position[0]))
+            self.position[1] = max(0.0, min(1.0, self.position[1]))
+        else:
+            raise ValueError("Position must be a tuple of two elements (x, y)")
+    
+    def set_orientation(self, angle_radians: float) -> None:
+        """
+        Set the player's facing direction using an angle in radians.
+        0 radians means facing right (positive x direction), and angles increase counter-clockwise.
+
+        Args:
+            angle_radians (float): Angle in radians
+        """
+        self.last_action_direction = np.array([np.cos(angle_radians), np.sin(angle_radians)])
+        norm = np.linalg.norm(self.last_action_direction)
+        if norm > 0:
+            self.last_action_direction /= norm
+        else:
+            self.last_action_direction = np.array([1.0, 0.0])  # default facing right if zero vector
+
     def get_agent_id(self) -> str:
         """
         Get the unique identifier for this player instance.

@@ -122,7 +122,7 @@ class FootballMultiEnv(MultiAgentEnv):
         })
 
 
-        # Goalkeeper (always 1 for now)
+        # Goalkeeper
         players.update({
             "gk_1": PlayerGoalkeeper(agent_id="gk_1", team="B", role="GK")
         })
@@ -343,7 +343,19 @@ class FootballMultiEnv(MultiAgentEnv):
 
         # Step 4: Check goal or out
         ball_x, ball_y = denormalize(*self.ball.get_position())
-        goal_owner = self.shot_owner if self._is_goal(ball_x, ball_y) else None
+        goal_owner = None
+        goal_team = None
+
+        if self.shot_owner is not None:
+            scorer_team = self.players[self.shot_owner].team  # "A" or "B"
+            if self._is_goal(ball_x, ball_y, scorer_team):
+                goal_owner = self.shot_owner
+                goal_team = scorer_team
+            elif self._is_own_goal(ball_x, ball_y, scorer_team):
+                goal_owner = self.shot_owner
+                # own goals count for the opposing team
+                goal_team = "A" if scorer_team == "B" else "B"
+
         ball_out_by = None
         if self._is_ball_completely_out(ball_x, ball_y):
             if self.shot_owner is not None:
@@ -358,17 +370,6 @@ class FootballMultiEnv(MultiAgentEnv):
             context = temp_context[agent_id]
             deflection_power = np.linalg.norm(self.ball.get_velocity()) if context.get("deflected") else 0.0
 
-            if goal_owner:
-                scorer_team = self.players[goal_owner].team
-                # Assign goal to the opposite team if the scorer is DEF or GK
-                role = self.players[goal_owner].get_role()
-                if role in {"DEF", "LCB", "RCB", "CB", "GK"}:
-                    goal_team = "A" if scorer_team == "B" else "B"
-                else:
-                    goal_team = scorer_team
-            else:
-                goal_team = None
-
             context.update({
                 "goal_scored": goal_owner == agent_id,
                 "goal_team": goal_team,
@@ -380,6 +381,7 @@ class FootballMultiEnv(MultiAgentEnv):
             })
 
             infos[agent_id] = context
+
 
         # Step 6: Reward calculation
         for agent_id in self.agents:
@@ -419,10 +421,10 @@ class FootballMultiEnv(MultiAgentEnv):
         terminations["__all__"] = any(terminations.values())
         truncations["__all__"]  = any(truncations.values())
 
-
         # Step 9: Cleanup for next step
         self.shot_just_started = False
         self.pass_just_started = False
+
 
         return observations, rewards, terminations, truncations, infos
     
@@ -491,7 +493,7 @@ class FootballMultiEnv(MultiAgentEnv):
             context["pass_attempted"] = False
 
 
-    def _assign_ball_if_nearby(self, threshold: float = 0.0175):  # 0.0175 normalized ~ 2m
+    def _assign_ball_if_nearby(self, threshold: float = 0.015):
         if self.ball.get_owner() is not None:
             return None  # Already owned
 
@@ -500,11 +502,20 @@ class FootballMultiEnv(MultiAgentEnv):
             player_pos = np.array(player.get_position())
             distance = np.linalg.norm(player_pos - ball_pos)
 
-            if distance < threshold and agent_id != self.shot_owner and agent_id != self.pass_owner:
+            # Prevent shooter from instantly re-taking the ball
+            if distance < threshold:
+                if agent_id == self.shot_owner:
+                    continue  # ignore until cooldown expires
+
                 self.ball.set_owner(agent_id)
                 self.ball.set_position(player_pos)
-                return agent_id  # return the new owner
+
+                # Reset contexts after real possession change
+                self._reset_shot_context()
+                self._reset_pass_context()
+                return agent_id
         return None
+
 
 
     def _check_possession_loss(self, agent_id: str) -> bool:
@@ -522,37 +533,95 @@ class FootballMultiEnv(MultiAgentEnv):
         role = self.players.get(new_owner, None).get_role() if new_owner in self.players else None
         return role in {"DEF", "LCB", "RCB", "CB", "GK"}
 
+
     def _is_ball_completely_out(self, ball_x_m, ball_y_m):
         """
-        Simple check if ball is outside the real field plus margin, using denormalized coordinates.
-
-        Args:
-            ball_x_m (float): Ball's x coordinate in meters.
-            ball_y_m (float): Ball's y coordinate in meters.
-            pitch: Pitch instance containing field dimensions and constants.
-
-        Returns:
-            bool: True if ball is outside field + margin, False otherwise
+        Check if ball is completely out of play.
+        - If ball is inside the goal area (between posts, behind goal line),
+        do nothing until it touches the net (back or sides).
+        - Otherwise, normal out-of-bounds detection.
         """
 
-        margin_m = 1.0  # 1.0 meters margin for out of bounds
+        margin_m = 1.0   # margin outside pitch
+        eps = 0.01        # tolerance for hitting side net
 
-        # Check if ball outside real field + margin
-        if (ball_x_m < 0 - margin_m or
+        GOAL_MIN_Y = self.pitch.center_y - self.pitch.goal_width / 2
+        GOAL_MAX_Y = self.pitch.center_y + self.pitch.goal_width / 2
+        GOAL_DEPTH = self.pitch.goal_depth
+
+        # Ball in right goal area (not yet out)
+        if self.pitch.width < ball_x_m <= self.pitch.width + GOAL_DEPTH and GOAL_MIN_Y <= ball_y_m <= GOAL_MAX_Y:
+            return False
+
+        # Ball in left goal area (not yet out)
+        if -GOAL_DEPTH <= ball_x_m < 0 and GOAL_MIN_Y <= ball_y_m <= GOAL_MAX_Y:
+            return False
+
+        # Ball hits back net
+        if ball_x_m > self.pitch.width + GOAL_DEPTH and GOAL_MIN_Y <= ball_y_m <= GOAL_MAX_Y:
+            return True
+        if ball_x_m < -GOAL_DEPTH and GOAL_MIN_Y <= ball_y_m <= GOAL_MAX_Y:
+            return True
+
+        # Ball hits side net (only if aligned with posts)
+        if ball_x_m > self.pitch.width and abs(ball_y_m - GOAL_MIN_Y) < eps:
+            return True
+        if ball_x_m > self.pitch.width and abs(ball_y_m - GOAL_MAX_Y) < eps:
+            return True
+        if ball_x_m < 0 and abs(ball_y_m - GOAL_MIN_Y) < eps:
+            return True
+        if ball_x_m < 0 and abs(ball_y_m - GOAL_MAX_Y) < eps:
+            return True
+
+        # Normal out-of-bounds
+        if (ball_x_m < -margin_m or
             ball_x_m > self.pitch.width + margin_m or
-            ball_y_m < 0 - margin_m or
+            ball_y_m < -margin_m or
             ball_y_m > self.pitch.height + margin_m):
             return True
-        return False
 
-    def _is_goal(self, x, y):
+        return False
+    
+    def _is_goal(self, x, y, scoring_team: str):
         """
-        Check if the ball is in the net
+        Check if the ball is a valid goal for the given scoring_team.
+        scoring_team: "A" or "B"
         """
         GOAL_MIN_Y = self.pitch.center_y - self.pitch.goal_width / 2
         GOAL_MAX_Y = self.pitch.center_y + self.pitch.goal_width / 2
-        return x > self.pitch.width and GOAL_MIN_Y <= y <= GOAL_MAX_Y
-    
+        r_ball = self.ball.radius
+
+        # Team A attacks right goal
+        if scoring_team == "A":
+            return x - r_ball > self.pitch.width and GOAL_MIN_Y <= y <= GOAL_MAX_Y
+
+        # Team B attacks left goal
+        elif scoring_team == "B":
+            return x + r_ball < 0 and GOAL_MIN_Y <= y <= GOAL_MAX_Y
+
+        return False
+
+
+    def _is_own_goal(self, x, y, scoring_team: str):
+        """
+        Check if the ball is an own goal for the given scoring_team.
+        scoring_team: "A" or "B"
+        """
+        GOAL_MIN_Y = self.pitch.center_y - self.pitch.goal_width / 2
+        GOAL_MAX_Y = self.pitch.center_y + self.pitch.goal_width / 2
+        r_ball = self.ball.radius
+
+        # Team A defends left goal → own goal if it goes there
+        if scoring_team == "A":
+            return x + r_ball < 0 and GOAL_MIN_Y <= y <= GOAL_MAX_Y
+
+        # Team B defends right goal → own goal if it goes there
+        elif scoring_team == "B":
+            return x - r_ball > self.pitch.width and GOAL_MIN_Y <= y <= GOAL_MAX_Y
+
+        return False
+
+
     def get_render_state(self):
         """
         Export the current environment state for rendering.

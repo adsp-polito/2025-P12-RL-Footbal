@@ -28,6 +28,7 @@ class Ball:
 
         # Initialize owner as None (ball not possessed)
         self.owner = None
+        self.radius = 0.35  # Ball radius in meters (standard size 0.35 m)
 
     def reset(self, position=None):
         """
