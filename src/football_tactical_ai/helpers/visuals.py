@@ -404,7 +404,7 @@ def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=Fal
                 fov_patches[agent_id].set_visible(False)
 
             if show_names:
-                player_labels[agent_id].set_position((px, py - 5))
+                player_labels[agent_id].set_position((px, py - 3.5))
                 player_labels[agent_id].set_visible(True)
 
 
