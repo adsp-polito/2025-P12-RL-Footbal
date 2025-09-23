@@ -545,11 +545,11 @@ class FootballMultiEnv(MultiAgentEnv):
 
             # Prevent shooter from instantly re-taking the ball
             if distance < threshold:
-                if agent_id == self.shot_owner:
-                    continue  # ignore until cooldown expires
+                if agent_id == self.shot_owner or agent_id == self.pass_owner:
+                    continue  # skip to next player
 
                 self.ball.set_owner(agent_id)
-                self.ball.set_position(player_pos)
+                # self.ball.set_position(player_pos)
 
                 # Reset contexts after real possession change
                 self._reset_shot_context()
