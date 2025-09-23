@@ -14,8 +14,8 @@ multiagent_params = {
     ),
     "seconds_per_episode": 20,
     "fps": 24,
-    "episodes": 1000,
-    "eval_every": 100,
+    "episodes": 10000,
+    "eval_every": 1000,
     "render": {
         "show_grid": False,
         "show_heatmap": False,
@@ -25,32 +25,38 @@ multiagent_params = {
         "show_names": True,   # if True, shows agent IDs above players
     },
     "paths": {
-        "save_model_path": "training/models/MultiAgentModel",
-        "save_render_dir": "training/renders/MultiAgent",
-        "plot_path": "training/renders/MultiAgent/MultiAgentRewards.png",
+        "save_model_path": "training/models/multiAgentModel",
+        "save_render_dir": "training/renders/multiAgent",
+        "plot_path": "training/renders/multiAgent/multiAgentRewards.png",
     },
     "num_envs": 4,
     # Custom environment settings for multi-agent scenario
     "env_settings": {
         "n_attackers": 3,
-        "n_defenders": 2,
-        "include_goalkeeper": True,
+        "n_defenders": 0,
+        "include_goalkeeper": False,
     },
-    "rllib": {
+        "rllib": {
         "framework": "torch",
-        "lr": 1e-4,
-        "lr_schedule": [[0, 1e-4], [240000, 1e-5]],
-        "gamma": 0.99,
+        "lr": 5e-4,
+        "lr_schedule": [
+                [0, 5e-4],
+                [1200000, 1e-4],
+                [2400000, 5e-5],
+                [4800000, 1e-5],
+            ],
+        "gamma": 0.96,
         "lambda": 0.95,
-        "entropy_coeff": 0.01,
-        "train_batch_size": 8000,  
-        "rollout_fragment_length": 200,    
-        "minibatch_size": 256,
-        "num_epochs": 10,
-        "num_workers": 2,
+        "entropy_coeff": 0.03,   
+        "train_batch_size": 4000,
+        "rollout_fragment_length": 200,
+        "minibatch_size": 128,
+        "num_epochs": 6,
+        "num_workers": 3,
         "num_envs_per_worker": 2,
         "model": {"fcnet_hiddens": [256, 256]},
     },
+
 }
 
 # Build the full scenario dict

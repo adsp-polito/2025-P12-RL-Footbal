@@ -122,7 +122,6 @@ def train_SingleAgent(scenario="move"):
 def env_creator(config):
     return FootballMultiEnv(config)
 
-
 def train_MultiAgent(scenario: str = "multiagent"):
     """
     Train a PPO agent with RLlib on the specified multi-agent scenario.
@@ -133,15 +132,17 @@ def train_MultiAgent(scenario: str = "multiagent"):
     # Register the environment with RLlib
     register_env("football_multi_env", env_creator)
 
-    # Load config and environment
+    # Load configuration and environment class
     cfg = CFG_MA.SCENARIOS[scenario]
     env_path, class_name = cfg["env_class"].split(":")
     module = importlib.import_module(env_path)
     env_class = getattr(module, class_name)
 
+    # Ensure output directories exist
     ensure_dirs(cfg["paths"]["save_render_dir"])
     ensure_dirs(os.path.dirname(cfg["paths"]["save_model_path"]))
 
+    # Unpack main parameters
     fps = cfg["fps"]
     episodes = cfg["episodes"]
     max_steps_per_episode = cfg["env_config"]["max_steps"]
@@ -149,13 +150,44 @@ def train_MultiAgent(scenario: str = "multiagent"):
 
     pitch = Pitch()
 
-    # Init Ray
+    # Initialize Ray
     if not ray.is_initialized():
         ray.init(ignore_reinit_error=True, log_to_driver=False)
 
-    # Build RLlib PPO config
+    # Build RLlib PPO configuration
+    # Create a base environment instance to extract observation/action spaces
     base_env = FootballMultiEnv(cfg["env_config"])
 
+    # Define policies dynamically based on available agents
+    policies = {}
+
+    # Attacker policy (always present, at least one attacker)
+    policies["attacker_policy"] = (
+        None,
+        base_env.observation_space("att_1"),
+        base_env.action_space("att_1"),
+        {}
+    )
+
+    # Defender policy (only if defenders exist)
+    if base_env.defender_ids:
+        policies["defender_policy"] = (
+            None,
+            base_env.observation_space(base_env.defender_ids[0]),
+            base_env.action_space(base_env.defender_ids[0]),
+            {}
+        )
+
+    # Goalkeeper policy (only if included in environment)
+    if base_env.gk_ids:
+        policies["goalkeeper_policy"] = (
+            None,
+            base_env.observation_space("gk_1"),
+            base_env.action_space("gk_1"),
+            {}
+        )
+
+    # Build RLlib PPO configuration
     config = (
         PPOConfig()
         .environment("football_multi_env", env_config=cfg["env_config"])
@@ -167,49 +199,29 @@ def train_MultiAgent(scenario: str = "multiagent"):
             entropy_coeff=cfg["rllib"]["entropy_coeff"],
             train_batch_size=cfg["rllib"]["train_batch_size"],
             minibatch_size=cfg["rllib"]["minibatch_size"],
-            num_epochs=cfg["rllib"]["num_epochs"],   # updated key
+            num_epochs=cfg["rllib"]["num_epochs"],
             model=cfg["rllib"]["model"],
         )
         .env_runners(
             num_env_runners=cfg["rllib"]["num_workers"],
-            #rollout_fragment_length="auto",
             rollout_fragment_length=cfg["rllib"]["rollout_fragment_length"],
         )
         .multi_agent(
-            policies={
-                "attacker_policy": (
-                    None,
-                    base_env.observation_space("att_1"),
-                    base_env.action_space("att_1"),
-                    {}
-                ),
-                "defender_policy": (
-                    None,
-                    base_env.observation_space("def_1"),
-                    base_env.action_space("def_1"),
-                    {}
-                ),
-                "goalkeeper_policy": (
-                    None,
-                    base_env.observation_space("gk_1"),
-                    base_env.action_space("gk_1"),
-                    {}
-                ),
-            },
+            policies=policies,
             policy_mapping_fn=lambda agent_id, *args, **kwargs: (
                 "attacker_policy" if agent_id.startswith("att")
                 else "defender_policy" if agent_id.startswith("def")
                 else "goalkeeper_policy" if agent_id.startswith("gk")
                 else None
             ),
-            policies_to_train=["attacker_policy", "defender_policy", "goalkeeper_policy"]
+            policies_to_train=list(policies.keys())
         )
-
     )
 
-    algo = config.build_algo() # build the RLlib algorithm
+    # Build the RLlib algorithm object
+    algo = config.build_algo()
 
-    # Logging
+    # Logging of training configuration
     print("\n" + "=" * 100)
     print("Starting PPO Multi-Agent Training (RLlib)".center(100))
     print("=" * 100)
@@ -220,17 +232,19 @@ def train_MultiAgent(scenario: str = "multiagent"):
     print(f"{'Steps per episode:':25} {max_steps_per_episode}")
     print(f"{'Total timesteps:':25} {episodes * max_steps_per_episode}")
     print(f"{'Time per episode:':25} {cfg['seconds_per_episode']} seconds")
-    print(f"{'RLlib Framework:':25} {cfg['rllib']['framework']}")
+    print("\nRLlib Training Parameters:")
+    for key, val in cfg["rllib"].items():
+        print(f"  {key:25} {val}")
     print("=" * 100 + "\n")
 
+    # TRAINING LOOP
     eval_rewards, eval_episodes = [], []
 
-    # Training loop
-    for ep in trange(1, episodes+1, desc="Episodes Progress", initial=1):
+    for ep in trange(1, episodes + 1, desc="Episodes Progress", initial=1):
         result = algo.train()
 
         # Periodic evaluation and rendering
-        if (ep) % eval_every == 0 or ep == 1:
+        if ep % eval_every == 0 or ep == 1:
             save_render = os.path.join(
                 cfg["paths"]["save_render_dir"], f"episode_{ep}.mp4"
             )
@@ -278,33 +292,25 @@ def train_MultiAgent(scenario: str = "multiagent"):
     save_model_path = os.path.abspath(cfg["paths"]["save_model_path"])
     checkpoint_dir = algo.save(save_model_path)
     print(f"Model saved at {checkpoint_dir}")
-    
-    # Plot evaluation rewards with one subplot per agent
+
+    # Plot evaluation rewards (per-agent)
     if eval_rewards:
         plt.close('all')
-
         agent_ids = list(eval_rewards[0].keys())
         n_agents = len(agent_ids)
 
         fig, axes = plt.subplots(n_agents, 1, figsize=(10, 4 * n_agents), sharex=True)
-
         if n_agents == 1:
             axes = [axes]  # Ensure axes is iterable when only one agent exists
 
         for idx, agent_id in enumerate(agent_ids):
-            # Collect rewards for this specific agent across all evaluations
             rewards_agent = [d[agent_id] for d in eval_rewards]
-
-            # Plot rewards in the corresponding subplot
             axes[idx].plot(eval_episodes, rewards_agent, marker='o')
             axes[idx].set_title(f"{scenario} - Cumulative Reward for {agent_id}", fontsize=14)
             axes[idx].set_ylabel("Reward")
             axes[idx].grid(True)
 
-        # Common xlabel at the bottom
         axes[-1].set_xlabel("Episodes")
-
         plt.tight_layout()
         plt.savefig(cfg["paths"]["plot_path"])
         plt.show()
-

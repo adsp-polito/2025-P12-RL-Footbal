@@ -47,6 +47,7 @@ def test_shot_on_post(save_path="test/videoTest/test_shot_post.mp4", post="right
 
     states = [env.get_render_state()]
 
+
     # Setup actions
     actions = {}
     for agent_id in env.agents:

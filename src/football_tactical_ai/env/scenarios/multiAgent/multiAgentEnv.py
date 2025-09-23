@@ -76,14 +76,23 @@ class FootballMultiEnv(MultiAgentEnv):
 
         # Define agents (IDs)
 
-        # Attacking team: 3 attackers (att_1, att_2, att_3)
-        self.attacker_ids = [f"att_{i}" for i in range(1, 4)]
+        # Define agents dynamically from config
+        n_attackers = self.config.get("n_attackers", 3)
+        n_defenders = self.config.get("n_defenders", 2)
+        include_goalkeeper = self.config.get("include_goalkeeper", True)
 
-        # Defending team: 2 defenders (def_1, def_2)
-        self.defender_ids = [f"def_{i}" for i in range(1, 3)]
+        # Attacking team
+        self.attacker_ids = [f"att_{i}" for i in range(1, n_attackers + 1)]
 
-        # Defending team: 1 goalkeeper (gk_1)
-        self.gk_ids = ["gk_1"]
+        # Defending team
+        self.defender_ids = [f"def_{i}" for i in range(1, n_defenders + 1)]
+
+        # Goalkeeper
+        self.gk_ids = ["gk_1"] if include_goalkeeper else []
+
+        # Full agent list
+        self.agents = self.attacker_ids + self.defender_ids + self.gk_ids
+        self.possible_agents = self.agents[:]
 
         # Complete agent list (PettingZoo requirement)
         self.agents = self.attacker_ids + self.defender_ids + self.gk_ids
@@ -107,12 +116,13 @@ class FootballMultiEnv(MultiAgentEnv):
             for aid, role in zip(self.attacker_ids, attacker_roles)
         })
 
-
         # Defender roles assignment
         if len(self.defender_ids) == 2:
-            defender_roles = ["RCB", "LCB"]                 # def_1=RCB, def_2=LCB
+            defender_roles = ["RCB", "LCB"]
         elif len(self.defender_ids) == 1:
-            defender_roles = ["CB"]                         # def_1=CB (fallback generic center back)
+            defender_roles = ["CB"]
+        elif len(self.defender_ids) == 0:
+            defender_roles = []
         else:
             raise ValueError("Unsupported number of defenders")
 
@@ -123,9 +133,11 @@ class FootballMultiEnv(MultiAgentEnv):
 
 
         # Goalkeeper
-        players.update({
-            "gk_1": PlayerGoalkeeper(agent_id="gk_1", team="B", role="GK")
-        })
+        if include_goalkeeper:
+            players.update({
+                "gk_1": PlayerGoalkeeper(agent_id="gk_1", team="B", role="GK")
+            })
+
 
         self.players = players
 
@@ -214,49 +226,74 @@ class FootballMultiEnv(MultiAgentEnv):
     def reset(self, seed=None, options=None):
         """
         Reset the environment to its initial state.
+        
         Args:
             seed (int, optional): Random seed for reproducibility.
             options (dict, optional): Additional options for reset.
+        
         Returns:
-            dict: Initial observations for all agents.
+            observations (dict): Initial observations for all active agents.
+            infos (dict): Auxiliary info for each agent (empty at reset).
         """
 
-        # Reset the environment state
-        self.agents = self.possible_agents[:]
-        self.episode_step = 0
-        self.ball.reset()
-        self.ball.set_owner("att_1")  # Initial ball ownership
+        # Reset environment state
+        self.agents = self.possible_agents[:]     # restore full agent list
+        self.episode_step = 0                     # reset step counter
+        self.ball.reset()                         # reset ball physics
+        self.ball.set_owner("att_1")              # default: att_1 starts with ball
 
-        # Reset positions
-        start_positions = {
-            "att_1": (60, 40),
-            "att_2": (60, 30),
-            "att_3": (60, 50),
-            "def_1": (100, 30),
-            "def_2": (100, 50),
-            "gk_1":  (120, 40)
-        }
+        # Define start positions dynamically depending on the number of agents
+        start_positions = {}
 
+        # Attacker positions (Team A)
+        if len(self.attacker_ids) == 3:
+            coords = [(60, 40), (60, 30), (60, 50)]   # CF central, LW, RW
+        elif len(self.attacker_ids) == 2:
+            coords = [(60, 35), (60, 45)]             # two forwards, slightly apart
+        elif len(self.attacker_ids) == 1:
+            coords = [(60, 40)]                       # single central striker
+        else:
+            coords = []
+
+        for aid, pos in zip(self.attacker_ids, coords):
+            start_positions[aid] = pos
+
+        # Defender positions (Team B)
+        if len(self.defender_ids) == 2:
+            coords = [(100, 30), (100, 50)]           # two CBs (RCB and LCB)
+        elif len(self.defender_ids) == 1:
+            coords = [(100, 40)]                      # single CB central
+        else:
+            coords = []
+
+        for did, pos in zip(self.defender_ids, coords):
+            start_positions[did] = pos
+
+        # Goalkeeper (Team B)
+        if self.gk_ids:                               # only if GK enabled
+            start_positions["gk_1"] = (120, 40)
+
+        # Apply initial positions to players
         for aid, player in self.players.items():
             if aid in start_positions:
                 x, y = start_positions[aid]
                 player.reset_position(normalize(x, y))
 
+        # Build initial observations for each agent
         observations = {
             agent_id: self._get_observation(agent_id)
             for agent_id in self.agents
         }
 
-        # Reset shot context
+        # Reset contexts (shot, pass)
         self._reset_shot_context()
-
-        # Reset pass context
         self._reset_pass_context()
 
-        # Info dict
+        # Initialize info dict (empty per agent)
         infos = {agent_id: {} for agent_id in self.agents}
 
         return observations, infos
+
 
     def step(self, actions: Dict[str, np.ndarray]):
         """
@@ -497,7 +534,7 @@ class FootballMultiEnv(MultiAgentEnv):
             context["pass_attempted"] = False
 
 
-    def _assign_ball_if_nearby(self, threshold: float = 0.01):  # in normalized units ~ 1 meter
+    def _assign_ball_if_nearby(self, threshold: float = 0.017):  # in normalized units ~ 2 meter
         if self.ball.get_owner() is not None:
             return None  # Already owned
 
@@ -512,7 +549,7 @@ class FootballMultiEnv(MultiAgentEnv):
                     continue  # ignore until cooldown expires
 
                 self.ball.set_owner(agent_id)
-                #self.ball.set_position(player_pos)
+                self.ball.set_position(player_pos)
 
                 # Reset contexts after real possession change
                 self._reset_shot_context()

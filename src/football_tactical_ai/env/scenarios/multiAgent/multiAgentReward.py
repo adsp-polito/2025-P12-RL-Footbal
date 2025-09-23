@@ -1,4 +1,3 @@
-from matplotlib.style import context
 import numpy as np
 from typing import Dict
 from football_tactical_ai.players.playerBase import BasePlayer
@@ -88,7 +87,7 @@ def attacker_reward(agent_id, player, pos_reward, context):
 
     # Penalize if possession is lost
     if context.get("possession_lost", False):
-        reward -= 2.5
+        reward -= 5.0
 
     # Individual reward if player scored
     if context.get("goal_scored", False):
@@ -96,19 +95,19 @@ def attacker_reward(agent_id, player, pos_reward, context):
 
     # Team reward if any teammate scored
     if context.get("goal_team") == player.team:
-        reward += 15.0
+        reward += 20.0
 
     # Penalize if agent kicked the ball out
     if context.get("ball_out_by") == agent_id:
-        reward -= 5.0
+        reward -= 7.5
 
     # Bonus for starting a pass and positional quality
     if context.get("start_pass_bonus", False):
-        reward += 5
+        reward += 5.0
 
     # Scaled reward by pass quality 
     if context.get("pass_quality") is not None:
-        reward += 2.5 * context.get("pass_quality") 
+        reward += 5.0 * context.get("pass_quality") 
 
     # Penalize if pass was attempted but not by the owner
     if context.get("invalid_pass_attempt", False):
@@ -116,7 +115,7 @@ def attacker_reward(agent_id, player, pos_reward, context):
 
     # Bonus for completed pass
     if context.get("pass_completed", False):
-        reward += 10
+        reward += 15.0
 
     # Extra penalty if pass led to ball out
     if context.get("ball_out_by") == agent_id and context.get("pass_attempted", False):
@@ -124,12 +123,12 @@ def attacker_reward(agent_id, player, pos_reward, context):
 
     # Bonus for starting a shot and positional quality
     if context.get("start_shot_bonus", False):
-        reward += 5
+        reward += 5.0
         reward += context.get("shot_positional_quality", 0.0)
 
     # Scaled reward by shot quality (0 to 1)
     if context.get("shot_quality") is not None:
-        reward += 2.5 * context.get("shot_quality")
+        reward += 5.0 * context.get("shot_quality")
 
     # Penalize bad shot direction
     if context.get("invalid_shot_direction", False):
@@ -146,7 +145,7 @@ def attacker_reward(agent_id, player, pos_reward, context):
 
     # Field of view visibility
     if context.get("fov_visible") is True:
-        reward += 0.25
+        reward += 0.5
     elif context.get("fov_visible") is False:
         reward -= 0.1
 
@@ -187,7 +186,7 @@ def defender_reward(agent_id, player, pos_reward, context):
     # Penalty if goal is conceded
     if context.get("goal_scored", False):
         if context.get("goal_team") != player.team:
-            reward -= 15.0
+            reward -= 25.0
 
     # Penalize if shot was attempted but not by the owner
     if context.get("invalid_shot_attempt", False):
@@ -199,7 +198,7 @@ def defender_reward(agent_id, player, pos_reward, context):
 
     # Field of view visibility
     if context.get("fov_visible") is True:
-        reward += 0.25
+        reward += 0.5
     elif context.get("fov_visible") is False:
         reward -= 0.1
 
@@ -243,7 +242,7 @@ def goalkeeper_reward(agent_id, player, pos_reward, context):
     # Penalty if goal is conceded
     if context.get("goal_scored", False):
         if context.get("goal_team") != player.team:
-            reward -= 15.0
+            reward -= 25.0
 
     # Penalize if shot was attempted but not by the owner
     if context.get("invalid_shot_attempt", False):
@@ -255,7 +254,7 @@ def goalkeeper_reward(agent_id, player, pos_reward, context):
 
     # Field of view visibility
     if context.get("fov_visible") is True:
-        reward += 0.25
+        reward += 0.5
     elif context.get("fov_visible") is False:
         reward -= 0.1
 
