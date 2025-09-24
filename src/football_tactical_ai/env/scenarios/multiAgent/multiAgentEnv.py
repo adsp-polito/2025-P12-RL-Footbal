@@ -374,9 +374,25 @@ class FootballMultiEnv(MultiAgentEnv):
                 self.pass_owner = None  # reset pass owner after interception
 
             elif self.pass_owner and new_owner_team == self.players[self.pass_owner].team and new_owner != self.pass_owner:
-                temp_context[new_owner]["pass_completed"] = True
-                self.pass_owner = None  # reset pass owner after successful pass
+                target_id = self.pass_context.get("pass_target_id")
 
+                # If the pass reached the intended target
+                if target_id and new_owner == target_id:
+                    temp_context[new_owner]["pass_completed"] = True
+                    temp_context[new_owner]["pass_from"] = self.pass_owner
+                    temp_context[self.pass_owner]["pass_completed"] = True
+                    temp_context[self.pass_owner]["pass_to"] = new_owner
+                else:
+                    # Pass reached a teammate, but not the intended target
+                    temp_context[new_owner]["pass_completed"] = True
+                    temp_context[new_owner]["pass_from"] = self.pass_owner
+                    temp_context[self.pass_owner]["pass_completed"] = True
+                    temp_context[self.pass_owner]["pass_to"] = new_owner
+                    temp_context[self.pass_owner]["pass_missed_target"] = True
+
+                # reset pass context
+                self.pass_owner = None
+                self.pass_context["pass_target_id"] = None
 
         # Step 4: Check goal or out
         ball_x, ball_y = denormalize(*self.ball.get_position())
@@ -481,8 +497,9 @@ class FootballMultiEnv(MultiAgentEnv):
         """
         Reset the pass context after a pass attempt.
         """
-        self.pass_context = {"pass_by": None, "direction": None, "power": 0.0}
         self.pass_owner = None
+        self.pass_context = {"pass_by": None, "direction": None, "power": 0.0, "pass_target_id": None}
+
         self.pass_just_started = False
 
     def _process_shot_attempt(self, agent_id: str, context: dict):

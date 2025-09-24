@@ -334,7 +334,7 @@ class BasePlayer(ABC):
 
         # Scale to ball velocity (lower than shot)
         # based on passing skill
-        pass_power = self.max_power * (0.4 + 0.5 * self.passing * desired_power)
+        pass_power = self.max_power * (0.2 + 0.7 * self.passing * desired_power)
 
         # Pass quality (simplified: skill + closeness to center)
         x_pos, y_pos = self.position

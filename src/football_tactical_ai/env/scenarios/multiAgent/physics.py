@@ -57,9 +57,47 @@ def update_ball_state(ball: Ball,
         pitch_width = pitch.x_max - pitch.x_min
         pitch_height = pitch.y_max - pitch.y_min
 
+        # Base direction from action
         direction = pass_context["direction"] / np.linalg.norm(pass_context["direction"])
         power = pass_context["power"]
 
+        # Find best teammate as target
+        passer_id = pass_context["pass_by"]
+        passer_team = players[passer_id].team
+        passer_pos = np.array(players[passer_id].get_position())
+        best_target, best_angle = None, 999.0
+
+        for pid, p in players.items():
+            if pid == passer_id:
+                continue
+            if p.team != passer_team:
+                continue
+
+            teammate_pos = np.array(p.get_position())
+            vec_to_teammate = teammate_pos - passer_pos
+            dist = np.linalg.norm(vec_to_teammate)
+            if dist < 1e-6:
+                continue
+
+            vec_to_teammate /= dist
+            angle = np.degrees(np.arccos(np.clip(np.dot(direction, vec_to_teammate), -1, 1)))
+
+            if angle < best_angle:
+                best_angle = angle
+                best_target = pid
+
+        # If a target is reasonably aligned, snap towards them
+        if best_target is not None and best_angle < 30:  # within 30° cone
+            teammate_pos = np.array(players[best_target].get_position())
+            new_dir = teammate_pos - passer_pos
+            if np.linalg.norm(new_dir) > 1e-6:
+                new_dir = new_dir / np.linalg.norm(new_dir)
+                # Blend original dir with target dir (0.7 weight to target)
+                direction = 0.7 * new_dir + 0.3 * direction
+                direction /= np.linalg.norm(direction)
+                pass_context["pass_target_id"] = best_target
+
+        # Compute Velocity
         velocity_real = direction * power
         velocity_norm = np.array([
             velocity_real[0] / pitch_width,
