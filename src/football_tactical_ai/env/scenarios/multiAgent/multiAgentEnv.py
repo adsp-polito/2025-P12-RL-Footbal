@@ -138,10 +138,9 @@ class FootballMultiEnv(MultiAgentEnv):
                 "gk_1": PlayerGoalkeeper(agent_id="gk_1", team="B", role="GK")
             })
 
-
         self.players = players
 
-        # Action spaces
+        # ACTION SPACES
         # Each role has a different action vector:
         # - Attacker: [dx, dy, pass_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
         # - Defender: [dx, dy, tackle_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
@@ -152,21 +151,35 @@ class FootballMultiEnv(MultiAgentEnv):
         # Flags are binary actions (activated if > 0.5)
         self.action_spaces = {}
         for aid in self.attacker_ids:
-            self.action_spaces[aid] = spaces.Box(low=-1.0, high=1.0, shape=(7,), dtype=np.float32)
+            self.action_spaces[aid] = spaces.Box(
+                low=-1.0, high=1.0, shape=(7,), dtype=np.float32
+            )
         for did in self.defender_ids:
-            self.action_spaces[did] = spaces.Box(low=-1.0, high=1.0, shape=(7,), dtype=np.float32)
+            self.action_spaces[did] = spaces.Box(
+                low=-1.0, high=1.0, shape=(7,), dtype=np.float32
+            )
         for gid in self.gk_ids:
-            self.action_spaces[gid] = spaces.Box(low=-1.0, high=1.0, shape=(7,), dtype=np.float32)
+            self.action_spaces[gid] = spaces.Box(
+                low=-1.0, high=1.0, shape=(7,), dtype=np.float32
+            )
 
-        # Observation spaces
+        # ALL POSSIBLE ROLES (used for one-hot embedding in observations)
+        self.roles_list = [
+            "LW", "RW", "CF", "LCF", "RCF", "SS", "ATT",    # Attackers
+            "LCB", "RCB", "CB", "DEF",                      # Defenders
+            "GK"                                            # Goalkeeper
+        ]
+
+        # OBSERVATION SPACES
         # Each agent observes:
         # [self_x, self_y, self_has_ball] +
         # [ball_x, ball_y, ball_vx, ball_vy] +
         # [goal_x, goal_y] +
         # For each other player:
-        #   [player_x, player_y, action_code, visible_flag, team_flag, has_ball_flag]
+        #   [player_x, player_y, action_code, visible_flag, team_flag, has_ball_flag] +
+        # One-hot encoding of agent role
         #
-        # action_code = one-hot or discrete integer (e.g., 0=idle, 1=move, 2=pass, 3=shoot, 4=tackle, ...)
+        # action_code = one-hot or discrete integer (0=idle, 1=move, 2=pass, 3=shoot, 4=tackle, ...)
         # visible_flag = 1 if in FOV, 0 otherwise
         # team_flag = 1 if teammate, 0 if opponent
         # has_ball_flag = 1 if this player has the ball
@@ -175,11 +188,14 @@ class FootballMultiEnv(MultiAgentEnv):
             3 +   # self_x, self_y, self_has_ball
             4 +   # ball_x, ball_y, ball_vx, ball_vy
             2 +   # goal_x, goal_y
-            (len(self.agents) - 1) * 6  # other players info
+            (len(self.agents) - 1) * 6 +  # info for each other player
+            len(self.roles_list)          # one-hot role embedding
         )
 
         self.observation_spaces = {
-            agent_id: spaces.Box(low=0.0, high=1.0, shape=(obs_dim,), dtype=np.float32)
+            agent_id: spaces.Box(
+                low=0.0, high=1.0, shape=(obs_dim,), dtype=np.float32
+            )
             for agent_id in self.agents
         }
 
@@ -795,10 +811,18 @@ class FootballMultiEnv(MultiAgentEnv):
                 else:
                     obs.extend([0.0, 0.0, 0.0, 0.0, team_flag, has_ball_flag])  # never seen
 
+        # Role one-hot encoding
+        role_code = [0.0] * len(self.roles_list)
+        role = self.players[agent_id].get_role()
+        if role in self.roles_list:
+            role_code[self.roles_list.index(role)] = 1.0
+
+        obs.extend(role_code)
+
         expected_dim = self.observation_spaces[agent_id].shape[0]
         assert len(obs) == expected_dim, (
             f"Observation length mismatch for {agent_id}: "
             f"got {len(obs)}, expected {expected_dim}"
         )
-
+        
         return np.array(obs, dtype=np.float32)
