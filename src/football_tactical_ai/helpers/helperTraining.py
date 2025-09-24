@@ -169,9 +169,7 @@ def train_MultiAgent(scenario: str = "multiagent"):
     # Build a temporary environment to extract observation/action spaces
     base_env = FootballMultiEnv(cfg["env_config"])
 
-    # --------------------------------------------------------
-    # POLICY DEFINITION (single shared policy)
-    # --------------------------------------------------------
+    # POLICY DEFINITION (single shared policy with role embedding)
     # One shared policy across all roles.
     # The role-specific behavior is learned because the observation
     # includes a one-hot role embedding (self.roles_list).
@@ -218,9 +216,7 @@ def train_MultiAgent(scenario: str = "multiagent"):
     # Build the RLlib PPO algorithm
     algo = config.build_algo()
 
-    # --------------------------------------------------------
     # LOGGING (training configuration overview)
-    # --------------------------------------------------------
     print("\n" + "=" * 100)
     print("Starting PPO Multi-Agent Training (Shared Policy)".center(100))
     print("=" * 100)
@@ -236,9 +232,7 @@ def train_MultiAgent(scenario: str = "multiagent"):
         print(f"  {key:25} {val}")
     print("=" * 100 + "\n")
 
-    # --------------------------------------------------------
     # TRAINING LOOP
-    # --------------------------------------------------------
     eval_rewards, eval_episodes = [], []
 
     for ep in trange(1, episodes + 1, desc="Episodes Progress", initial=1):
@@ -263,22 +257,18 @@ def train_MultiAgent(scenario: str = "multiagent"):
             print(f"\n[Episode {ep}] Evaluation results")
             for agent_id, rew in cumulative_reward.items():
                 role = base_env.players[agent_id].get_role()
-                print(f"  {agent_id:10s} ({role:>3}) -> {rew: .2f}")
+                print(f"  {agent_id:10s} -> {rew: .2f}")
 
             # Save raw rewards for later plotting
             eval_rewards.append(cumulative_reward)
             eval_episodes.append(ep)
 
-    # --------------------------------------------------------
     # SAVE MODEL CHECKPOINT
-    # --------------------------------------------------------
     save_model_path = os.path.abspath(cfg["paths"]["save_model_path"])
     checkpoint_dir = algo.save(save_model_path)
     print(f"Model saved at {checkpoint_dir}")
 
-    # --------------------------------------------------------
     # PLOT EVALUATION REWARDS
-    # --------------------------------------------------------
     if eval_rewards:
         plt.close('all')
         agent_ids = list(eval_rewards[0].keys())

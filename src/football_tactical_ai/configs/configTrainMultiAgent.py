@@ -15,7 +15,7 @@ multiagent_params = {
     "seconds_per_episode": 20,
     "fps": 24,
     "episodes": 5000,
-    "eval_every": 100,
+    "eval_every": 250,
     "render": {
         "show_grid": False,
         "show_heatmap": False,
