@@ -1,3 +1,4 @@
+from xml.parsers.expat import model
 from football_tactical_ai.helpers.visuals import render_episode_singleAgent, render_episode_multiAgent
 import torch
 import numpy as np
@@ -88,8 +89,6 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0, fps=24,
         )
 
     return cumulative_reward
-import torch
-import numpy as np
 
 def evaluate_and_render_multi(
     model,
@@ -104,15 +103,12 @@ def evaluate_and_render_multi(
     full_pitch=True,
     show_fov=False,
     show_names=False,     # if True, shows agent IDs above players
-    deterministic=True,   # if True, use greedy actions (mean/argmax)
-    debug=False           # if True, print debug info
+    deterministic=True,   # if True, greedy actions
+    debug=False
 ):
     """
-    Evaluate a trained RLlib PPO model in a multi-agent football environment (new RLlib API stack).
-
-    This version assumes a **single shared policy** ("shared_policy")
-    across all agents (attackers, defenders, GK). Role-specific behavior
-    comes from the one-hot role embedding in the observation space.
+    Evaluate a trained RLlib PPO model in a multi-agent football environment
+    using **one policy per agent** (new API stack).
 
     Args:
         model: Trained RLlib Algorithm object (with RLModules).
@@ -121,57 +117,58 @@ def evaluate_and_render_multi(
         save_path (str, optional): Path to save video (mp4).
         episode (int): Episode number (for logging).
         fps (int): Frames per second for rendering.
-        deterministic (bool): If True, actions are greedy (mean/argmax).
+        deterministic (bool): If True, actions are greedy.
         debug (bool): If True, print per-agent action debug info.
 
     Returns:
         dict: Cumulative rewards per agent for this evaluation episode.
     """
 
-    # Reset environment to initial state
+    # Reset environment
     obs, _ = env.reset()
 
-    # Track rewards and environment states for rendering
-    states = [env.get_render_state()]   # first frame
+    # Track rewards + states
+    states = [env.get_render_state()]
     cumulative_rewards = {agent: 0.0 for agent in env.agents}
     rewards_per_frame = [0.0] if save_path else None
 
-    # Initialize termination flags
+    # Termination flags
     terminated = {agent: False for agent in env.agents}
     truncated = {agent: False for agent in env.agents}
 
-    # Main evaluation loop
+    # Evaluation loop
     while not any(terminated.values()) and not any(truncated.values()):
         action_dict = {}
 
         for agent_id in env.agents:
-            # Convert observation to PyTorch tensor
-            obs_array = torch.tensor(obs[agent_id], dtype=torch.float32).unsqueeze(0)
+            # Get module for this specific agent
+            module = model.get_module(agent_id)
 
-            # Always use the shared policy module
-            module = model.get_module("shared_policy")
+            # Convert obs to batch tensor
+            obs_array = torch.tensor(
+                np.array(obs[agent_id], dtype=np.float32).reshape(1, -1), 
+                dtype=torch.float32
+            )
 
-            # Forward pass (inference mode)
+            # Forward inference
             with torch.no_grad():
-                action_out = module.forward_inference({"obs": obs_array})
+                out = module.forward_inference({"obs": obs_array})
 
-            # Action distribution inputs (logits for continuous/discrete actions)
-            logits = action_out["action_dist_inputs"]
-
-            # Build action distribution from logits
+            # Build distribution
+            dist_inputs = out["action_dist_inputs"]
             dist_class = module.get_train_action_dist_cls()
-            dist = dist_class.from_logits(logits)
+            dist = dist_class.from_logits(dist_inputs)
 
-            # Greedy or stochastic action selection
+            # Choose action
             if deterministic:
-                if hasattr(dist, "loc"):   # Gaussian distribution (continuous)
+                if hasattr(dist, "loc"):  # Gaussian (continuous)
                     action = dist.loc
-                else:                      # Discrete distribution
-                    action = torch.argmax(logits, dim=-1)
+                else:                     # Categorical (discrete)
+                    action = torch.argmax(dist_inputs, dim=-1)
             else:
                 action = dist.sample()
 
-            # Convert to numpy, enforce shape (7,) for continuous actions
+            # Convert to numpy
             action = np.array(action.cpu().numpy()).squeeze()
 
             if debug:
@@ -179,19 +176,19 @@ def evaluate_and_render_multi(
 
             action_dict[agent_id] = action
 
-        # Step the environment
+        # Step env
         obs, rewards, terminated, truncated, infos = env.step(action_dict)
 
-        # Accumulate per-agent rewards
+        # Update rewards
         for agent, r in rewards.items():
             cumulative_rewards[agent] += r
 
-        # Save state for rendering
+        # Save state
         states.append(env.get_render_state())
         if save_path:
             rewards_per_frame.append(sum(rewards.values()))
 
-    # Render to video if path provided
+    # Render to video
     if save_path:
         anim = render_episode_multiAgent(
             states,

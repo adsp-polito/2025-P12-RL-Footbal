@@ -163,21 +163,13 @@ class FootballMultiEnv(MultiAgentEnv):
                 low=-1.0, high=1.0, shape=(7,), dtype=np.float32
             )
 
-        # ALL POSSIBLE ROLES (used for one-hot embedding in observations)
-        self.roles_list = [
-            "LW", "RW", "CF", "LCF", "RCF", "SS", "ATT",    # Attackers
-            "LCB", "RCB", "CB", "DEF",                      # Defenders
-            "GK"                                            # Goalkeeper
-        ]
-
         # OBSERVATION SPACES
         # Each agent observes:
         # [self_x, self_y, self_has_ball] +
         # [ball_x, ball_y, ball_vx, ball_vy] +
         # [goal_x, goal_y] +
         # For each other player:
-        #   [player_x, player_y, action_code, visible_flag, team_flag, has_ball_flag] +
-        # One-hot encoding of agent role
+        #   [player_x, player_y, action_code, visible_flag, team_flag, has_ball_flag]
         #
         # action_code = one-hot or discrete integer (0=idle, 1=move, 2=pass, 3=shoot, 4=tackle, ...)
         # visible_flag = 1 if in FOV, 0 otherwise
@@ -188,8 +180,7 @@ class FootballMultiEnv(MultiAgentEnv):
             3 +   # self_x, self_y, self_has_ball
             4 +   # ball_x, ball_y, ball_vx, ball_vy
             2 +   # goal_x, goal_y
-            (len(self.agents) - 1) * 6 +  # info for each other player
-            len(self.roles_list)          # one-hot role embedding
+            (len(self.agents) - 1) * 6  # info for each other player
         )
 
         self.observation_spaces = {
@@ -810,14 +801,6 @@ class FootballMultiEnv(MultiAgentEnv):
                     obs.extend([ox, oy, action_code, 0.0, team_flag, has_ball_flag])  # not visible but known
                 else:
                     obs.extend([0.0, 0.0, 0.0, 0.0, team_flag, has_ball_flag])  # never seen
-
-        # Role one-hot encoding
-        role_code = [0.0] * len(self.roles_list)
-        role = self.players[agent_id].get_role()
-        if role in self.roles_list:
-            role_code[self.roles_list.index(role)] = 1.0
-
-        obs.extend(role_code)
 
         expected_dim = self.observation_spaces[agent_id].shape[0]
         assert len(obs) == expected_dim, (
