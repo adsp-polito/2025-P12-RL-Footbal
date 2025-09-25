@@ -7,8 +7,6 @@ This module provides a function to generate the configuration dictionary
 for any training or testing setup, with override options for key parameters.
 """
 
-from typing import Literal
-
 def get_config(
     fps: int = 24,
     seconds: int = 10,

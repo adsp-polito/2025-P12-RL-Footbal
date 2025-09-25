@@ -41,15 +41,14 @@ def get_reward(player: BasePlayer,
 
     # Dispatch logic
     if role in attacker_roles:
-        return attacker_reward(agent_id, player, pos_reward, context)
+        return attacker_reward(agent_id, player, pos_reward, ball, context)
     elif role in defender_roles:
-        return defender_reward(agent_id, player, pos_reward, context)
+        return defender_reward(agent_id, player, pos_reward, ball, context)
     elif role in goalkeeper_roles:
         return goalkeeper_reward(agent_id, player, pos_reward, context)
     else:
         # Unknown role → neutral reward
         return 0.0
-
 
 
 def get_position_reward_from_grid(pitch: Pitch,
@@ -69,7 +68,7 @@ def get_position_reward_from_grid(pitch: Pitch,
     return reward_grid[i, j]
 
 
-def attacker_reward(agent_id, player, pos_reward, context):
+def attacker_reward(agent_id, player, pos_reward, ball, context):
     """
     Attacker reward function:
     - Prioritizes goals and successful passes.
@@ -82,6 +81,17 @@ def attacker_reward(agent_id, player, pos_reward, context):
     # BASE: positioning + time penalty
     reward += pos_reward                     # small dense feedback
     reward -= 0.02                           # time malus (avoid stalling)
+
+    # BALL CHASING
+    if ball is not None and ball.get_owner() is None:
+        # Distance from player to ball (in meters)
+        x_p, y_p = denormalize(*player.get_position())
+        x_b, y_b = denormalize(*ball.get_position())
+        dist_to_ball = np.linalg.norm([x_b - x_p, y_b - y_p])
+
+        # Inverse distance reward (closer = better)
+        # Positive reward up to ~20 meters, then decays to 0
+        reward += max(0.0, 2.0 - 0.1 * dist_to_ball)    # range [0, 2]
 
     # POSSESSION / OUT
     if context.get("possession_lost", False):
@@ -143,7 +153,7 @@ def attacker_reward(agent_id, player, pos_reward, context):
 
     return reward
 
-def defender_reward(agent_id, player, pos_reward, context):
+def defender_reward(agent_id, player, pos_reward, ball, context):
     """
     Defender reward function:
     - Prioritizes preventing goals.
@@ -156,6 +166,15 @@ def defender_reward(agent_id, player, pos_reward, context):
     # BASE
     reward += pos_reward          # dense shaping
     reward += 0.01                # small time survival bonus
+
+    # BALL CHASING (less aggressive than attackers)
+    if ball is not None and ball.get_owner() is None:
+        x_p, y_p = denormalize(*player.get_position())
+        x_b, y_b = denormalize(*ball.get_position())
+        dist_to_ball = np.linalg.norm([x_b - x_p, y_b - y_p])
+
+        # Smaller incentive (up to ~20 meters)
+        reward += max(0.0, 1.0 - 0.05 * dist_to_ball)   # range [0, 1]
 
     # DEFENSIVE ACTIONS
     if context.get("tackle_success", False):
