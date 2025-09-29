@@ -253,12 +253,12 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = True):
             eval_env = FootballMultiEnv(cfg["env_config"])
             save_render = os.path.join(cfg["paths"]["save_render_dir"], f"episode_{ep}.mp4")
 
-            cumulative_reward, stats = evaluate_and_render_multi(
+            cumulative_reward = evaluate_and_render_multi(
                 algo, eval_env, Pitch(),
                 save_path=save_render,
                 episode=ep,
                 fps=cfg["fps"],
-                policy_mapping_fn=policy_mapping_fn,  # 🔑 pass mapping
+                policy_mapping_fn=policy_mapping_fn,
                 **cfg["render"],
             )
 
@@ -267,7 +267,6 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = True):
             for aid, rew in cumulative_reward.items():
                 role = eval_env.players[aid].get_role()
                 print(f"  {aid:10s} ({role}) -> {rew:.2f}")
-            print("Extra stats:", stats)
 
     # SAVE MODEL
     checkpoint_dir = algo.save(os.path.abspath(cfg["paths"]["save_model_path"]))

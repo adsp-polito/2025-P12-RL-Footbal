@@ -93,12 +93,6 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0, fps=24,
 
 
 
-
-
-
-
-
-
 def evaluate_and_render_multi(
     model,
     env,
@@ -113,34 +107,18 @@ def evaluate_and_render_multi(
     show_fov=False,
     show_names=False,      # If True, shows agent IDs above players
     deterministic=True,    # If True, agents act greedily
-    debug=False,           # If True, print per-agent action debug info
+    debug=False,           # If True, print per-agent debug info
     policy_mapping_fn=None # Optional: mapping from agent_id → policy_id (role-based setup)
 ):
     """
     Evaluate a trained RLlib PPO model in a multi-agent football environment
-    (new API stack, compatible with both one-policy-per-agent and role-based).
-
-    Args:
-        model: Trained RLlib Algorithm object (with RLModules).
-        env: Environment instance (FootballMultiEnv).
-        pitch: Pitch instance for rendering.
-        save_path (str, optional): Path to save video (mp4).
-        episode (int): Episode number (for logging).
-        fps (int): Frames per second for rendering.
-        deterministic (bool): If True, actions are greedy (argmax or mean).
-        debug (bool): If True, print debug info per step.
-        policy_mapping_fn (callable, optional): Maps agent_id → policy_id.
-            - If None: assumes one policy per agent (policy_id == agent_id).
-            - If provided: role-based (e.g. all attackers share same policy).
-
-    Returns:
-        dict: Cumulative rewards per agent for this evaluation episode.
+    (new API stack). This version only tracks cumulative rewards and rendering.
     """
 
     # Reset environment
     obs, _ = env.reset()
 
-    # Initialize reward and rendering trackers
+    # Track rewards and rendering states
     states = [env.get_render_state()]
     cumulative_rewards = {agent: 0.0 for agent in env.agents}
 
@@ -153,53 +131,42 @@ def evaluate_and_render_multi(
         action_dict = {}
 
         for agent_id in env.agents:
-            # Select policy_id depending on mapping mode
-            if policy_mapping_fn:
-                policy_id = policy_mapping_fn(agent_id)
-            else:
-                policy_id = agent_id  # one-policy-per-agent mode
-
-            # Retrieve the correct RLModule
+            # Select policy
+            policy_id = policy_mapping_fn(agent_id) if policy_mapping_fn else agent_id
             module = model.get_module(policy_id)
 
-            # Convert obs to tensor with batch dimension
+            # Obs tensor
             obs_array = torch.tensor(
                 np.array(obs[agent_id], dtype=np.float32).reshape(1, -1),
                 dtype=torch.float32
             )
 
-            # Forward pass through RLModule
+            # Forward inference
             with torch.no_grad():
                 out = module.forward_inference({"obs": obs_array})
 
-            # Get action distribution
+            # Build distribution
             dist_inputs = out["action_dist_inputs"]
             dist_class = module.get_train_action_dist_cls()
             dist = dist_class.from_logits(dist_inputs)
 
-            # Choose action (greedy vs stochastic)
+            # Choose action
             if deterministic:
-                if hasattr(dist, "loc"):  
-                    # Gaussian distribution (continuous actions)
-                    action = dist.loc
-                else:
-                    # Categorical distribution (discrete actions)
-                    action = torch.argmax(dist_inputs, dim=-1)
+                action = dist.loc if hasattr(dist, "loc") else torch.argmax(dist_inputs, dim=-1)
             else:
                 action = dist.sample()
 
-            # Convert to numpy for env
+            # Convert to numpy
             action = np.array(action.cpu().numpy()).flatten()
-
             if debug:
                 print(f"[Episode {episode}] Agent={agent_id}, Policy={policy_id}, Action={action}")
 
             action_dict[agent_id] = action
 
-        # Step environment
+        # Step env
         obs, rewards, terminated, truncated, infos = env.step(action_dict)
 
-        # Update cumulative rewards
+        # Update rewards
         for agent, r in rewards.items():
             cumulative_rewards[agent] += r
 
@@ -223,4 +190,4 @@ def evaluate_and_render_multi(
         )
         anim.save(save_path, writer="ffmpeg", fps=fps)
 
-    return cumulative_rewards, {}  # {} placeholder for extra stats
+    return cumulative_rewards
