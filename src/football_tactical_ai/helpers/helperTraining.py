@@ -10,17 +10,22 @@ from football_tactical_ai.configs import configTrainSingleAgent as CFG_SA
 from football_tactical_ai.helpers.helperFunctions import ensure_dirs
 from football_tactical_ai.helpers.helperEvaluation import evaluate_and_render
 
-import ray
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
 from football_tactical_ai.env.scenarios.multiAgent.multiAgentEnv import FootballMultiEnv
 from football_tactical_ai.configs import configTrainMultiAgent as CFG_MA
 from football_tactical_ai.helpers.helperEvaluation import evaluate_and_render_multi
 
-import warnings, logging
-
+import warnings
+import ray
+import logging
+ray.init(ignore_reinit_error=True, log_to_driver=False)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 logging.getLogger("ray").setLevel(logging.ERROR)
+
+# Reduce RLlib/Ray log verbosity
+logger = logging.getLogger("ray")
+logger.setLevel(logging.ERROR)
 
 
 def train_SingleAgent(scenario="move"):
@@ -119,94 +124,102 @@ def train_SingleAgent(scenario="move"):
 
 
 def env_creator(config):
-    """Environment creator required by RLlib."""
+    """Environment creator required by RLlib (wraps FootballMultiEnv)."""
     return FootballMultiEnv(config)
 
 
-def train_MultiAgent(scenario: str = "multiagent"):
+def make_schedule_fn(schedule: list):
     """
-    Train a PPO agent with RLlib on the specified multi-agent scenario.
-    Scenario: attackers vs defenders (+ goalkeeper).
+    Convert a schedule [[t0, v0], [t1, v1], ...] into a function f(timestep) → value.
+
+    Args:
+        schedule (list): List of [timestep, value] pairs.
     
-    This version assigns **one distinct policy per agent**:
-    - Each attacker, defender, and goalkeeper gets its own neural network.
-    - This allows full specialization of behaviors per agent.
-    
-    Differences from shared policy version:
-    - No need to rely on role one-hot embedding (but it can stay, harmless).
-    - Higher compute cost, since multiple networks are optimized separately.
-    
-    Compatible with:
-    - Gymnasium >= 0.29
-    - Ray / RLlib >= 2.30
+    Returns:
+        function: A function that interpolates the value according to the timestep.
+    """
+    def fn(timestep: int):
+        # Linear interpolation between schedule points
+        for i in range(len(schedule) - 1):
+            t0, v0 = schedule[i]
+            t1, v1 = schedule[i + 1]
+            if t0 <= timestep < t1:
+                alpha = (timestep - t0) / float(t1 - t0)
+                return v0 + alpha * (v1 - v0)
+        return schedule[-1][1]  # after the last point → last value
+    return fn
+
+
+def train_MultiAgent(scenario: str = "multiagent", role_based: bool = True):
+    """
+    Train a PPO multi-agent setup with RLlib (new API stack).
+
+    Args:
+        scenario (str): Name of the scenario defined in CFG_MA.SCENARIOS.
+        role_based (bool): 
+            - If True → one shared policy per role (attacker, defender, goalkeeper).
+            - If False → one independent policy per agent (e.g. att_1, att_2, def_1, gk_1).
     """
 
-    # ENVIRONMENT REGISTRATION
-    # Register the football environment with RLlib
+    # Register env with RLlib
     register_env("football_multi_env", env_creator)
 
     # Load scenario configuration
     cfg = CFG_MA.SCENARIOS[scenario]
-
-    # Ensure save directories exist
     ensure_dirs(cfg["paths"]["save_render_dir"])
     ensure_dirs(os.path.dirname(cfg["paths"]["save_model_path"]))
 
-    # Extract key parameters
-    fps = cfg["fps"]
-    episodes = cfg["episodes"]
-    max_steps_per_episode = cfg["env_config"]["max_steps"]
-    eval_every = cfg["eval_every"]
-
-    # Pitch instance (used for rendering evaluation videos)
-    pitch = Pitch()
-
-    # Initialize Ray (skip if already running)
-    if not ray.is_initialized():
-        ray.init(ignore_reinit_error=True, log_to_driver=False)
-
-    # POLICY DEFINITION
-    # Create a temporary environment to extract all agent IDs and spaces
+    # Build a base environment to extract obs/action spaces
     base_env = FootballMultiEnv(cfg["env_config"])
-    obs_space = base_env.observation_space("att_1")   # same format for all agents
-    act_space = base_env.action_space("att_1")        # same format for all agents
-    agent_ids = base_env.agents                       # list of all agent IDs
+    obs_space = base_env.observation_space("att_1")  # same format for all agents
+    act_space = base_env.action_space("att_1")
 
-    # Define one policy per agent (e.g., att_1, att_2, def_1, gk_1, ...)
-    policies = {
-        agent_id: (
-            None,      # default RLlib PPO policy class
-            obs_space, # observation space for this agent
-            act_space, # action space for this agent
-            {}         # no extra config
-        )
-        for agent_id in agent_ids
-    }
+    # Define policies and mapping
+    if role_based:
+        policies = {
+            "attacker_policy": (None, obs_space, act_space, {}),
+            "defender_policy": (None, obs_space, act_space, {}),
+            "goalkeeper_policy": (None, obs_space, act_space, {}),
+        }
 
-    # RLlib PPO CONFIGURATION
+        def policy_mapping_fn(agent_id, *args, **kwargs):
+            if agent_id.startswith("att"): return "attacker_policy"
+            if agent_id.startswith("def"): return "defender_policy"
+            if agent_id.startswith("gk"):  return "goalkeeper_policy"
+    else:
+        policies = {
+            agent_id: (None, obs_space, act_space, {})
+            for agent_id in base_env.agents
+        }
+        policy_mapping_fn = lambda agent_id, *args, **kwargs: agent_id
+
+    # Handle LR and entropy schedules (constant or schedule list)
+    lr = cfg["rllib"].get("lr_schedule", cfg["rllib"]["lr"])
+    entropy_coeff = cfg["rllib"].get("entropy_coeff_schedule", cfg["rllib"]["entropy_coeff"])
+
+    # RLlib PPO configuration
     config = (
         PPOConfig()
         .environment("football_multi_env", env_config=cfg["env_config"])
         .framework(cfg["rllib"]["framework"])
         .training(
-            lr=cfg["rllib"]["lr"],
+            lr=lr,
             gamma=cfg["rllib"]["gamma"],
             lambda_=cfg["rllib"]["lambda"],
-            entropy_coeff=cfg["rllib"]["entropy_coeff"],
+            entropy_coeff=entropy_coeff,
             train_batch_size=cfg["rllib"]["train_batch_size"],
             minibatch_size=cfg["rllib"]["minibatch_size"],
             num_epochs=cfg["rllib"]["num_epochs"],
-            model=cfg["rllib"]["model"],  # NN architecture
         )
+        .rl_module(model_config=cfg["rllib"]["model"])  # proper new API way
         .env_runners(
             num_env_runners=cfg["rllib"]["num_workers"],
             rollout_fragment_length=cfg["rllib"]["rollout_fragment_length"],
         )
         .multi_agent(
-            policies=policies,  # one policy per agent
-            # Mapping function: each agent uses its own policy with same ID
-            policy_mapping_fn=lambda agent_id, *args, **kwargs: agent_id,
-            policies_to_train=list(policies.keys()),  # train all policies
+            policies=policies,
+            policy_mapping_fn=policy_mapping_fn,
+            policies_to_train=list(policies.keys()),
         )
     )
 
@@ -215,77 +228,47 @@ def train_MultiAgent(scenario: str = "multiagent"):
 
     # LOGGING HEADER
     print("\n" + "=" * 100)
-    print("Starting PPO Multi-Agent Training (One Policy per Agent)".center(100))
+    print("Starting PPO Multi-Agent Training".center(100))
     print("=" * 100)
+
     print(f"{'Scenario:':25} {scenario}")
-    print(f"{'Episodes:':25} {episodes}")
-    print(f"{'Evaluation every:':25} {eval_every} episodes")
-    print(f"{'FPS:':25} {fps}")
-    print(f"{'Steps per episode:':25} {max_steps_per_episode}")
-    print(f"{'Total timesteps:':25} {episodes * max_steps_per_episode}")
+    print(f"{'Episodes:':25} {cfg['episodes']}")
     print(f"{'Time per episode:':25} {cfg['seconds_per_episode']} seconds")
+    print(f"{'Evaluation every:':25} {cfg['eval_every']} episodes")
+    print(f"{'FPS:':25} {cfg['fps']}")
+    print(f"{'Steps per episode:':25} {cfg['env_config']['max_steps']}")
+    print(f"{'Total timesteps:':25} {cfg['episodes'] * cfg['env_config']['max_steps']}")
+
     print("\nRLlib Training Parameters:")
     for key, val in cfg["rllib"].items():
         print(f"  {key:25} {val}")
     print("=" * 100 + "\n")
 
     # TRAINING LOOP
-    eval_rewards, eval_episodes = [], []
-
-    for ep in trange(1, episodes + 1, desc="Episodes Progress", initial=1):
+    for ep in trange(1, cfg["episodes"] + 1, desc="Episodes Progress"):
         result = algo.train()
 
         # Evaluate at first, every eval_every, and last episode
-        if ep % eval_every == 0 or ep in (1, episodes):
-            save_render = os.path.join(
-                cfg["paths"]["save_render_dir"], f"episode_{ep}.mp4"
-            )
+        if ep % cfg["eval_every"] == 0 or ep in (1, cfg["episodes"]):
             eval_env = FootballMultiEnv(cfg["env_config"])
+            save_render = os.path.join(cfg["paths"]["save_render_dir"], f"episode_{ep}.mp4")
 
-            # Run evaluation episode and save render
-            cumulative_reward = evaluate_and_render_multi(
-                algo, eval_env, pitch,
+            cumulative_reward, stats = evaluate_and_render_multi(
+                algo, eval_env, Pitch(),
                 save_path=save_render,
                 episode=ep,
-                fps=fps,
+                fps=cfg["fps"],
+                policy_mapping_fn=policy_mapping_fn,  # 🔑 pass mapping
                 **cfg["render"],
             )
 
-            # Print rewards per agent
-            print(f"\n[Episode {ep}] Evaluation results")
-            for agent_id, rew in cumulative_reward.items():
-                role = eval_env.players[agent_id].get_role()
-                print(f"  {agent_id:10s} ({role}) -> {rew: .2f}")
+            # Log results
+            print(f"\n[Episode {ep}] Evaluation results:")
+            for aid, rew in cumulative_reward.items():
+                role = eval_env.players[aid].get_role()
+                print(f"  {aid:10s} ({role}) -> {rew:.2f}")
+            print("Extra stats:", stats)
 
-            # Save evaluation history
-            eval_rewards.append(cumulative_reward)
-            eval_episodes.append(ep)
-
-    # SAVE MODEL CHECKPOINT
-    save_model_path = os.path.abspath(cfg["paths"]["save_model_path"])
-    checkpoint_dir = algo.save(save_model_path)
+    # SAVE MODEL
+    checkpoint_dir = algo.save(os.path.abspath(cfg["paths"]["save_model_path"]))
     print(f"Model saved at {checkpoint_dir}")
-
-    # PLOT EVALUATION REWARDS
-    if eval_rewards:
-        plt.close('all')
-        agent_ids = list(eval_rewards[0].keys())
-        n_agents = len(agent_ids)
-
-        # One subplot per agent
-        fig, axes = plt.subplots(n_agents, 1, figsize=(10, 4 * n_agents), sharex=True)
-        if n_agents == 1:
-            axes = [axes]
-
-        for idx, agent_id in enumerate(agent_ids):
-            rewards_agent = [d[agent_id] for d in eval_rewards]
-            role = eval_env.players[agent_id].get_role()
-            axes[idx].plot(eval_episodes, rewards_agent, marker='o')
-            axes[idx].set_title(f"{scenario} - Cumulative Reward for {agent_id} ({role})", fontsize=14)
-            axes[idx].set_ylabel("Reward")
-            axes[idx].grid(True)
-
-        axes[-1].set_xlabel("Episodes")
-        plt.tight_layout()
-        plt.savefig(cfg["paths"]["plot_path"])
-        plt.show()

@@ -80,7 +80,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
 
     # BASE: positioning + time penalty
     reward += pos_reward                     # small dense feedback
-    reward -= 0.02                           # time malus (avoid stalling)
+    reward -= 0.005                           # time malus (avoid stalling)
 
     # BALL CHASING
     if ball is not None and ball.get_owner() is None:
@@ -91,65 +91,62 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
 
         # Inverse distance reward (closer = better)
         # Positive reward up to ~20 meters, then decays to 0
-        reward += max(0.0, 2.0 - 0.1 * dist_to_ball)    # range [0, 2]
+        reward += max(0.0, 0.1 - 0.005 * dist_to_ball)    # range [0, 0.1]
 
     # POSSESSION / OUT
     if context.get("possession_lost", False):
-        reward -= 5.0                        # losing the ball
+        reward -= 0.5                       # losing the ball
     if context.get("ball_out_by") == agent_id:
-        reward -= 7.5                        # kicking ball out
+        reward -= 1.0                       # kicking ball out
 
     # GOALS
     if context.get("goal_scored", False):
-        reward += 25.0                       # scoring
+        reward += 8.0                       # scoring
     if context.get("goal_team") == player.team:
-        reward += 20.0                       # team goal bonus (shared reward)
+        reward += 6.0                       # team goal bonus (shared reward)
 
     # PASSING
     if context.get("start_pass_bonus", False):
-        reward += 2.5                        # small bonus for attempting pass
+        reward += 0.2                        # small bonus for attempting pass
 
     if context.get("pass_quality") is not None:
-        reward += 5.0 * context["pass_quality"]   # scaled by quality (0–5)
+        reward += 0.5 * context["pass_quality"]   # scaled by quality (0–0.5)
 
     if context.get("invalid_pass_attempt", False):
-        reward -= 0.5                        
+        reward -= 0.05                      
 
     if context.get("pass_completed", False):
         # Reward both passer and receiver
-        if "pass_to" in context:             # passer
-            reward += 12.0
-        elif "pass_from" in context:         # receiver
-            reward += 10.0
+        if "pass_to" in context:             # receiver
+            reward += 0.2
+        elif "pass_from" in context:         # passer
+            reward += 0.4
         # Small team bonus for cooperation
-        reward += 2.0
-
-    if context.get("ball_out_by") == agent_id and context.get("pass_attempted", False):
-        reward -= 3.0                        # attempted pass → out
+        reward += 0.2
 
     # SHOOTING
     if context.get("start_shot_bonus", False):
-        reward += 3.0                        # reward intent
+        reward += 0.5                        # reward intent
         reward += context.get("shot_positional_quality", 0.0)
 
     if context.get("shot_quality") is not None:
-        reward += 5.0 * context["shot_quality"]   # scaled 0–5
+        reward += 0.5 * context["shot_quality"]   # scaled 0–0.5
 
     if context.get("invalid_shot_direction", False):
-        reward -= 0.5
+        reward -= 0.05
 
     if context.get("invalid_shot_attempt", False):
-        reward -= 0.5
+        reward -= 0.05
 
     alignment = context.get("shot_alignment")
     if alignment is not None:
-        reward += (2 * (alignment ** 3)) - 1  # shaping [-1, 1]
+        reward += alignment ** 2 - 0.25  # shaping [-0.25, 0.75]
 
     # FIELD OF VIEW
     if context.get("fov_visible") is True:
-        reward += 0.5
+        reward += 0.1
     elif context.get("fov_visible") is False:
-        reward -= 0.1
+        reward -= 0.05
 
     return reward
 
@@ -164,8 +161,8 @@ def defender_reward(agent_id, player, pos_reward, ball, context):
     reward = 0.0
 
     # BASE
-    reward += pos_reward          # dense shaping
-    reward += 0.01                # small time survival bonus
+    reward += pos_reward            # dense shaping
+    reward += 0.002                 # small time survival bonus
 
     # BALL CHASING (less aggressive than attackers)
     if ball is not None and ball.get_owner() is None:
@@ -174,38 +171,38 @@ def defender_reward(agent_id, player, pos_reward, ball, context):
         dist_to_ball = np.linalg.norm([x_b - x_p, y_b - y_p])
 
         # Smaller incentive (up to ~20 meters)
-        reward += max(0.0, 1.0 - 0.05 * dist_to_ball)   # range [0, 1]
+        reward += max(0.0, 0.1 - 0.005 * dist_to_ball)   # range [0, 0.1]
 
     # DEFENSIVE ACTIONS
     if context.get("tackle_success", False):
-        reward += 15.0            # strong bonus for winning ball
+        reward += 0.8          # strong bonus for winning ball
     if context.get("interception_success", False):
-        reward += 12.0            # slightly less than tackle
+        reward += 0.7            # slightly less than tackle
 
     # FAKE / FAILED ACTIONS
     if context.get("fake_tackle", False):
-        reward -= 0.5
+        reward -= 0.1
     if context.get("invalid_shot_attempt", False):
-        reward -= 0.5
+        reward -= 0.05
     if context.get("invalid_shot_direction", False):
-        reward -= 0.5
+        reward -= 0.05
 
     # BALL OUT
     if context.get("ball_out_by") is not None:
-        reward += 5.0             # forcing out = good
+        reward += 0.3             # forcing out = good
         if context.get("ball_out_by") == agent_id:
-            reward += 2.0         # if you caused it
+            reward += 0.2         # if you caused it
 
     # GOALS CONCEDED
     if context.get("goal_scored", False):
         if context.get("goal_team") != player.team:
-            reward -= 25.0        # conceding is worst outcome
+            reward -= 6.0        # conceding is worst outcome
 
     # FIELD OF VIEW
     if context.get("fov_visible") is True:
-        reward += 0.5
+        reward += 0.1
     elif context.get("fov_visible") is False:
-        reward -= 0.1
+        reward -= 0.05
 
     return reward
 
@@ -222,37 +219,37 @@ def goalkeeper_reward(agent_id, player, pos_reward, context):
 
     # BASE
     reward += pos_reward          # grid shaping
-    reward += 0.01                # small time survival bonus
+    reward += 0.002               # small time survival bonus
 
     # SAVES
     if context.get("blocked", False):
-        reward += 15.0            # successful save
+        reward += 1.5            # successful save
     if context.get("deflected", False):
-        reward += 10.0            # save via deflection
+        reward += 0.8            # save via deflection
     if context.get("dive_score") is not None and not context.get("wasted_dive", False):
-        reward += context["dive_score"] * 7.5   # scaled by dive quality
+        reward += 0.5 * context["dive_score"]  # scaled [0, 0.5]
 
     # FAILED ACTIONS
     if context.get("wasted_dive", False):
-        reward -= 0.5
+        reward -= 0.1
     if context.get("invalid_shot_attempt", False):
-        reward -= 0.5
+        reward -= 0.05
     if context.get("invalid_shot_direction", False):
-        reward -= 0.5
+        reward -= 0.05
 
     # BALL OUT
     if context.get("ball_out_by") is not None:
-        reward += 3.0             # putting ball out = acceptable
+        reward += 0.3           # putting ball out = acceptable
 
     # GOALS CONCEDED
     if context.get("goal_scored", False):
         if context.get("goal_team") != player.team:
-            reward -= 25.0        # conceding goal
+            reward -= 6.0        # conceding goal
 
     # FIELD OF VIEW
     if context.get("fov_visible") is True:
-        reward += 0.5
+        reward += 0.1
     elif context.get("fov_visible") is False:
-        reward -= 0.1
+        reward -= 0.05
 
     return reward

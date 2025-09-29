@@ -60,9 +60,7 @@ class PlayerDefender(BasePlayer):
             "speed": self.speed,
             "fov_angle": self.fov_angle,
             "fov_range": self.fov_range,
-            "tackling": self.tackling,
-            "marking": self.marking,
-            "anticipation": self.anticipation
+            "tackling": self.tackling
         }
 
     def get_role(self):
@@ -98,13 +96,12 @@ class PlayerDefender(BasePlayer):
         return success, dist
 
 
-    
     def execute_action(self, 
-                    action: np.ndarray, 
-                    time_step: float, 
-                    x_range: float, 
-                    y_range: float, 
-                    ball: Ball = None) -> dict:
+                   action: np.ndarray, 
+                   time_step: float, 
+                   x_range: float, 
+                   y_range: float, 
+                   ball: Ball = None) -> dict:
         """
         Executes a continuous action for a defensive player (movement, tackle, optional shooting).
 
@@ -120,11 +117,11 @@ class PlayerDefender(BasePlayer):
             dict: Contextual information about the executed actions
         """
 
-        # Initialize context
+        # Initialize context dictionary (output for reward calculation)
         context = {
             "tackle_success": False,
             "fake_tackle": False,
-            "interception_success": False,   # will be set True if tackle/interception succeeds
+            "interception_success": False,
             "shot_attempted": False,
             "invalid_shot_attempt": False,
             "invalid_shot_direction": False,
@@ -134,7 +131,7 @@ class PlayerDefender(BasePlayer):
             "shot_power": None
         }
 
-        # Movement setup
+        # Movement decoding
         dx, dy = action[0], action[1]
         direction = np.array([dx, dy])
         norm = np.linalg.norm(direction)
@@ -148,34 +145,40 @@ class PlayerDefender(BasePlayer):
             direction = np.array([0.0, 0.0])
             fov_visible = None
 
-        # Apply movement from BasePlayer
+        # Apply base movement (handled by BasePlayer)
         super().execute_action(action, time_step, x_range, y_range)
 
-        # Save fov info in context
+        # Save FOV information in context
         context["fov_visible"] = fov_visible
 
+        # Update tackle cooldown timer
+        self.tackle_timer = max(0.0, self.tackle_timer - time_step)
+
         # Tackle attempt
-        self.tackle_timer = max(0.0, self.tackle_timer - time_step)  # cooldown update
-
-        if len(action) >= 3 and action[2] > 0.5:  # tackle_flag
-
+        if len(action) >= 3 and action[2] > 0.5:  # tackle_flag pressed
             self.current_action = "tackle"
 
-            success, distance = self.attempt_tackle(ball, time_step)
-            context["tackle_success"] = success
-
-            # Fake tackle → too far or cooldown active
-            if distance > self.tackle_range or self.tackle_timer > 0.0:
+            if self.tackle_timer > 0.0:
+                # Tackle is on cooldown → fake tackle, cannot succeed
                 context["fake_tackle"] = True
                 context["tackle_success"] = False
+            else:
+                # Try to execute tackle
+                success, distance = self.attempt_tackle(ball, time_step)
+                context["tackle_success"] = success
 
-            # If tackle was actually successful → mark interception
-            if context["tackle_success"]:
-                context["interception_success"] = True
+                # Too far from the ball → fake tackle
+                if distance > self.tackle_range:
+                    context["fake_tackle"] = True
+                    context["tackle_success"] = False
+
+                # If tackle was successful, mark interception and start cooldown
+                if context["tackle_success"]:
+                    context["interception_success"] = True
+                    self.tackle_timer = self.tackle_cooldown_time
 
         # Shooting attempt (clearance / emergency shot)
-        elif len(action) >= 7 and action[3] > 0.5:  # shoot_flag
-
+        elif len(action) >= 7 and action[3] > 0.5:  # shoot_flag pressed
             self.current_action = "shoot"
 
             power = np.clip(action[4], 0.0, 1.0)
@@ -204,9 +207,6 @@ class PlayerDefender(BasePlayer):
                 self.current_action = "idle"
 
         return context
-
-
-
 
     def copy(self):
         """

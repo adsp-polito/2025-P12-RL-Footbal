@@ -1,5 +1,5 @@
 """
-Multi-agent training settings
+Multi-agent training settings.
 This configuration file defines how the multi-agent football environment
 is set up and how RLlib should train PPO agents in this scenario.
 """
@@ -18,16 +18,16 @@ multiagent_params = {
     ),
 
     # Episode duration in real-world seconds
-    "seconds_per_episode": 20,
+    "seconds_per_episode": 15,
 
     # Frames per second (simulation runs at 24 steps per second)
     "fps": 24,
 
     # Total number of training episodes
-    "episodes": 5000,
+    "episodes": 10000,
 
     # Frequency of evaluation in episodes
-    "eval_every": 250,
+    "eval_every": 500,
 
     # Rendering configuration (used in evaluation/visualization)
     "render": {
@@ -46,74 +46,57 @@ multiagent_params = {
         "plot_path": "training/renders/multiAgent/multiAgentRewards.png",   # Reward curve output
     },
 
-    # Number of parallel environments used during training
-    "num_envs": 4,
-
     # Environment-specific settings for multi-agent scenario
     "env_settings": {
-        "n_attackers": 3,           # Number of attackers (Team A)
-        "n_defenders": 0,           # Number of defenders (Team B)
-        "include_goalkeeper": False # Whether to include a goalkeeper
+        "n_attackers": 3,            # Number of attackers (Team A)
+        "n_defenders": 0,            # Number of defenders (Team B)
+        "include_goalkeeper": False, # Whether to include a goalkeeper
+        # NOTE: increase defenders/GK here to test larger scenarios (e.g. 2v2, 3v3, 3v2+GK)
     },
 
     # RLlib PPO configuration parameters
     "rllib": {
-        "framework": "torch",    # Neural network backend (PyTorch)
+        "framework": "torch",  # Neural network backend
 
-        # Learning rate for optimizer
-        "lr": 5e-4,
-
-        # Learning rate schedule: defines how lr decreases as training progresses
-        # Format: [global_timestep, lr_value]
+        # Learning rate for optimizer (with schedule for decay)
+        "lr": 5e-5,
         "lr_schedule": [
-            [0,        5e-4],   # At step 0 → 0.0005
-            [800_000,  2e-4],   # At ~1/3 of training (800k steps) → 0.0002
-            [1_600_000, 1e-4],  # At ~2/3 of training (1.6M steps) → 0.0001
-            [2_400_000, 5e-5],  # At final step (2.4M steps) → 0.00005
+            [0,        5e-5],   
+            [500_000,  2e-5],   
+            [1_000_000, 1e-5]
         ],
 
-        # Discount factor for future rewards (high = long-term focus)
-        "gamma": 0.99,
-
-        # GAE (Generalized Advantage Estimation) parameter
+        # Discount factor & GAE
+        "gamma": 0.995,
         "lambda": 0.95,
 
-        # Entropy coefficient (encourages exploration)
-        "entropy_coeff": 0.03,
+        # Exploration
+        "entropy_coeff": 0.01,
 
-        # Training batch size (number of collected samples per update)
-        "train_batch_size": 5000,
+        # Rollout / Training settings
+        "train_batch_size": 16_000,     # Large enough for stable updates
+        "rollout_fragment_length": 400, # Steps per worker before sending batch
+        "minibatch_size": 256,          # For SGD updates
+        "num_epochs": 8,                # Gradient passes per batch
 
-        # Number of steps in each rollout fragment
-        "rollout_fragment_length": 300,
+        # Parallelism
+        "num_workers": 4,               # Number of rollout workers
+        "num_envs_per_worker": 2,       # Each worker runs 2 envs → total 8 envs in parallel
 
-        # Size of mini-batches used for gradient updates
-        "minibatch_size": 128,
-
-        # Number of epoches over each training batch
-        "num_epochs": 6,
-
-        # Number of parallel workers collecting rollouts
-        "num_workers": 3,
-
-        # Number of environments per worker
-        "num_envs_per_worker": 2,
-
-        # Neural network architecture for policy/value function
+        # Model architecture
         "model": {
-            "fcnet_hiddens": [512, 256],  # Two hidden layers with 512 and 256 neurons
-            "fcnet_activation": "relu"    # Activation function for hidden layers
+            "fcnet_hiddens": [256, 128],  # Hidden layers
+            "fcnet_activation": "relu",        # Non-linearity
         },
     },
 }
 
-# Build the full environment configuration by calling helper function
-# This ensures consistency in how episodes, fps, and players are initialized
+# Build the full environment configuration (ensures consistency)
 multiagent_params["env_config"] = get_config(
     fps=multiagent_params["fps"],
     seconds=multiagent_params["seconds_per_episode"],
     **multiagent_params["env_settings"]
 )
 
-# Register the scenario in the SCENARIOS dictionary
+# Register the scenario
 SCENARIOS["multiagent"] = multiagent_params

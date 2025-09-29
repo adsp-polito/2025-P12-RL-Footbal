@@ -55,22 +55,9 @@ class PlayerGoalkeeper(BasePlayer):
         self.position = [0.0, 0.0]
         self.last_action_direction = np.array([1.0, 0.0])  # last action direction
 
-
     def dive(self, direction: np.ndarray, ball: Ball) -> dict:
         """
-        Attempt a dive in the given direction and evaluate if the shot is blocked or deflected.
-
-        Args:
-            direction (np.ndarray): Dive direction vector (normalized).
-            ball (Ball): The ball object.
-
-        Returns:
-            dict: {
-                'dive_score': float,   # Reflex + reach effectiveness
-                'blocked': bool,       # True if shot was caught and stopped
-                'deflected': bool,     # True if shot was parried away
-                'wasted_dive': bool    # True if dive was too far
-            }
+        Attempt a dive in the given direction and evaluate if the shot is blocked or deflected
         """
         # Dive effectiveness based on reflexes and reach
         dive_score = 0.5 * self.reflexes + 0.5 * self.reach
@@ -79,7 +66,7 @@ class PlayerGoalkeeper(BasePlayer):
         ball_x, ball_y = denormalize(*ball.get_position())
         self_x, self_y = denormalize(*self.get_position())
         distance = np.linalg.norm([ball_x - self_x, ball_y - self_y])
-        reachable = distance <= (0.5 + self.reach)
+        reachable = distance <= (1.0 + self.reach)
 
         dive_successful = np.random.rand() < dive_score
 
@@ -97,10 +84,6 @@ class PlayerGoalkeeper(BasePlayer):
         # CASE 2: Deflection (redirect ball)
         incoming_velocity = np.array(ball.get_velocity())
         speed = np.linalg.norm(incoming_velocity)
-        if speed < 1e-6:
-            incoming_dir = np.array([1.0, 0.0])
-        else:
-            incoming_dir = incoming_velocity / speed
 
         # Use dive direction (normalized)
         if np.linalg.norm(direction) > 1e-6:
