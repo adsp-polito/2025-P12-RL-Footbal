@@ -3,7 +3,7 @@ from typing import Dict
 from football_tactical_ai.env.objects.ball import Ball
 from football_tactical_ai.env.objects.pitch import Pitch
 from football_tactical_ai.players.playerBase import BasePlayer
-from football_tactical_ai.helpers.helperFunctions import normalize, denormalize
+from football_tactical_ai.helpers.helperFunctions import denormalize
 
 
 def update_ball_state(ball: Ball,
@@ -19,8 +19,10 @@ def update_ball_state(ball: Ball,
     Handles dribbling, passing, shooting, free movement and post collisions.
     """
 
+
     dribble_offset = 0.01  # distance in front of the owner when dribbling
     owner_id = ball.get_owner()
+
 
     # 1. Shot: ball is released with velocity proportional to shot power
     if (shot_context and 
@@ -28,7 +30,7 @@ def update_ball_state(ball: Ball,
         shot_context.get("direction") is not None and 
         np.linalg.norm(shot_context["direction"]) > 1e-6 and 
         shot_context.get("power", 0.0) > 0.0 and
-        collision == False):
+        not collision):
 
         pitch_width = pitch.x_max - pitch.x_min
         pitch_height = pitch.y_max - pitch.y_min
@@ -46,58 +48,35 @@ def update_ball_state(ball: Ball,
         ball.set_velocity(velocity_norm)
         ball.set_owner(None)  # ball is now free
 
-    # 2. Pass: similar to shot, but with different intention
+        # Reset context after consuming
+        shot_context.clear()
+
+
+    # 2. Pass: ball is released toward chosen teammate
     elif (pass_context and 
-          pass_context.get("pass_by") and 
-          pass_context.get("direction") is not None and 
-          np.linalg.norm(pass_context["direction"]) > 1e-6 and 
-          pass_context.get("power", 0.0) > 0.0 and
-          collision == False):
+        pass_context.get("pass_by") and 
+        pass_context.get("direction") is not None and 
+        pass_context.get("power", 0.0) > 0.0 and
+        not collision):
 
         pitch_width = pitch.x_max - pitch.x_min
         pitch_height = pitch.y_max - pitch.y_min
 
-        # Base direction from action
-        direction = pass_context["direction"] / np.linalg.norm(pass_context["direction"])
+        passer_id = pass_context["pass_by"]
+        passer_pos = np.array(players[passer_id].get_position())
         power = pass_context["power"]
 
-        # Find best teammate as target
-        passer_id = pass_context["pass_by"]
-        passer_team = players[passer_id].team
-        passer_pos = np.array(players[passer_id].get_position())
-        best_target, best_angle = None, 999.0
-
-        for pid, p in players.items():
-            if pid == passer_id:
-                continue
-            if p.team != passer_team:
-                continue
-
-            teammate_pos = np.array(p.get_position())
-            vec_to_teammate = teammate_pos - passer_pos
-            dist = np.linalg.norm(vec_to_teammate)
-            if dist < 1e-6:
-                continue
-
-            vec_to_teammate /= dist
-            angle = np.degrees(np.arccos(np.clip(np.dot(direction, vec_to_teammate), -1, 1)))
-
-            if angle < best_angle:
-                best_angle = angle
-                best_target = pid
-
-        # If a target is reasonably aligned, snap towards them
-        if best_target is not None and best_angle < 30:  # within 30° cone
-            teammate_pos = np.array(players[best_target].get_position())
+        # Compute direction: target teammate if available, else raw
+        target_id = pass_context.get("pass_target_id")
+        if target_id and target_id in players:
+            teammate_pos = np.array(players[target_id].get_position())
             new_dir = teammate_pos - passer_pos
-            if np.linalg.norm(new_dir) > 1e-6:
-                new_dir = new_dir / np.linalg.norm(new_dir)
-                # Blend original dir with target dir (0.7 weight to target)
-                direction = 0.7 * new_dir + 0.3 * direction
-                direction /= np.linalg.norm(direction)
-                pass_context["pass_target_id"] = best_target
+            direction = new_dir / np.linalg.norm(new_dir) if np.linalg.norm(new_dir) > 1e-6 else np.array([1.0, 0.0])
+        else:
+            raw_dir = pass_context["direction"]
+            direction = raw_dir / np.linalg.norm(raw_dir) if np.linalg.norm(raw_dir) > 1e-6 else np.array([1.0, 0.0])
 
-        # Compute Velocity
+        # Compute normalized velocity (scaled by field size)
         velocity_real = direction * power
         velocity_norm = np.array([
             velocity_real[0] / pitch_width,
@@ -106,6 +85,10 @@ def update_ball_state(ball: Ball,
 
         ball.set_velocity(velocity_norm)
         ball.set_owner(None)  # ball is now free
+
+        # Reset context after consuming
+        pass_context.clear()
+
 
     # 3. Dribbling: ball stays close to the owner, slightly in front of their movement
     elif owner_id in players:

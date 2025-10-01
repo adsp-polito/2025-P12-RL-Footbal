@@ -1,27 +1,8 @@
 import numpy as np
 from football_tactical_ai.env.objects.pitch import Pitch
 
-# some good values were:
-# ATTACKERS:
-# - min_reward: -0.02
-# - max_reward: 0.1
-# DEFENDERS:
-# - min_reward: -0.02
-# - max_reward: 0.08
-# GOALKEEPERS:
-# - min_reward: -0.02
-# - max_reward: 0.08
-
-
-
-
 def is_out_of_play(pitch: Pitch, x: float, y: float) -> bool:
     return x < 0 or x > pitch.width or y < 0 or y > pitch.height
-
-
-import numpy as np
-from football_tactical_ai.env.objects.pitch import Pitch
-
 
 def build_attacker_grid(pitch: Pitch, 
                         role: str,

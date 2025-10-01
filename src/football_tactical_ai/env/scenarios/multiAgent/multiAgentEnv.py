@@ -371,35 +371,38 @@ class FootballMultiEnv(MultiAgentEnv):
             pass_context=self.pass_context
         )
 
-        # Step 3b: Check for possession loss by attackers
+      # Step 3b: Check for possession loss by attackers
         if new_owner:
-            
             new_owner_team = self.players[new_owner].team
 
-            if self.pass_owner and new_owner_team != self.players[self.pass_owner].team:
-                temp_context[new_owner]["interception_success"] = True 
-                self.pass_owner = None  # reset pass owner after interception
-
-            elif self.pass_owner and new_owner_team == self.players[self.pass_owner].team and new_owner != self.pass_owner:
+            if self.pass_owner:
                 target_id = self.pass_context.get("pass_target_id")
 
-                # If the pass reached the intended target
-                if target_id and new_owner == target_id:
-                    temp_context[new_owner]["pass_completed"] = True
-                    temp_context[new_owner]["pass_from"] = self.pass_owner
-                    temp_context[self.pass_owner]["pass_completed"] = True
-                    temp_context[self.pass_owner]["pass_to"] = new_owner
-                else:
-                    # Pass reached a teammate, but not the intended target
-                    temp_context[new_owner]["pass_completed"] = False
-                    temp_context[new_owner]["pass_from"] = self.pass_owner
-                    temp_context[self.pass_owner]["pass_completed"] = False
-                    temp_context[self.pass_owner]["pass_to"] = new_owner
-                    temp_context[self.pass_owner]["pass_missed_target"] = True
+                if new_owner_team != self.players[self.pass_owner].team:
+                    # Pass intercepted by opponent
+                    temp_context[new_owner]["interception_success"] = True
+                    temp_context[self.pass_owner]["pass_intercepted"] = True
 
-                # reset pass context
+                else:
+                    # Ball still within same team
+                    if target_id and new_owner == target_id:
+                        # Intended receiver got the ball
+                        temp_context[new_owner]["pass_completed"] = True
+                        temp_context[new_owner]["pass_from"] = self.pass_owner
+                        temp_context[self.pass_owner]["pass_completed"] = True
+                        temp_context[self.pass_owner]["pass_to"] = new_owner
+                    else:
+                        # Wrong teammate received the ball
+                        temp_context[new_owner]["pass_completed"] = False
+                        temp_context[new_owner]["pass_from"] = self.pass_owner
+                        temp_context[self.pass_owner]["pass_completed"] = False
+                        temp_context[self.pass_owner]["pass_to"] = new_owner
+                        temp_context[self.pass_owner]["pass_missed_target"] = True
+
+                # Reset pass context after resolution
                 self.pass_owner = None
                 self.pass_context["pass_target_id"] = None
+
 
         # Step 4: Check goal or out
         ball_x, ball_y = denormalize(*self.ball.get_position())
@@ -534,51 +537,83 @@ class FootballMultiEnv(MultiAgentEnv):
 
     def _process_shot_attempt(self, agent_id: str, context: dict):
         """
-        Process a shot attempt by an agent.
-        Args:
-            agent_id (str): ID of the agent attempting the shot.
-            context (dict): Context dictionary containing shot details.
+        Validate and register a shot attempt.
+        - Only stores info into self.shot_context.
+        - The actual detachment of the ball is handled in update_ball_state.
         """
+
+        direction = context.get("shot_direction")
+        power = context.get("shot_power", 0.0)
+
+        # Validate before setting context
+        if direction is None or np.linalg.norm(direction) < 1e-6 or power <= 0:
+            context["invalid_shot_attempt"] = True
+            return
 
         if self.ball.get_owner() == agent_id and context.get("fov_visible", False):
             self.shot_context.update({
                 "shot_by": agent_id,
-                "direction": context.get("shot_direction"),
-                "power": context.get("shot_power")
+                "direction": direction,
+                "power": power
             })
             self.shot_owner = agent_id
             self.shot_just_started = True
-            self.ball.set_owner(None)
-
+            context["shot_attempted"] = True
         else:
             context["invalid_shot_attempt"] = True
-            context["shot_power"] = 0.0
-            context["shot_direction"] = None
             context["shot_attempted"] = False
+
 
     def _process_pass_attempt(self, agent_id: str, context: dict):
         """
-        Process a pass attempt by an agent.
-        Args:
-            agent_id (str): ID of the agent attempting the pass.
-            context (dict): Context dictionary containing pass details.
+        Validate and register a pass attempt.
+        - Only stores info into self.pass_context.
+        - The actual detachment of the ball is handled in update_ball_state.
         """
 
-        if self.ball.get_owner() == agent_id and context.get("fov_visible", False):
-            self.pass_context.update({
-                "pass_by": agent_id,
-                "direction": context.get("pass_direction"),
-                "power": context.get("pass_power")
-            })
-            self.pass_owner = agent_id
-            self.pass_just_started = True
-            self.ball.set_owner(None)  # ball now travels
+        power = context.get("pass_power", 0.0)
 
-        else:
+        if self.ball.get_owner() != agent_id or power <= 0:
             context["invalid_pass_attempt"] = True
-            context["pass_power"] = 0.0
-            context["pass_direction"] = None
             context["pass_attempted"] = False
+            return
+
+        passer = self.players[agent_id]
+        passer_team = passer.team
+        passer_pos = np.array(passer.get_position())
+
+        teammates = [(pid, p) for pid, p in self.players.items() if p.team == passer_team and pid != agent_id]
+        if not teammates:
+            context["invalid_pass_attempt"] = True
+            context["pass_attempted"] = False
+            return
+
+        # Closest teammate
+        target_id, target = min(teammates, key=lambda kv: np.linalg.norm(np.array(kv[1].get_position()) - passer_pos))
+        target_pos = np.array(target.get_position())
+
+        direction = target_pos - passer_pos
+        if np.linalg.norm(direction) > 1e-6:
+            direction = direction / np.linalg.norm(direction)
+        else:
+            direction = np.array([1.0, 0.0])  # fallback
+
+        # Save pass context
+        self.pass_context.update({
+            "pass_by": agent_id,
+            "pass_target_id": target_id,
+            "direction": direction,
+            "power": power
+        })
+
+        self.pass_owner = agent_id
+        self.pass_just_started = True
+
+        context["pass_attempted"] = True
+        context["pass_target_id"] = target_id
+        context["pass_power"] = power
+        context["pass_direction"] = direction.tolist()
+        context["fov_pass"] = self._is_in_fov(passer, target)
 
 
     def _assign_ball_if_nearby(self, threshold: float = 0.017):  # in normalized units ~ 2 meter

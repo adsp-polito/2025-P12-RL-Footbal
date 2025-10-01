@@ -291,7 +291,7 @@ class BasePlayer(ABC):
 
         return shot_quality, shot_direction, shot_power
     
-    def passage(self, desired_direction, desired_power, enable_fov=True):
+    def pass_ball(self, desired_direction, desired_power, enable_fov=False):
         """
         Attempt to pass in a given direction, only if it's within the field of view.
 

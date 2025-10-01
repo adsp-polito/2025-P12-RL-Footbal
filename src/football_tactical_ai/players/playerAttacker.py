@@ -148,7 +148,7 @@ class PlayerAttacker(BasePlayer):
             # Recalculate FOV visibility using pass direction (not movement)
             fov_visible_pass = self.is_direction_visible(desired_direction)
 
-            pass_quality, pass_direction, pass_power = self.passage(
+            pass_quality, pass_direction, pass_power = self.pass_ball(
                 desired_direction=desired_direction,
                 desired_power=desired_power,
                 enable_fov=True

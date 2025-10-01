@@ -70,86 +70,95 @@ def get_position_reward_from_grid(pitch: Pitch,
 
 def attacker_reward(agent_id, player, pos_reward, ball, context):
     """
-    Attacker reward function:
-    - Prioritizes goals and successful passes.
-    - Encourages useful positioning and meaningful attempts.
-    - Penalizes possession loss and out-of-play.
+    Attacker reward function.
+    
+    Main principles:
+    1. Positioning → dense shaping from reward grid + small time penalty
+    2. Ball pursuit → reward for moving close to free ball
+    3. Possession / Ball-out → penalize losing ball or sending it out
+    4. Goals → large reward for scoring; medium for team goals
+    5. Passing → rewarded for both passer and receiver
+       - Blind pass (outside FOV) is allowed, but gets smaller reward
+       - Pass inside FOV is preferred, larger reward
+    6. Shooting → stricter rules:
+       - Shots outside FOV are invalid and penalized
+       - Valid shots inside FOV get rewards based on quality, alignment, and position
+    7. FOV visibility → general shaping: being oriented towards play is positive
     """
 
     reward = 0.0
 
-    # BASE: positioning + time penalty
-    reward += pos_reward                     # small dense feedback
-    reward -= 0.005                          # time malus (avoid stalling)
+    # BASE: positioning + small time penalty
+    reward += pos_reward
+    reward -= 0.005  # time malus to avoid stalling
 
-    # BALL CHASING: incentivize going for unowned ball
+    # BALL CHASING: encourage attacker to chase free ball
     if ball is not None and ball.get_owner() is None:
-        # Distance from player to ball (in meters)
         x_p, y_p = denormalize(*player.get_position())
         x_b, y_b = denormalize(*ball.get_position())
         dist_to_ball = np.linalg.norm([x_b - x_p, y_b - y_p])
+        reward += max(0.0, 0.1 - 0.005 * dist_to_ball)  # closer = small positive | range [0, 0.1]
 
-        # Inverse distance reward (closer = better)
-        # Positive reward up to ~20 meters, then decays to 0
-        reward += max(0.0, 0.1 - 0.005 * dist_to_ball)    # range [0, 0.1]
-
-    # POSSESSION / OUT
+    # POSSESSION / OUT OF PLAY
     if context.get("possession_lost", False):
-        reward -= 0.25                          # losing the ball
+        reward -= 0.25
 
     if context.get("ball_out_by") == agent_id:
-        reward -= 0.5                           # kicking ball out
+        reward -= 0.5
 
     # GOALS
     if context.get("goal_scored", False):
-        reward += 8.0                       # scoring
+        reward += 8.0  # scorer bonus
     if context.get("goal_team") == player.team:
-        reward += 5.0                       # team goal bonus (shared reward)
+        reward += 5.0  # shared team bonus
 
     # PASSING
     if context.get("start_pass_bonus", False):
-        reward += 0.5                            # small bonus for attempting pass
+        reward += 0.25  # reward for attempting pass
 
     if context.get("pass_quality") is not None:
-        reward += 0.5 * context["pass_quality"]   # scaled by quality (0–0.5)
+        reward += 0.5 * context["pass_quality"]
 
     if context.get("invalid_pass_attempt", False):
-        reward -= 0.01                      
+        reward -= 0.1
 
     if context.get("pass_completed", False):
-        # Reward both passer and receiver
-        if "pass_to" in context:             # receiver
-            reward += 2.0
-        elif "pass_from" in context:         # passer
-            reward += 2.0
-        # Small team bonus for cooperation
-        reward += 2.5
+        # Reward passer and receiver symmetrically
+        if "pass_to" in context or "pass_from" in context:
+            if context.get("invalid_pass_direction", False):
+                # Blind pass that worked → smaller bonus
+                reward += 1.0
+            else:
+                # Normal visible pass → larger bonus
+                reward += 2.0
+        # Extra small team cooperation bonus
+        reward += 1.5
 
     # SHOOTING
     if context.get("start_shot_bonus", False):
-        reward += 0.25                        # reward intent
+        reward += 0.5
         reward += context.get("shot_positional_quality", 0.0)
 
     if context.get("shot_quality") is not None:
-        reward += 0.5 * context["shot_quality"]   # scaled 0–0.5
-
-    if context.get("invalid_shot_direction", False):
-        reward -= 0.01
+        reward += 0.5 * context["shot_quality"] # scaled [0, 0.5]
 
     if context.get("invalid_shot_attempt", False):
-        reward -= 0.01
+        reward -= 0.2  # shooting without ball or outside FOV
+    if context.get("invalid_shot_direction", False):
+        reward -= 0.1
 
     alignment = context.get("shot_alignment")
     if alignment is not None:
-        reward += alignment ** 2 - 0.25  # shaping [-0.25, 0.75]
+        reward += alignment ** 2 - 0.25  # shaping from -0.25 to +0.75
 
-    # FIELD OF VIEW
+    # FOV shaping
     if context.get("fov_visible") is True:
         reward += 0.1
     elif context.get("fov_visible") is False:
         reward -= 0.05
 
     return reward
+
 
 def defender_reward(agent_id, player, pos_reward, ball, context):
     """
