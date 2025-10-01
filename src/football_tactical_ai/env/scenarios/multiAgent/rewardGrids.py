@@ -29,7 +29,7 @@ def build_attacker_grid(pitch: Pitch,
                         min_reward: float = -0.01, 
                         max_reward: float = 0.01,
                         y_center_penalty_scale: float = 0.5,
-                        focus_sharpness: float = 2.5) -> np.ndarray:
+                        focus_sharpness: float = 1.5) -> np.ndarray:
     """
     Reward grid for attackers (role-specific, team-oriented):
     - Encourages attacking play in opponent's half (X axis)
@@ -38,6 +38,8 @@ def build_attacker_grid(pitch: Pitch,
         * Team A attacks RIGHT → targets on the right side
         * Team B attacks LEFT  → mirrored horizontally and vertically
     - Out of play = strong penalty (-5)
+
+    NOTE: focus_sharpness controls how concentrated the reward hotspot is around the role target (exponential decay)
     """
 
     grid = np.zeros((pitch.num_cells_x, pitch.num_cells_y))
@@ -108,8 +110,8 @@ def build_defender_grid(pitch: Pitch,
                         team: str = "B",
                         min_reward: float = -0.01,
                         max_reward: float = 0.01,
-                        amplification: float = 4.5,
-                        focus_sharpness: float = 2.5) -> np.ndarray:
+                        amplification: float = 4.5, 
+                        focus_sharpness: float = 1.5) -> np.ndarray:
     """
     Reward grid for defenders (LCB, RCB, CB)
 
@@ -125,6 +127,9 @@ def build_defender_grid(pitch: Pitch,
         * LCB ~ 0.35
         * RCB ~ 0.65
     - CB always ~ 0.50 (central)
+
+    NOTE: amplification controls how strongly the reward increases when approaching the target X (polynomially)
+    NOTE: focus_sharpness controls how concentrated the reward hotspot is around the role target (exponential decay)
     """
 
     grid = np.zeros((pitch.num_cells_x, pitch.num_cells_y))

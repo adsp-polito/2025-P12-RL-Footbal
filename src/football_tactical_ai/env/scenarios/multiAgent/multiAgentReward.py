@@ -108,22 +108,22 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
 
     # PASSING
     if context.get("start_pass_bonus", False):
-        reward += 0.25                            # small bonus for attempting pass
+        reward += 0.5                            # small bonus for attempting pass
 
     if context.get("pass_quality") is not None:
         reward += 0.5 * context["pass_quality"]   # scaled by quality (0–0.5)
 
     if context.get("invalid_pass_attempt", False):
-        reward -= 0.05                      
+        reward -= 0.01                      
 
     if context.get("pass_completed", False):
         # Reward both passer and receiver
         if "pass_to" in context:             # receiver
-            reward += 0.25
+            reward += 2.0
         elif "pass_from" in context:         # passer
-            reward += 0.5
+            reward += 2.0
         # Small team bonus for cooperation
-        reward += 0.2
+        reward += 2.5
 
     # SHOOTING
     if context.get("start_shot_bonus", False):
@@ -134,10 +134,10 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
         reward += 0.5 * context["shot_quality"]   # scaled 0–0.5
 
     if context.get("invalid_shot_direction", False):
-        reward -= 0.05
+        reward -= 0.01
 
     if context.get("invalid_shot_attempt", False):
-        reward -= 0.05
+        reward -= 0.01
 
     alignment = context.get("shot_alignment")
     if alignment is not None:

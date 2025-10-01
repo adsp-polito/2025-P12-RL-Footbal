@@ -247,7 +247,7 @@ class FootballMultiEnv(MultiAgentEnv):
         self.agents = self.possible_agents[:]     # restore full agent list
         self.episode_step = 0                     # reset step counter
         self.ball.reset()                         # reset ball physics
-        #self.ball.set_owner("att_1")              # default: att_1 starts with ball
+        self.ball.set_owner("att_1")              # default: att_1 starts with ball
 
         # Define start positions dynamically depending on the number of agents
         start_positions = {}
@@ -406,15 +406,39 @@ class FootballMultiEnv(MultiAgentEnv):
         goal_owner = None
         goal_team = None
 
+        # Determine responsible team:
+        # - Prefer shooter (shot_owner)
+        # - Otherwise, fall back to ball owner
+        # - If neither exists → no scorer team
         if self.shot_owner is not None:
-            scorer_team = self.players[self.shot_owner].team  # "A" or "B"
+            scorer_team = self.players[self.shot_owner].team
+        elif self.ball.get_owner() is not None:
+            scorer_team = self.players[self.ball.get_owner()].team
+        else:
+            scorer_team = None
+
+        # Always check goal conditions if we have a valid scorer_team
+        if scorer_team is not None:
+            # Case 1: Normal goal (ball enters opponent's net)
             if self._is_goal(ball_x, ball_y, scorer_team):
-                goal_owner = self.shot_owner
                 goal_team = scorer_team
+                if self.shot_owner is not None:
+                    goal_owner = self.shot_owner
+                else:
+                    # No shooter → fallback to ball owner if available
+                    if self.ball.get_owner() is not None:
+                        goal_owner = self.ball.get_owner()
+
+            # Case 2: Own goal (ball enters own net)
             elif self._is_own_goal(ball_x, ball_y, scorer_team):
-                goal_owner = self.shot_owner
-                # own goals count for the opposing team
                 goal_team = "A" if scorer_team == "B" else "B"
+                if self.shot_owner is not None:
+                    goal_owner = self.shot_owner
+                else:
+                    # No shooter → fallback to ball owner if available
+                    if self.ball.get_owner() is not None:
+                        goal_owner = self.ball.get_owner()
+
 
         ball_out_by = None
         if self._is_ball_completely_out(ball_x, ball_y):
@@ -445,7 +469,6 @@ class FootballMultiEnv(MultiAgentEnv):
 
         # Step 6: Reward calculation
         for agent_id in self.agents:
-            role = self.players[agent_id].get_role()
             rewards[agent_id] = get_reward(
                 player=self.players[agent_id],
                 ball=self.ball,
@@ -458,7 +481,7 @@ class FootballMultiEnv(MultiAgentEnv):
             observations[agent_id] = self._get_observation(agent_id)
 
         # Step 8: Termination / Truncation
-        terminated_event = goal_owner is not None or ball_out_by is not None
+        terminated_event = (goal_team is not None) or (ball_out_by is not None)
         timeout_event = self.episode_step >= self.max_steps
 
         if terminated_event:
