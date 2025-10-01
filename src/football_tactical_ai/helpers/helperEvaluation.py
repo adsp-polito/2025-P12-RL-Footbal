@@ -2,6 +2,7 @@ from xml.parsers.expat import model
 from football_tactical_ai.helpers.visuals import render_episode_singleAgent, render_episode_multiAgent
 import torch
 import numpy as np
+import os
 
 def evaluate_and_render(model, env, pitch, save_path=None, episode=0, fps=24,
                         show_grid=False, show_heatmap=False,
@@ -93,6 +94,13 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0, fps=24,
 
 
 
+
+
+
+
+
+
+
 def evaluate_and_render_multi(
     model,
     env,
@@ -105,14 +113,14 @@ def evaluate_and_render_multi(
     show_rewards=False,
     full_pitch=True,
     show_fov=False,
-    show_names=False,      # If True, shows agent IDs above players
-    deterministic=True,    # If True, agents act greedily
-    debug=False,           # If True, print per-agent debug info
-    policy_mapping_fn=None # Optional: mapping from agent_id → policy_id (role-based setup)
+    show_names=False,       # If True, shows agent IDs above players
+    deterministic=True,     # If True, agents act greedily
+    debug=True,             # If True, save debug info
+    policy_mapping_fn=None  # Optional: mapping from agent_id → policy_id (role-based setup)
 ):
     """
     Evaluate a trained RLlib PPO model in a multi-agent football environment
-    (new API stack). This version only tracks cumulative rewards and rendering.
+    (new API stack). This version saves per-agent debug logs into a folder per episode.
     """
 
     # Reset environment
@@ -122,12 +130,25 @@ def evaluate_and_render_multi(
     states = [env.get_render_state()]
     cumulative_rewards = {agent: 0.0 for agent in env.agents}
 
-    # Termination flags (RLlib new API: dicts per agent + "__all__")
+    # Prepare debug log folder (one per episode)
+    log_files = {}
+    if debug:
+        base_dir = f"training/debug_logs/episode_{episode}"
+        os.makedirs(base_dir, exist_ok=True)
+        for agent in env.agents:
+            fname = os.path.join(base_dir, f"episode_{episode}_{agent}.log")
+            log_files[agent] = open(fname, "w", encoding="utf-8")
+            log_files[agent].write(f"Debug log for {agent} (Episode {episode})\n")
+            log_files[agent].write("=" * 80 + "\n")
+
+    # Termination flags
     terminated = {agent: False for agent in env.agents}
     truncated = {agent: False for agent in env.agents}
 
     # Evaluation loop
+    step_count = 0
     while not terminated.get("__all__", False) and not truncated.get("__all__", False):
+        step_count += 1
         action_dict = {}
 
         for agent_id in env.agents:
@@ -158,20 +179,30 @@ def evaluate_and_render_multi(
 
             # Convert to numpy
             action = np.array(action.cpu().numpy()).flatten()
-            if debug:
-                print(f"[Episode {episode}] Agent={agent_id}, Policy={policy_id}, Action={action}")
-
             action_dict[agent_id] = action
 
         # Step env
         obs, rewards, terminated, truncated, infos = env.step(action_dict)
 
-        # Update rewards
-        for agent, r in rewards.items():
-            cumulative_rewards[agent] += r
+        # Save per-agent debug info
+        for agent in env.agents:
+            cumulative_rewards[agent] += rewards.get(agent, 0.0)
+            if debug and agent in log_files:
+                log_files[agent].write(
+                    f"[Step {step_count}] "
+                    f"Action={action_dict[agent]} | "
+                    f"Reward={rewards[agent]:+.3f} | "
+                    f"Cum={cumulative_rewards[agent]:+.3f} | "
+                    f"Info={infos[agent]}\n"
+                )
 
         # Save state for rendering
         states.append(env.get_render_state())
+
+    # Close log files
+    if debug:
+        for f in log_files.values():
+            f.close()
 
     # Render to video if requested
     if save_path:

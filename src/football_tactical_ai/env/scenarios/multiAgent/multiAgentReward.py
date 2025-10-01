@@ -80,9 +80,9 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
 
     # BASE: positioning + time penalty
     reward += pos_reward                     # small dense feedback
-    reward -= 0.005                           # time malus (avoid stalling)
+    reward -= 0.005                          # time malus (avoid stalling)
 
-    # BALL CHASING
+    # BALL CHASING: incentivize going for unowned ball
     if ball is not None and ball.get_owner() is None:
         # Distance from player to ball (in meters)
         x_p, y_p = denormalize(*player.get_position())
@@ -95,19 +95,20 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
 
     # POSSESSION / OUT
     if context.get("possession_lost", False):
-        reward -= 0.5                       # losing the ball
+        reward -= 0.25                          # losing the ball
+
     if context.get("ball_out_by") == agent_id:
-        reward -= 1.0                       # kicking ball out
+        reward -= 0.5                           # kicking ball out
 
     # GOALS
     if context.get("goal_scored", False):
         reward += 8.0                       # scoring
     if context.get("goal_team") == player.team:
-        reward += 6.0                       # team goal bonus (shared reward)
+        reward += 5.0                       # team goal bonus (shared reward)
 
     # PASSING
     if context.get("start_pass_bonus", False):
-        reward += 0.2                        # small bonus for attempting pass
+        reward += 0.25                            # small bonus for attempting pass
 
     if context.get("pass_quality") is not None:
         reward += 0.5 * context["pass_quality"]   # scaled by quality (0–0.5)
@@ -118,15 +119,15 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
     if context.get("pass_completed", False):
         # Reward both passer and receiver
         if "pass_to" in context:             # receiver
-            reward += 0.2
+            reward += 0.25
         elif "pass_from" in context:         # passer
-            reward += 0.4
+            reward += 0.5
         # Small team bonus for cooperation
         reward += 0.2
 
     # SHOOTING
     if context.get("start_shot_bonus", False):
-        reward += 0.5                        # reward intent
+        reward += 0.25                        # reward intent
         reward += context.get("shot_positional_quality", 0.0)
 
     if context.get("shot_quality") is not None:

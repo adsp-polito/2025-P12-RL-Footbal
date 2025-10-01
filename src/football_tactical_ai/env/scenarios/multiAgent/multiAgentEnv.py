@@ -247,7 +247,7 @@ class FootballMultiEnv(MultiAgentEnv):
         self.agents = self.possible_agents[:]     # restore full agent list
         self.episode_step = 0                     # reset step counter
         self.ball.reset()                         # reset ball physics
-        self.ball.set_owner("att_1")              # default: att_1 starts with ball
+        #self.ball.set_owner("att_1")              # default: att_1 starts with ball
 
         # Define start positions dynamically depending on the number of agents
         start_positions = {}
@@ -317,6 +317,9 @@ class FootballMultiEnv(MultiAgentEnv):
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
         temp_context = {}
 
+        # Assign ball to a nearby player if unowned
+        new_owner = self._assign_ball_if_nearby()
+
         # Step 1: Execute actions (movement, pass, shot, tackle, dive)
         for agent_id, action in actions.items():
             player = self.players[agent_id]
@@ -368,9 +371,6 @@ class FootballMultiEnv(MultiAgentEnv):
             pass_context=self.pass_context
         )
 
-        # Assign ball to a nearby player if unowned
-        new_owner = self._assign_ball_if_nearby()
-
         # Step 3b: Check for possession loss by attackers
         if new_owner:
             
@@ -391,9 +391,9 @@ class FootballMultiEnv(MultiAgentEnv):
                     temp_context[self.pass_owner]["pass_to"] = new_owner
                 else:
                     # Pass reached a teammate, but not the intended target
-                    temp_context[new_owner]["pass_completed"] = True
+                    temp_context[new_owner]["pass_completed"] = False
                     temp_context[new_owner]["pass_from"] = self.pass_owner
-                    temp_context[self.pass_owner]["pass_completed"] = True
+                    temp_context[self.pass_owner]["pass_completed"] = False
                     temp_context[self.pass_owner]["pass_to"] = new_owner
                     temp_context[self.pass_owner]["pass_missed_target"] = True
 
@@ -585,18 +585,26 @@ class FootballMultiEnv(MultiAgentEnv):
 
     def _check_possession_loss(self, agent_id: str) -> bool:
         """
-        Check if the attacker has lost possession to a defender or goalkeeper.
+        Check if an attacker has lost possession specifically
+        to a defender or goalkeeper.
         """
+        # Only attackers can lose possession in this way
         if not agent_id.startswith("att"):
             return False
 
-        new_owner = self.ball.owner
-        if new_owner == agent_id:
+        new_owner = self.ball.get_owner()
+
+        # If ball is unowned or still with the same attacker, no loss
+        if new_owner is None or new_owner == agent_id:
             return False
 
         # Check if the new owner is a defender or goalkeeper
-        role = self.players.get(new_owner, None).get_role() if new_owner in self.players else None
-        return role in {"DEF", "LCB", "RCB", "CB", "GK"}
+        if new_owner in self.players:
+            role = self.players[new_owner].get_role()
+            return role in {"DEF", "LCB", "RCB", "CB", "GK"}
+
+        return False
+
 
 
     def _is_ball_completely_out(self, ball_x_m, ball_y_m):

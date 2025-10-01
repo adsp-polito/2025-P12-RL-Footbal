@@ -24,10 +24,10 @@ multiagent_params = {
     "fps": 24,
 
     # Total number of training episodes
-    "episodes": 10000,
+    "episodes": 1000,
 
     # Frequency of evaluation in episodes
-    "eval_every": 500,
+    "eval_every": 250,
 
     # Rendering configuration (used in evaluation/visualization)
     "render": {
@@ -71,10 +71,12 @@ multiagent_params = {
         "lambda": 0.95,
 
         # Exploration
-        "entropy_coeff": 0.01,
+        #"entropy_coeff": 0.01,
+        "entropy_coeff": 0.03,
 
         # Rollout / Training settings
-        "train_batch_size": 16_000,     # Large enough for stable updates
+        #"train_batch_size": 16_000,     # Large enough for stable updates
+        "train_batch_size": 8_000,     # Large enough for stable updates
         "rollout_fragment_length": 400, # Steps per worker before sending batch
         "minibatch_size": 256,          # For SGD updates
         "num_epochs": 8,                # Gradient passes per batch

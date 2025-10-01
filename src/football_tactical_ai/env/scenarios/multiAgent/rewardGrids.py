@@ -1,6 +1,19 @@
 import numpy as np
 from football_tactical_ai.env.objects.pitch import Pitch
 
+# some good values were:
+# ATTACKERS:
+# - min_reward: -0.02
+# - max_reward: 0.1
+# DEFENDERS:
+# - min_reward: -0.02
+# - max_reward: 0.08
+# GOALKEEPERS:
+# - min_reward: -0.02
+# - max_reward: 0.08
+
+
+
 
 def is_out_of_play(pitch: Pitch, x: float, y: float) -> bool:
     return x < 0 or x > pitch.width or y < 0 or y > pitch.height
@@ -13,8 +26,8 @@ from football_tactical_ai.env.objects.pitch import Pitch
 def build_attacker_grid(pitch: Pitch, 
                         role: str,
                         team: str = "A",
-                        min_reward: float = -0.02, 
-                        max_reward: float = 0.1,
+                        min_reward: float = -0.01, 
+                        max_reward: float = 0.01,
                         y_center_penalty_scale: float = 0.5,
                         focus_sharpness: float = 2.5) -> np.ndarray:
     """
@@ -60,7 +73,7 @@ def build_attacker_grid(pitch: Pitch,
 
             # Out-of-play check
             if is_out_of_play(pitch, cell_x, cell_y):
-                grid[i, j] = -0.2
+                grid[i, j] = -0.1
                 continue
 
             # Normalize coords
@@ -93,8 +106,8 @@ def build_attacker_grid(pitch: Pitch,
 def build_defender_grid(pitch: Pitch, 
                         role: str,
                         team: str = "B",
-                        min_reward: float = -0.02,
-                        max_reward: float = 0.08,
+                        min_reward: float = -0.01,
+                        max_reward: float = 0.01,
                         amplification: float = 4.5,
                         focus_sharpness: float = 2.5) -> np.ndarray:
     """
@@ -177,8 +190,8 @@ def build_defender_grid(pitch: Pitch,
 
 def build_goalkeeper_grid(pitch: Pitch,
                           team: str = "B",
-                          min_reward: float = -0.02,
-                          max_reward: float = 0.08,
+                          min_reward: float = -0.01,
+                          max_reward: float = 0.01,
                           decay_scale: float = 0.025) -> np.ndarray:
     """
     Reward grid for goalkeepers (team-aware).
