@@ -140,28 +140,70 @@ class FootballMultiEnv(MultiAgentEnv):
 
         self.players = players
 
+        # ======================================================================
         # ACTION SPACES
-        # Each role has a different action vector:
-        # - Attacker: [dx, dy, pass_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
-        # - Defender: [dx, dy, tackle_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
-        # - Goalkeeper: [dx, dy, dive_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
         #
-        # dx, dy ∈ [-1, 1] represent movement direction (normalized)
-        # power ∈ [0, 1] represents shooting/tackling power
-        # Flags are binary actions (activated if > 0.5)
+        # Each player has a Dict action space with the following structure:
+        #
+        # Attacker:
+        #   {
+        #       "move":      [dx, dy] in [-1, 1]        → normalized continuous movement
+        #       "flags":     [pass, shoot] in {0, 1}    → binary flags (MultiBinary(2))
+        #       "power":     [p] in [0, 1]              → shot/pass intensity
+        #       "direction": [dir_x, dir_y] in [-1, 1]  → shot/pass direction
+        #   }
+        #
+        # Defender:
+        #   {
+        #       "move":      [dx, dy] in [-1, 1]
+        #       "flags":     [tackle, shoot] in {0, 1}
+        #       "power":     [p] in [0, 1]
+        #       "direction": [dir_x, dir_y] in [-1, 1]
+        #   }
+        #
+        # Goalkeeper:
+        #   {
+        #       "move":      [dx, dy] in [-1, 1]
+        #       "flags":     [dive, shoot] in {0, 1}
+        #       "power":     [p] in [0, 1]
+        #       "direction": [dir_x, dir_y] in [-1, 1]
+        #   }
+        #
+        # Notes:
+        # - With this structure, no thresholds (>0.5) are needed to interpret the flags
+        # - The power is already constrained in [0,1], so clipping is no longer necessary
+        # - dx, dy, dir_x, and dir_y remain continuous in [-1,1]
+        # ======================================================================
+
         self.action_spaces = {}
+
+        # Attacker action space
         for aid in self.attacker_ids:
-            self.action_spaces[aid] = spaces.Box(
-                low=-1.0, high=1.0, shape=(7,), dtype=np.float32
-            )
+            self.action_spaces[aid] = spaces.Dict({
+                "move": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
+                "flags": spaces.MultiBinary(2),  # [pass, shoot]
+                "power": spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
+                "direction": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
+            })
+
+        # Defender action space
         for did in self.defender_ids:
-            self.action_spaces[did] = spaces.Box(
-                low=-1.0, high=1.0, shape=(7,), dtype=np.float32
-            )
+            self.action_spaces[did] = spaces.Dict({
+                "move": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
+                "flags": spaces.MultiBinary(2),  # [tackle, shoot]
+                "power": spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
+                "direction": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
+            })
+
+        # Goalkeeper action space
         for gid in self.gk_ids:
-            self.action_spaces[gid] = spaces.Box(
-                low=-1.0, high=1.0, shape=(7,), dtype=np.float32
-            )
+            self.action_spaces[gid] = spaces.Dict({
+                "move": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
+                "flags": spaces.MultiBinary(2),  # [dive, shoot]
+                "power": spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
+                "direction": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
+            })
+
 
         # OBSERVATION SPACES
         # Each agent observes:

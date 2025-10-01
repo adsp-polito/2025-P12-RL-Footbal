@@ -24,10 +24,10 @@ multiagent_params = {
     "fps": 24,
 
     # Total number of training episodes
-    "episodes": 1000,
+    "episodes": 3000,
 
     # Frequency of evaluation in episodes
-    "eval_every": 50,
+    "eval_every": 300,
 
     # Rendering configuration (used in evaluation/visualization)
     "render": {
@@ -72,7 +72,7 @@ multiagent_params = {
 
         # Exploration
         #"entropy_coeff": 0.01,
-        "entropy_coeff": 0.03,
+        "entropy_coeff": 0.04,
 
         # Rollout / Training settings
         #"train_batch_size": 16_000,     # Large enough for stable updates
@@ -89,6 +89,7 @@ multiagent_params = {
         "model": {
             "fcnet_hiddens": [256, 128],  # Hidden layers
             "fcnet_activation": "relu",        # Non-linearity
+            "tanh_squash_output": True,    # Force actions into [-1, 1]
         },
     },
 }

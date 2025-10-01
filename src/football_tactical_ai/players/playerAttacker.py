@@ -68,7 +68,7 @@ class PlayerAttacker(BasePlayer):
         return "CF" if self.role is None else self.role
     
     def execute_action(self, 
-                    action: np.ndarray, 
+                    action: dict, 
                     time_step: float, 
                     x_range: float, 
                     y_range: float, 
@@ -78,12 +78,11 @@ class PlayerAttacker(BasePlayer):
         The attacker can move, pass, or shoot depending on the action vector
 
         Args:
-            action (np.ndarray): Action vector of the form:
-                [dx, dy, pass_flag, shoot_flag, power, dir_x, dir_y]
-                - dx, dy: movement deltas in [-1, 1]
-                - pass_flag: >0.5 means attempt a pass
-                - shoot_flag: >0.5 means attempt a shot
-                - power: normalized power [0, 1]
+            action (dict): Action dictionary with the following keys:
+                - "move": [dx, dy] movement deltas in [-1, 1]
+                - "flags": [pass, shoot] binary flags (MultiBinary(2))
+                - "power": [p] shot/pass intensity in [0, 1]
+                - "direction": [dir_x, dir_y] shot/pass direction in [-1, 1]
                 - dir_x, dir_y: direction vector for pass/shot
             time_step (float): Duration of simulation step in seconds (e.g. 1 / FPS)
             x_range (float): Field width in meters
@@ -95,28 +94,26 @@ class PlayerAttacker(BasePlayer):
         """
 
         # 1. MOVEMENT
-        dx, dy = action[0], action[1]
+        dx, dy = action["move"]
         direction = np.array([dx, dy])
         norm = np.linalg.norm(direction)
 
-        # Default FOV visibility
         fov_visible = None
-
         if norm > 1e-6:
-            direction /= norm  # Normalize
+            direction /= norm
             self.last_action_direction = direction
             fov_visible = self.is_direction_visible(direction)
         else:
             direction = np.array([0.0, 0.0])
 
-        # Apply actual movement (handled by BasePlayer)
+        # Apply movement via BasePlayer (pass only dx, dy etc.)
         super().execute_action(action, time_step, x_range, y_range)
 
         # 2. COMMON PARAMETERS
-        pass_flag = action[2] if len(action) >= 7 else 0.0
-        shoot_flag = action[3] if len(action) >= 7 else 0.0
-        desired_power = np.clip(action[4], 0.0, 1.0) if len(action) >= 7 else 0.0
-        desired_direction = np.array(action[5:7]) if len(action) >= 7 else np.array([0.0, 0.0])
+        pass_flag, shoot_flag = action["flags"]   # MultiBinary(2)
+        desired_power = float(action["power"][0])  # [0,1]
+        desired_direction = np.array(action["direction"])
+
 
         context = {
             "fov_visible": fov_visible,   # will be updated for pass/shot
@@ -130,7 +127,7 @@ class PlayerAttacker(BasePlayer):
             return context
 
         # 3. INVALID ACTION CHECK
-        if pass_flag > 0.5 and shoot_flag > 0.5:
+        if pass_flag == 1 and shoot_flag == 1:
             self.current_action = "idle"
             context.update({
                 "invalid_action": True,
@@ -142,7 +139,7 @@ class PlayerAttacker(BasePlayer):
             return context
         
         # 4. PASSING LOGIC
-        if pass_flag > 0.5:
+        if pass_flag == 1:
             self.current_action = "pass"
 
             # Recalculate FOV visibility using pass direction (not movement)
@@ -167,7 +164,7 @@ class PlayerAttacker(BasePlayer):
             return context  
 
         # 5. SHOOTING LOGIC
-        if shoot_flag > 0.5:
+        if shoot_flag == 1:
             self.current_action = "shoot"
 
             # Recalculate FOV visibility using shot direction

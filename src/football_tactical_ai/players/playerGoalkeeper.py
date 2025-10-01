@@ -98,6 +98,8 @@ class PlayerGoalkeeper(BasePlayer):
 
         return {"dive_score": dive_score, "blocked": False, "deflected": True, "wasted_dive": False}
 
+
+
     def get_parameters(self):
         """Return technical attributes for logging or debugging."""
         return {
@@ -113,35 +115,46 @@ class PlayerGoalkeeper(BasePlayer):
             "punch_power": self.punch_power
         }
     
+
+
+    
     def execute_action(self, 
-        action: np.ndarray, 
+        action: dict, 
         time_step: float, 
         x_range: float, 
         y_range: float, 
         ball: Ball = None) -> dict:
         """
-        Executes a continuous action for a goalkeeper, including movement, dive, and shoot.
-
-        Action vector format:
-        [dx, dy, dive_flag, shoot_flag, power, dir_x, dir_y]
+        Executes a continuous action for a goalkeeper: move, dive, or shoot.
+        Action dictionary format:
+            {
+                "move": [dx, dy],
+                "flags": [dive_flag, shoot_flag],
+                "power": [p],
+                "direction": [dir_x, dir_y]
+            }
         """
 
         context = {
-        "dive_score": None,
-        "blocked": False,
-        "deflected": False,
-        "wasted_dive": False,
-        "shot_attempted": False,
-        "invalid_shot_attempt": False,
-        "invalid_shot_direction": False,
-        "fov_visible": None,
-        "shot_quality": None,
-        "shot_direction": None,
-        "shot_power": None,
+            "dive_score": None,
+            "blocked": False,
+            "deflected": False,
+            "wasted_dive": False,
+            "shot_attempted": False,
+            "invalid_shot_attempt": False,
+            "invalid_shot_direction": False,
+            "fov_visible": None,
+            "shot_quality": None,
+            "shot_direction": None,
+            "shot_power": None,
         }
 
         # Movement
-        dx, dy = action[0], action[1]
+        dx, dy = action["move"]
+        dive_flag, shoot_flag = action["flags"]
+        desired_power = float(action["power"][0])
+        desired_direction = np.array(action["direction"], dtype=np.float32)
+
         direction = np.array([dx, dy])
         norm = np.linalg.norm(direction)
 
@@ -150,39 +163,36 @@ class PlayerGoalkeeper(BasePlayer):
             self.last_action_direction = direction
             context["fov_visible"] = self.is_direction_visible(direction)
         else:
-            direction = np.array([0.0, 0.0])
             context["fov_visible"] = None
 
         super().execute_action(action, time_step, x_range, y_range)
 
         # DIVE
-        dive_flag = action[2] > 0.5
-        if dive_flag:
+        if dive_flag == 1:
             self.current_action = "dive"
-            dive_dir = np.array([action[5], action[6]])
-            dive_result = self.dive(dive_dir, ball)
+            dive_result = self.dive(desired_direction, ball)
             context.update(dive_result)
 
-        # SHOOT (goal kick or pass)
-        elif action[3] > 0.5:
+        # SHOOT (goal kick / pass)
+        elif shoot_flag == 1 and ball is not None and ball.get_owner() == self.agent_id:
             self.current_action = "shoot"
-            power = np.clip(action[4], 0.0, 1.0)
-            shoot_direction = np.array([action[5], action[6]])
-
             shot_quality, actual_direction, actual_power = self.shoot(
-            desired_direction=shoot_direction,
-            desired_power=power,
-            enable_fov=True
+                desired_direction=desired_direction,
+                desired_power=desired_power,
+                enable_fov=True
             )
-
             context.update({
-            "shot_attempted": True,
-            "shot_quality": shot_quality,
-            "shot_direction": actual_direction,
-            "shot_power": actual_power,
-            "invalid_shot_attempt": self.agent_id != ball.get_owner(),
-            "invalid_shot_direction": np.allclose(actual_direction, [0.0, 0.0])
+                "shot_attempted": True,
+                "shot_quality": shot_quality,
+                "shot_direction": actual_direction,
+                "shot_power": actual_power,
+                "invalid_shot_attempt": False,
+                "invalid_shot_direction": np.allclose(actual_direction, [0.0, 0.0])
             })
+        elif shoot_flag == 1:
+            # Tried to shoot without ball
+            context["invalid_shot_attempt"] = True
+            self.current_action = "idle"
 
         else:
             self.current_action = "move" if norm > 1e-6 else "idle"
@@ -200,6 +210,7 @@ class PlayerGoalkeeper(BasePlayer):
         Create a deep copy of the goalkeeper instance.
         Useful for rendering snapshots or parallel simulations.
         """
+
         new_player = PlayerGoalkeeper(
             reflexes=self.reflexes,
             reach=self.reach,
@@ -207,7 +218,9 @@ class PlayerGoalkeeper(BasePlayer):
             precision=self.precision,
             speed=self.speed,
             fov_angle=self.fov_angle,
-            fov_range=self.fov_range
+            fov_range=self.fov_range,
+            catching=self.catching,
+            punch_power=self.punch_power
         )
 
         new_player.max_speed     = self.max_speed

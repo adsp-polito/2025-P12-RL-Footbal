@@ -123,6 +123,12 @@ def train_SingleAgent(scenario="move"):
     plt.show()
 
 
+
+
+
+
+
+
 def env_creator(config):
     """Environment creator required by RLlib (wraps FootballMultiEnv)."""
     return FootballMultiEnv(config)
@@ -194,8 +200,17 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = True):
         policy_mapping_fn = lambda agent_id, *args, **kwargs: agent_id
 
     # Handle LR and entropy schedules (constant or schedule list)
-    lr = cfg["rllib"].get("lr_schedule", cfg["rllib"]["lr"])
-    entropy_coeff = cfg["rllib"].get("entropy_coeff_schedule", cfg["rllib"]["entropy_coeff"])
+    lr = (
+        make_schedule_fn(cfg["rllib"]["lr_schedule"])
+        if "lr_schedule" in cfg["rllib"]
+        else cfg["rllib"]["lr"]
+    )
+    entropy_coeff = (
+        make_schedule_fn(cfg["rllib"]["entropy_coeff_schedule"])
+        if "entropy_coeff_schedule" in cfg["rllib"]
+        else cfg["rllib"]["entropy_coeff"]
+    )
+
 
     # RLlib PPO configuration
     config = (

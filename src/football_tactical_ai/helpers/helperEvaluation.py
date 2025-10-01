@@ -115,7 +115,7 @@ def evaluate_and_render_multi(
     show_fov=False,
     show_names=False,       # If True, shows agent IDs above players
     deterministic=True,     # If True, agents act greedily
-    debug=False,             # If True, save debug info
+    debug=True,             # If True, save debug info
     policy_mapping_fn=None  # Optional: mapping from agent_id → policy_id (role-based setup)
 ):
     """

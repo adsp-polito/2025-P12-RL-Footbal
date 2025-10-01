@@ -202,34 +202,27 @@ class BasePlayer(ABC):
 
     # Execute the action (to be overridden by subclasses)
     # This method is specifically used in multi-agent environments
-    def execute_action(self, action: np.ndarray, time_step: float, x_range: float, y_range: float):
+    def execute_action(self, action: dict, time_step: float, x_range: float, y_range: float):
         """
-        Executes a continuous action vector for the player. This method is called once per frame by the environment.
-
-        The base class handles only movement. Role-specific subclasses (Attacker, Defender, Goalkeeper)
-        should override this method to handle actions like shooting, tackling, diving, etc.
-
-        Args:
-            action (np.ndarray): Continuous action vector, typically [dx, dy, ...]
-            time_step (float): Duration of simulation step in seconds (e.g. 1 / FPS)
-            x_range (float): Field width in meters
-            y_range (float): Field height in meters
+        Executes a continuous action dictionary for the player.
+        Only movement is handled here; child classes implement pass/shoot/etc.
         """
 
-        # Basic movement: interpret dx, dy
+        # Movement comes from "move" field
+        move_vec = np.array(action.get("move", [0.0, 0.0]), dtype=np.float32)
+
         self.move_with_action(
-            action=action[:2],
+            action=move_vec,
             time_per_step=time_step,
             x_range=x_range,
             y_range=y_range,
             enable_fov=True
         )
 
+        # Store current action type (pass, shoot, etc.)
         self.current_action = self._infer_action_type(action)
-
-        # This base implementation does not include a ny extra action
-        # (e.g. shooting, tackling) – these must be handled by child classes
         return None
+
     
     def shoot(self, desired_direction, desired_power, enable_fov=True):
         """
@@ -347,39 +340,29 @@ class BasePlayer(ABC):
         return pass_quality, pass_direction, pass_power
 
     
-    def _infer_action_type(self, action: np.ndarray) -> str:
+    def _infer_action_type(self, action: dict) -> str:
         """
-        Infer action type from the raw action vector.
+        Infer action type from the structured action dict.
         Returns one of: "idle", "move", "pass", "shoot", "tackle", "dive".
         """
-        role = self.role
-
-        # Movement
-        dx, dy = action[0], action[1]
+        dx, dy = action.get("move", [0.0, 0.0])
         if np.linalg.norm([dx, dy]) > 1e-6:
             return "move"
 
-        # Role-specific actions
-        
-        # Manage also "ATT" for retrocompatibility
-        if role == "ATT" or role == "LW" or role == "RW" or role == "CF" or role == "LCF" or role == "RCF":
-            if len(action) >= 3 and action[2] > 0.5:  # pass_flag
-                return "pass"
-            if len(action) >= 4 and action[3] > 0.5:  # shoot_flag
-                return "shoot"
+        flags = action.get("flags", [0, 0])
+        f0, f1 = int(flags[0]), int(flags[1])  # ensure ints
 
-        # Manage also "DEF" for retrocompatibility
-        elif role == "DEF" or role == "LCB" or role == "RCB":
-            if len(action) >= 3 and action[2] > 0.5:  # tackle_flag
-                return "tackle"
-            if len(action) >= 4 and action[3] > 0.5:  # shoot_flag
-                return "shoot"
+        if self.role in {"ATT", "CF", "LW", "RW", "LCF", "RCF", "SS"}:
+            if f0 == 1: return "pass"
+            if f1 == 1: return "shoot"
 
-        elif role == "GK":
-            if len(action) >= 3 and (action[2] > 0.5 or action[3] > 0.5):  # dive flags
-                return "dive"
-            if len(action) >= 5 and action[4] > 0.5:  # shoot_flag
-                return "shoot"
+        elif self.role in {"DEF", "LCB", "RCB", "CB"}:
+            if f0 == 1: return "tackle"
+            if f1 == 1: return "shoot"
+
+        elif self.role == "GK":
+            if f0 == 1: return "dive"
+            if f1 == 1: return "shoot"
 
         return "idle"
 

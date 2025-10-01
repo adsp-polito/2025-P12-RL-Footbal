@@ -9,7 +9,7 @@ from football_tactical_ai.helpers.helperFunctions import denormalize
 def update_ball_state(ball: Ball,
                       players: Dict[str, BasePlayer],
                       pitch: Pitch,
-                      actions: Dict[str, np.ndarray],
+                      actions: Dict[str, dict],
                       time_step: float,
                       shot_context: Dict[str, bool] = None,
                       pass_context: Dict[str, bool] = None,
@@ -92,10 +92,10 @@ def update_ball_state(ball: Ball,
 
     # 3. Dribbling: ball stays close to the owner, slightly in front of their movement
     elif owner_id in players:
-        action = actions.get(owner_id)
-        direction = np.array(action[:2]) if action is not None and len(action) >= 2 else np.zeros(2)
-        norm = np.linalg.norm(direction)
-        direction = direction / norm if norm > 1e-6 else np.zeros(2)
+        action = actions.get(owner_id, {})
+        move_vec = np.array(action.get("move", [0.0, 0.0]), dtype=np.float32)
+        norm = np.linalg.norm(move_vec)
+        direction = move_vec / norm if norm > 1e-6 else np.zeros(2, dtype=np.float32)
 
         new_pos = np.array(players[owner_id].get_position()) + direction * dribble_offset
         ball.set_position(new_pos)
