@@ -174,40 +174,46 @@ class FootballMultiEnv(MultiAgentEnv):
         #
         # 1. Self (3):
         #    [self_x, self_y, self_has_ball]
-        #      - self_x, self_y ∈ [0,1] (normalized absolute position)
-        #      - self_has_ball ∈ {0,1}
         #
         # 2. Ball (4):
         #    [ball_x, ball_y, ball_vx, ball_vy]
-        #      - ball_x, ball_y ∈ [0,1] (normalized position)
-        #      - ball_vx, ball_vy ∈ [-1,1] (normalized velocity)
         #
         # 3. Goal (2):
-        #    [goal_x, goal_y] ∈ [0,1] (opponent goal position)
+        #    [goal_x, goal_y]
         #
-        # 4. Other players (6 per player):
+        # 4. Own parameters (depends on role):
+        #    - Attacker: [shooting, passing, dribbling, speed, precision, fov_angle, fov_range] → 7
+        #    - Defender: [shooting, tackling, speed, precision, fov_angle, fov_range] → 6
+        #    - Goalkeeper: [shooting, reflexing, punch_power, reach, catching, speed, precision, fov_angle, fov_range] → 9
+        #
+        # 5. Other players (6 per player):
         #    [rel_x, rel_y, action_code, visible_flag, team_flag, has_ball_flag]
-        #      - rel_x, rel_y ∈ [-1,1] (relative to self)
-        #      - action_code ∈ {0=idle,1=move,2=pass,3=shoot,4=tackle,...}
-        #      - visible_flag, team_flag, has_ball_flag ∈ {0,1}
         #
-        # Total dim:
-        #   obs_dim = 3 (self) + 4 (ball) + 2 (goal) + (N-1)*6
+        # Total dim = 3 + 4 + 2 + params_dim + (N-1)*6 ===> min: (3+4+2+9+(0*6))=18, max: (3+4+2+9+(5*6))=48
         # ======================================================================
 
-        obs_dim = (
-            3 +   # self_x, self_y, self_has_ball
-            4 +   # ball_x, ball_y, ball_vx, ball_vy
-            2 +   # goal_x, goal_y
-            (len(self.agents) - 1) * 6  # info for each other player
-        )
+        def _compute_obs_dim(player):
+            base_dim = 3 + 4 + 2 + (len(self.agents) - 1) * 6
+            role = player.get_role()
+            if role in {"CF", "LW", "RW", "LCF", "RCF", "SS", "ATT"}:
+                return base_dim + 7
+            elif role in {"LCB", "RCB", "CB", "DEF"}:
+                return base_dim + 6
+            elif role == "GK":
+                return base_dim + 9
+            else:
+                return base_dim
 
         self.observation_spaces = {
             agent_id: spaces.Box(
-                low=-1.0, high=1.0, shape=(obs_dim,), dtype=np.float32
+                low=-1.0, 
+                high=1.0, 
+                shape=(_compute_obs_dim(player),), 
+                dtype=np.float32
             )
-            for agent_id in self.agents
+            for agent_id, player in self.players.items()
         }
+
 
         # Roles mapping
         self.roles = {aid: self.players[aid].get_role() for aid in self.agents}
@@ -474,20 +480,33 @@ class FootballMultiEnv(MultiAgentEnv):
         # Step 5: Build agent info and contextual updates
         for agent_id in self.agents:
             context = temp_context[agent_id]
-            deflection_power = np.linalg.norm(self.ball.get_velocity()) if context.get("deflected") else 0.0
+            role = self.players[agent_id].get_role()
 
+            # COMMON FIELDS 
             context.update({
                 "goal_scored": goal_owner == agent_id,
                 "goal_team": goal_team,
                 "ball_out_by": ball_out_by,
-                "start_shot_bonus": agent_id == self.shot_owner and self.shot_just_started,
-                "start_pass_bonus": agent_id == self.pass_owner and self.pass_just_started,
-                "possession_lost": self._check_possession_loss(agent_id),
-                "deflection_power": deflection_power
+                "start_shot_bonus": agent_id == self.shot_owner and self.shot_just_started
             })
 
-            infos[agent_id] = context
+            # ATTACKER-SPECIFIC
+            if role.startswith("att"):  # "attacker"
+                context.update({
+                    "start_pass_bonus": agent_id == self.pass_owner and self.pass_just_started,
+                    "possession_lost": self._check_possession_loss(agent_id),
+                })
 
+            # GOALKEEPER-SPECIFIC
+            elif role.startswith("gk"):  # "goalkeeper"
+
+                # Deflection power
+                deflection_power = np.linalg.norm(self.ball.get_velocity()) if context.get("deflected") else 0.0
+                context.update({
+                    "deflection_power": deflection_power
+                })
+
+            infos[agent_id] = context
 
         # Step 6: Reward calculation
         for agent_id in self.agents:
@@ -817,7 +836,6 @@ class FootballMultiEnv(MultiAgentEnv):
 
         return angle <= observer.fov_angle / 2
 
-
     def _get_observation(self, agent_id: str):
         """
         Build the observation vector for a given agent.
@@ -826,6 +844,7 @@ class FootballMultiEnv(MultiAgentEnv):
         [self_x, self_y, self_has_ball] +
         [ball_x, ball_y, ball_vx, ball_vy] +
         [goal_x, goal_y] +
+        [own_parameters...] +
         For each other player:
             [rel_x, rel_y, action_code, visible_flag, team_flag, has_ball_flag]
         """
@@ -841,33 +860,75 @@ class FootballMultiEnv(MultiAgentEnv):
         ball_vx, ball_vy = self.ball.get_velocity()
 
         # Goal position (depends on team)
-        if player.team == "A":  # attacking team
+        if player.team == "A":  # attacking team → right goal
             goal_x, goal_y = self.pitch.width, self.pitch.center_y
-        else:  # defending team
+        else:  # defending team → left goal
             goal_x, goal_y = 0.0, self.pitch.center_y
 
         # Normalize goal coordinates
         goal_x, goal_y = normalize(goal_x, goal_y)
 
-        # Start obs vector
+        # Start observation vector with base features
         obs = [
             self_x, self_y, self_has_ball,
             ball_x, ball_y, ball_vx, ball_vy,
             goal_x, goal_y
         ]
 
-        # Memory for last known positions
+        # Add own parameters (role-dependent)
+        # These values are already normalized in [0, 1].
+        # They allow the shared policy (per role) to differentiate agents
+        role = player.get_role()
+        if role in {"CF", "LW", "RW", "LCF", "RCF", "SS", "ATT"}:
+            params = [
+                player.shooting,
+                player.passing,
+                player.dribbling,
+                player.speed,
+                player.precision,
+                player.fov_angle,
+                player.fov_range,
+            ]
+        elif role in {"LCB", "RCB", "CB", "DEF"}:
+            params = [
+                player.shooting,
+                player.tackling,
+                player.speed,
+                player.precision,
+                player.fov_angle,
+                player.fov_range,
+            ]
+        elif role == "GK":
+            params = [
+                player.shooting,
+                player.reflexing,
+                player.punch_power,
+                player.reach,
+                player.catching,
+                player.speed,
+                player.precision,
+                player.fov_angle,
+                player.fov_range,
+            ]
+        else:
+            params = []
+
+        obs.extend(params)
+
+        # Memory for last known positions of other players
+        # This allows the agent to "remember" where unseen players were
         if not hasattr(self, "last_known_positions"):
             self.last_known_positions = {aid: None for aid in self.agents}
 
-        # Other players (relative coords)
+        # Add information about other players
+        # Each other player contributes 6 values:
+        # [rel_x, rel_y, action_code, visible_flag, team_flag, has_ball_flag]
         for other_id, other in self.players.items():
             if other_id == agent_id:
                 continue
 
             team_flag = 1.0 if other.team == player.team else 0.0
             has_ball_flag = 1.0 if self.ball.get_owner() == other_id else 0.0
-
             visible = self._is_in_fov(player, other)
 
             if visible:
@@ -876,15 +937,18 @@ class FootballMultiEnv(MultiAgentEnv):
                 rel_y = oy - self_y
                 action_code = other.get_current_action_code()
 
+                # Store last known info
                 self.last_known_positions[other_id] = (rel_x, rel_y, action_code)
                 obs.extend([rel_x, rel_y, action_code, 1.0, team_flag, has_ball_flag])
             else:
+                # Use last known position if available, otherwise zeros
                 if self.last_known_positions[other_id] is not None:
                     rel_x, rel_y, action_code = self.last_known_positions[other_id]
                     obs.extend([rel_x, rel_y, action_code, 0.0, team_flag, has_ball_flag])
                 else:
                     obs.extend([0.0, 0.0, 0.0, 0.0, team_flag, has_ball_flag])
 
+        # Check that the final observation vector matches the expected dimension
         expected_dim = self.observation_spaces[agent_id].shape[0]
         assert len(obs) == expected_dim, (
             f"Observation length mismatch for {agent_id}: "
