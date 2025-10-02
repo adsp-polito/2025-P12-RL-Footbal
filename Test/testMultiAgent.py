@@ -6,7 +6,6 @@ from football_tactical_ai.env.objects.pitch import Pitch
 
 
 
-
 def test_multiagent_render(save_path="test/videoTest/testMultiAgent.mp4"):
     """
     Run a single episode in FootballMultiEnv with random actions
@@ -18,7 +17,7 @@ def test_multiagent_render(save_path="test/videoTest/testMultiAgent.mp4"):
     # Initialize pitch and environment
     pitch = Pitch()
     env = FootballMultiEnv()
-    obs, _ = env.reset()  # reset returns (obs, info)
+    env.reset()  
 
     # Storage for rendering
     states = []

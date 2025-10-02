@@ -118,23 +118,21 @@ class PlayerGoalkeeper(BasePlayer):
 
 
     
-    def execute_action(self, 
-        action: dict, 
-        time_step: float, 
-        x_range: float, 
-        y_range: float, 
-        ball: Ball = None) -> dict:
+    def execute_action(self,
+                       action: np.ndarray,
+                       time_step: float,
+                       x_range: float,
+                       y_range: float,
+                       ball: Ball = None) -> dict:
         """
-        Executes a continuous action for a goalkeeper: move, dive, or shoot.
-        Action dictionary format:
-            {
-                "move": [dx, dy],
-                "flags": [dive_flag, shoot_flag],
-                "power": [p],
-                "direction": [dir_x, dir_y]
-            }
+        Execute continuous action for a goalkeeper:
+        move, dive, or shoot (clearance)
+        
+        Action vector format (Box(7,)):
+            [dx, dy, dive_flag, shoot_flag, power, dir_x, dir_y]
         """
 
+        # Context dictionary for reward shaping / logging
         context = {
             "dive_score": None,
             "blocked": False,
@@ -149,23 +147,25 @@ class PlayerGoalkeeper(BasePlayer):
             "shot_power": None,
         }
 
-        # Movement
-        dx, dy = action["move"]
-        dive_flag, shoot_flag = action["flags"]
-        desired_power = float(action["power"][0])
-        desired_direction = np.array(action["direction"], dtype=np.float32)
+        # UNPACK ACTION
+        dx, dy, f0, f1, power, dir_x, dir_y = action
+        dive_flag, shoot_flag = int(f0 > 0.5), int(f1 > 0.5)
+        desired_power = float(np.clip(power, 0.0, 1.0))
+        desired_direction = np.array([dir_x, dir_y], dtype=np.float32)
 
-        direction = np.array([dx, dy])
-        norm = np.linalg.norm(direction)
+        # MOVEMENT
+        move_vec = np.array([dx, dy], dtype=np.float32)
+        norm = np.linalg.norm(move_vec)
 
         if norm > 1e-6:
-            direction /= norm
-            self.last_action_direction = direction
-            context["fov_visible"] = self.is_direction_visible(direction)
+            move_vec /= norm
+            self.last_action_direction = move_vec
+            context["fov_visible"] = self.is_direction_visible(move_vec)
         else:
             context["fov_visible"] = None
 
-        super().execute_action(action, time_step, x_range, y_range)
+        # Call base class to apply movement
+        super().execute_action(move_vec, time_step, x_range, y_range)
 
         # DIVE
         if dive_flag == 1:
@@ -173,31 +173,34 @@ class PlayerGoalkeeper(BasePlayer):
             dive_result = self.dive(desired_direction, ball)
             context.update(dive_result)
 
-        # SHOOT (goal kick / pass)
-        elif shoot_flag == 1 and ball is not None and ball.get_owner() == self.agent_id:
-            self.current_action = "shoot"
-            shot_quality, actual_direction, actual_power = self.shoot(
-                desired_direction=desired_direction,
-                desired_power=desired_power,
-                enable_fov=True
-            )
-            context.update({
-                "shot_attempted": True,
-                "shot_quality": shot_quality,
-                "shot_direction": actual_direction,
-                "shot_power": actual_power,
-                "invalid_shot_attempt": False,
-                "invalid_shot_direction": np.allclose(actual_direction, [0.0, 0.0])
-            })
+        # SHOOT (CLEARANCE)
         elif shoot_flag == 1:
-            # Tried to shoot without ball
-            context["invalid_shot_attempt"] = True
-            self.current_action = "idle"
+            if ball is not None and ball.get_owner() == self.agent_id:
+                self.current_action = "shoot"
+                shot_quality, actual_dir, actual_power = self.shoot(
+                    desired_direction=desired_direction,
+                    desired_power=desired_power,
+                    enable_fov=True
+                )
+                context.update({
+                    "shot_attempted": True,
+                    "shot_quality": shot_quality,
+                    "shot_direction": actual_dir,
+                    "shot_power": actual_power,
+                    "invalid_shot_attempt": False,
+                    "invalid_shot_direction": np.allclose(actual_dir, [0.0, 0.0]),
+                })
+            else:
+                # Tried to shoot without ball possession
+                context["invalid_shot_attempt"] = True
+                self.current_action = "idle"
 
+        # Otherwise → only movement
         else:
             self.current_action = "move" if norm > 1e-6 else "idle"
 
         return context
+
 
 
 

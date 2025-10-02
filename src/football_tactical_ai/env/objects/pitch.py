@@ -165,13 +165,13 @@ class Pitch:
 
         # Draw heatmap, rewards or grid overlay if requested
         if show_heatmap and reward_grid is not None:
-            self._draw_heatmap(ax, reward_grid)
+            self._draw_heatmap(ax, reward_grid, show_grid=show_grid, half=True)
 
         if show_rewards and reward_grid is not None:
-            self._draw_rewards(ax, reward_grid)
+            self._draw_rewards(ax, reward_grid, half=True)
 
         if show_grid:
-            self._draw_grid(ax)
+            self._draw_grid(ax, half=True)
 
         # Set axis limits to focus on the offensive half
         ax.set_xlim(self.half_field_x, self.x_max)
@@ -333,18 +333,29 @@ class Pitch:
             zorder=2
         ))
 
-    def _draw_grid(self, ax):
+    def _draw_grid(self, ax, half=False):
         """
-        Draw the reward shaping grid over the entire pitch area.
+        Draw the reward shaping grid.
+        - Full pitch if half=False
+        - Only offensive half if half=True
+        """
 
-        Each cell corresponds to a discrete region used for RL reward shaping.
-        """
-        for i in range(self.num_cells_x):
+        if half:
+            i_start = self.num_cells_x // 2
+            i_end = self.num_cells_x
+            x_start = self.half_field_x
+            x_end = self.x_max
+        else:
+            i_start = 0
+            i_end = self.num_cells_x
+            x_start = self.x_min
+            x_end = self.x_max
+
+        for i in range(i_start, i_end):
             for j in range(self.num_cells_y):
                 x0 = self.x_min + i * self.cell_size
                 y0 = self.y_min + j * self.cell_size
 
-                # Draw a rectangle for each cell
                 rect = Rectangle(
                     (x0, y0),
                     self.cell_size,
@@ -356,7 +367,12 @@ class Pitch:
                 )
                 ax.add_patch(rect)
 
-    def _draw_heatmap(self, ax, reward_grid, show_grid=False):
+        # Safe axis limits
+        ax.set_xlim(x_start, x_end)
+        ax.set_ylim(self.y_min, self.y_max)
+
+
+    def _draw_heatmap(self, ax, reward_grid, show_grid=False, half=False):
         """
         Draw a heatmap of rewards over the pitch using imshow, with the same
         color normalization logic as the rectangle-based version.
@@ -395,11 +411,18 @@ class Pitch:
                     norm = np.clip(norm, 0, 1)
                 norm_grid[i, j] = norm
 
+        if half:
+            mid_col = self.num_cells_x // 2
+            norm_grid = norm_grid[mid_col:, :]   # keep only offensive half
+            extent = [self.half_field_x, self.x_max, self.y_min, self.y_max]
+        else:
+            extent = [self.x_min, self.x_max, self.y_min, self.y_max]
+
         # Draw with imshow
         im = ax.imshow(
             norm_grid.T,  # transpose for orientation
             origin="lower",
-            extent=[self.x_min, self.x_max, self.y_min, self.y_max],
+            extent=extent,
             cmap="coolwarm",
             alpha=0.6,
             interpolation="nearest"  # avoids blurred lines
@@ -413,36 +436,30 @@ class Pitch:
 
         return im
 
-
-
-
-
-    def _draw_rewards(self, ax, reward_grid):
+    def _draw_rewards(self, ax, reward_grid, half=False):
         """
         Draw numeric reward values inside each cell of the reward grid.
 
         Parameters:
             ax (matplotlib.axes.Axes): Matplotlib axis to draw on.
             reward_grid (2D np.array): Grid of reward values.
+            half (bool): If True, draw only the offensive half of the pitch.
         """
-        # Iterate over each cell and add text annotation with reward value
         for i in range(self.num_cells_x):
             for j in range(self.num_cells_y):
-                # Compute bottom-left corner coordinates of the cell in pitch meters
                 x0 = self.x_min + i * self.cell_size
                 y0 = self.y_min + j * self.cell_size
 
-                reward = reward_grid[i, j]
+                # Skip if half-pitch and cell is before midfield
+                if half and x0 < self.half_field_x:
+                    continue
 
-                # Add centered text with the reward value formatted with 2 decimals
+                reward = reward_grid[i, j]
                 ax.text(
                     x0 + self.cell_size / 2,
                     y0 + self.cell_size / 2,
                     f"{reward:.2f}",
-                    ha='center',
-                    va='center',
-                    fontsize=self.cell_size * 0.85,  # Scale font size with cell size
-                    color='black',
-                    alpha=0.7,
-                    zorder=2  
+                    ha='center', va='center',
+                    fontsize=self.cell_size * 0.85,
+                    color='black', alpha=0.7, zorder=2
                 )

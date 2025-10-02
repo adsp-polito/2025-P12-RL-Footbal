@@ -143,80 +143,57 @@ class FootballMultiEnv(MultiAgentEnv):
         # ======================================================================
         # ACTION SPACES
         #
-        # Each player has a Dict action space with the following structure:
+        # Each player now uses a flat Box(7,) action space:
+        # [dx, dy, flag1, flag2, power, dir_x, dir_y]
         #
-        # Attacker:
-        #   {
-        #       "move":      [dx, dy] in [-1, 1]        → normalized continuous movement
-        #       "flags":     [pass, shoot] in {0, 1}    → binary flags (MultiBinary(2))
-        #       "power":     [p] in [0, 1]              → shot/pass intensity
-        #       "direction": [dir_x, dir_y] in [-1, 1]  → shot/pass direction
-        #   }
-        #
-        # Defender:
-        #   {
-        #       "move":      [dx, dy] in [-1, 1]
-        #       "flags":     [tackle, shoot] in {0, 1}
-        #       "power":     [p] in [0, 1]
-        #       "direction": [dir_x, dir_y] in [-1, 1]
-        #   }
-        #
-        # Goalkeeper:
-        #   {
-        #       "move":      [dx, dy] in [-1, 1]
-        #       "flags":     [dive, shoot] in {0, 1}
-        #       "power":     [p] in [0, 1]
-        #       "direction": [dir_x, dir_y] in [-1, 1]
-        #   }
+        # - dx, dy ∈ [-1, 1] → movement direction
+        # - flag1, flag2 ∈ [0, 1] → treated as binary with threshold (e.g. > 0.5)
+        # - power ∈ [0, 1] → kick strength
+        # - dir_x, dir_y ∈ [-1, 1] → direction vector
         #
         # Notes:
-        # - With this structure, no thresholds (>0.5) are needed to interpret the flags
-        # - The power is already constrained in [0,1], so clipping is no longer necessary
-        # - dx, dy, dir_x, and dir_y remain continuous in [-1,1]
+        # - Attackers interpret (flag1=pass, flag2=shoot)
+        # - Defenders interpret (flag1=tackle, flag2=shoot)
+        # - Goalkeeper interprets (flag1=dive, flag2=shoot)
         # ======================================================================
 
         self.action_spaces = {}
-
-        # Attacker action space
-        for aid in self.attacker_ids:
-            self.action_spaces[aid] = spaces.Dict({
-                "move": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
-                "flags": spaces.MultiBinary(2),  # [pass, shoot]
-                "power": spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
-                "direction": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
-            })
-
-        # Defender action space
-        for did in self.defender_ids:
-            self.action_spaces[did] = spaces.Dict({
-                "move": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
-                "flags": spaces.MultiBinary(2),  # [tackle, shoot]
-                "power": spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
-                "direction": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
-            })
-
-        # Goalkeeper action space
-        for gid in self.gk_ids:
-            self.action_spaces[gid] = spaces.Dict({
-                "move": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
-                "flags": spaces.MultiBinary(2),  # [dive, shoot]
-                "power": spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),
-                "direction": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32),
-            })
+        for agent_id in self.agents:
+            self.action_spaces[agent_id] = spaces.Box(
+                low=np.array([-1, -1, 0, 0, 0, -1, -1], dtype=np.float32),
+                high=np.array([ 1,  1, 1, 1, 1,  1,  1], dtype=np.float32),
+                shape=(7,),
+                dtype=np.float32,
+            )
 
 
-        # OBSERVATION SPACES
-        # Each agent observes:
-        # [self_x, self_y, self_has_ball] +
-        # [ball_x, ball_y, ball_vx, ball_vy] +
-        # [goal_x, goal_y] +
-        # For each other player:
-        #   [player_x, player_y, action_code, visible_flag, team_flag, has_ball_flag]
+        # ======================================================================
+        # OBSERVATION SPACE
         #
-        # action_code = one-hot or discrete integer (0=idle, 1=move, 2=pass, 3=shoot, 4=tackle, ...)
-        # visible_flag = 1 if in FOV, 0 otherwise
-        # team_flag = 1 if teammate, 0 if opponent
-        # has_ball_flag = 1 if this player has the ball
+        # Each agent observes a flat vector:
+        #
+        # 1. Self (3):
+        #    [self_x, self_y, self_has_ball]
+        #      - self_x, self_y ∈ [0,1] (normalized absolute position)
+        #      - self_has_ball ∈ {0,1}
+        #
+        # 2. Ball (4):
+        #    [ball_x, ball_y, ball_vx, ball_vy]
+        #      - ball_x, ball_y ∈ [0,1] (normalized position)
+        #      - ball_vx, ball_vy ∈ [-1,1] (normalized velocity)
+        #
+        # 3. Goal (2):
+        #    [goal_x, goal_y] ∈ [0,1] (opponent goal position)
+        #
+        # 4. Other players (6 per player):
+        #    [rel_x, rel_y, action_code, visible_flag, team_flag, has_ball_flag]
+        #      - rel_x, rel_y ∈ [-1,1] (relative to self)
+        #      - action_code ∈ {0=idle,1=move,2=pass,3=shoot,4=tackle,...}
+        #      - visible_flag, team_flag, has_ball_flag ∈ {0,1}
+        #
+        # Total dim:
+        #   obs_dim = 3 (self) + 4 (ball) + 2 (goal) + (N-1)*6
+        # ======================================================================
 
         obs_dim = (
             3 +   # self_x, self_y, self_has_ball
@@ -227,7 +204,7 @@ class FootballMultiEnv(MultiAgentEnv):
 
         self.observation_spaces = {
             agent_id: spaces.Box(
-                low=0.0, high=1.0, shape=(obs_dim,), dtype=np.float32
+                low=-1.0, high=1.0, shape=(obs_dim,), dtype=np.float32
             )
             for agent_id in self.agents
         }
@@ -850,14 +827,7 @@ class FootballMultiEnv(MultiAgentEnv):
         [ball_x, ball_y, ball_vx, ball_vy] +
         [goal_x, goal_y] +
         For each other player:
-            [player_x, player_y, action_code, visible_flag, team_flag, has_ball_flag]
-
-        Notes:
-        - visible_flag = 1 if agent is in the FOV, else 0
-        - team_flag = 1 if teammate, 0 if opponent
-        - has_ball_flag = 1 if that player is the current ball owner
-        - if not visible now but seen before -> last known position
-        - if never seen -> padding with zeros
+            [rel_x, rel_y, action_code, visible_flag, team_flag, has_ball_flag]
         """
 
         player = self.players[agent_id]
@@ -866,54 +836,59 @@ class FootballMultiEnv(MultiAgentEnv):
         # Self has ball?
         self_has_ball = 1.0 if self.ball.get_owner() == agent_id else 0.0
 
-        # Ball position and velocity
+        # Ball info (normalized)
         ball_x, ball_y = self.ball.get_position()
         ball_vx, ball_vy = self.ball.get_velocity()
 
-        # Goal position (attacker → opponent goal, defender/GK → own goal)
+        # Goal position (depends on team)
         if player.team == "A":  # attacking team
             goal_x, goal_y = self.pitch.width, self.pitch.center_y
         else:  # defending team
             goal_x, goal_y = 0.0, self.pitch.center_y
 
-        # Start observation vector
-        obs = [self_x, self_y, self_has_ball,
-            ball_x, ball_y, ball_vx, ball_vy,
-            goal_x, goal_y]
+        # Normalize goal coordinates
+        goal_x, goal_y = normalize(goal_x, goal_y)
 
-        # Ensure we have memory for last known positions
+        # Start obs vector
+        obs = [
+            self_x, self_y, self_has_ball,
+            ball_x, ball_y, ball_vx, ball_vy,
+            goal_x, goal_y
+        ]
+
+        # Memory for last known positions
         if not hasattr(self, "last_known_positions"):
             self.last_known_positions = {aid: None for aid in self.agents}
 
+        # Other players (relative coords)
         for other_id, other in self.players.items():
             if other_id == agent_id:
-                continue  # skip self
+                continue
 
-            # Team flag (1 = teammate, 0 = opponent)
             team_flag = 1.0 if other.team == player.team else 0.0
-
-            # Has ball flag
             has_ball_flag = 1.0 if self.ball.get_owner() == other_id else 0.0
 
-            # Check visibility using FOV
             visible = self._is_in_fov(player, other)
 
             if visible:
                 ox, oy = other.get_position()
-                action_code = other.get_current_action_code()  # must be defined in Player
-                self.last_known_positions[other_id] = (ox, oy, action_code)
-                obs.extend([ox, oy, action_code, 1.0, team_flag, has_ball_flag])  # visible
+                rel_x = ox - self_x
+                rel_y = oy - self_y
+                action_code = other.get_current_action_code()
+
+                self.last_known_positions[other_id] = (rel_x, rel_y, action_code)
+                obs.extend([rel_x, rel_y, action_code, 1.0, team_flag, has_ball_flag])
             else:
                 if self.last_known_positions[other_id] is not None:
-                    ox, oy, action_code = self.last_known_positions[other_id]
-                    obs.extend([ox, oy, action_code, 0.0, team_flag, has_ball_flag])  # not visible but known
+                    rel_x, rel_y, action_code = self.last_known_positions[other_id]
+                    obs.extend([rel_x, rel_y, action_code, 0.0, team_flag, has_ball_flag])
                 else:
-                    obs.extend([0.0, 0.0, 0.0, 0.0, team_flag, has_ball_flag])  # never seen
+                    obs.extend([0.0, 0.0, 0.0, 0.0, team_flag, has_ball_flag])
 
         expected_dim = self.observation_spaces[agent_id].shape[0]
         assert len(obs) == expected_dim, (
             f"Observation length mismatch for {agent_id}: "
             f"got {len(obs)}, expected {expected_dim}"
         )
-        
+
         return np.array(obs, dtype=np.float32)

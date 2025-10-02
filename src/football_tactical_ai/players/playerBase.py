@@ -154,22 +154,24 @@ class BasePlayer(ABC):
         max_angle = self.fov_angle * self.max_fov_angle
 
         return angle_deg <= (max_angle / 2)
+    
 
     def move_with_action(self, action, time_per_step, x_range, y_range, enable_fov=True):
         """
-        Move the player based on a continuous action input.
+        Move the player based on a movement vector extracted from the full action array.
 
-        The player can only move if the intended direction is inside their field of view (FOV),
-        unless `enable_fov` is set to False. Movement is computed in real meters per step,
-        then converted back to normalized [0, 1] coordinates.
+        - The input here is only [dx, dy] ∈ [-1, 1].
+        - Handles FOV constraints, normalizes direction, and converts displacement
+          into meters per step → then back to normalized pitch coordinates.
 
         Args:
-            action (np.array): Array [dx, dy] with movement direction in [-1, 1].
-            time_per_step (float): Duration of one simulation step (seconds).
+            action (np.array): Array [dx, dy] with movement direction.
+            time_per_step (float): Simulation step duration (s).
             x_range (float): Pitch width in meters.
             y_range (float): Pitch height in meters.
-            enable_fov (bool): If True, block movement outside player's FOV.
+            enable_fov (bool): If True, blocks movement outside the player's FOV.
         """
+
 
         # If the action is zero (idle), do not move
         if np.linalg.norm(action) < 1e-6:
@@ -200,17 +202,29 @@ class BasePlayer(ABC):
         self.move([dx, dy])
 
 
-    # Execute the action (to be overridden by subclasses)
+    # Execute the action (to be overridden by subclasses if needed)
     # This method is specifically used in multi-agent environments
-    def execute_action(self, action: dict, time_step: float, x_range: float, y_range: float):
+    def execute_action(self, action: np.ndarray, time_step: float, x_range: float, y_range: float):
         """
-        Executes a continuous action dictionary for the player.
+        Executes a continuous action vector for the player.
         Only movement is handled here; child classes implement pass/shoot/etc.
+
+        Args:
+            action (np.ndarray): Flat action vector of shape (7,)
+                - action[0], action[1]: movement deltas (dx, dy) in [-1, 1]
+                - action[2], action[3]: binary flags (e.g. pass/tackle, shoot/dive)
+                - action[4]: power (0-1)
+                - action[5], action[6]: direction vector for pass/shot in [-1, 1]
+            time_step (float): Duration of simulation step in seconds (e.g. 1/FPS)
+            x_range (float): Field width in meters
+            y_range (float): Field height in meters
         """
 
-        # Movement comes from "move" field
-        move_vec = np.array(action.get("move", [0.0, 0.0]), dtype=np.float32)
+        # Extract movement from the first two values of the action vector
+        dx, dy = action[0], action[1]
+        move_vec = np.array([dx, dy], dtype=np.float32)
 
+        # Apply movement logic (with FOV constraint)
         self.move_with_action(
             action=move_vec,
             time_per_step=time_step,
@@ -219,9 +233,11 @@ class BasePlayer(ABC):
             enable_fov=True
         )
 
-        # Store current action type (pass, shoot, etc.)
+        # Store the inferred action type (idle, move, pass, shoot, etc.)
         self.current_action = self._infer_action_type(action)
+
         return None
+
 
     
     def shoot(self, desired_direction, desired_power, enable_fov=True):
@@ -339,44 +355,66 @@ class BasePlayer(ABC):
 
         return pass_quality, pass_direction, pass_power
 
-    
-    def _infer_action_type(self, action: dict) -> str:
+
+    def _infer_action_type(self, action: np.ndarray) -> str:
         """
-        Infer action type from the structured action dict.
-        Returns one of: "idle", "move", "pass", "shoot", "tackle", "dive".
+        Infer the action type from the flat action vector.
+        Action format = [dx, dy, f0, f1, power, dir_x, dir_y]
         """
-        dx, dy = action.get("move", [0.0, 0.0])
+
+        # Pad action if it's shorter (e.g. only [dx, dy])
+        if len(action) < 7:
+            padded = np.zeros(7, dtype=np.float32)
+            padded[:len(action)] = action
+            action = padded
+
+        dx, dy, f0, f1, power, dir_x, dir_y = action
+
+        # Movement has priority
         if np.linalg.norm([dx, dy]) > 1e-6:
             return "move"
 
-        flags = action.get("flags", [0, 0])
-        f0, f1 = int(flags[0]), int(flags[1])  # ensure ints
+        # Threshold flags
+        f0, f1 = int(f0 > 0.5), int(f1 > 0.5)
 
         if self.role in {"ATT", "CF", "LW", "RW", "LCF", "RCF", "SS"}:
-            if f0 == 1: return "pass"
-            if f1 == 1: return "shoot"
+            if f0: return "pass"
+            if f1: return "shoot"
 
         elif self.role in {"DEF", "LCB", "RCB", "CB"}:
-            if f0 == 1: return "tackle"
-            if f1 == 1: return "shoot"
+            if f0: return "tackle"
+            if f1: return "shoot"
 
         elif self.role == "GK":
-            if f0 == 1: return "dive"
-            if f1 == 1: return "shoot"
+            if f0: return "dive"
+            if f1: return "shoot"
 
         return "idle"
 
 
-    def get_current_action_code(self):
+    def get_current_action_code(self) -> int:
         """
-        Return the integer code for the current action.
+        Map the current action string to a discrete integer code.
+
+        Returns:
+            int: Encoded action for observations (0 = idle, 1 = move, etc.).
         """
-        mapping = {"idle": 0, "move": 1, "pass": 2, "shoot": 3, "tackle": 4, "dive": 5}
+        mapping = {
+            "idle": 0,
+            "move": 1,
+            "pass": 2,
+            "shoot": 3,
+            "tackle": 4,
+            "dive": 5,
+        }
         return mapping.get(self.current_action, 0)
 
 
-    # ABSTRACT METHODS
 
+
+
+
+    # ABSTRACT METHODS
     @abstractmethod
     def get_parameters(self) -> Dict[str, float]:
         """Return the role-specific skill dictionary."""

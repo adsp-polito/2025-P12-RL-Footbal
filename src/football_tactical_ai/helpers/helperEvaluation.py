@@ -95,12 +95,6 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0, fps=24,
 
 
 
-
-
-
-
-
-
 def evaluate_and_render_multi(
     model,
     env,
@@ -113,50 +107,48 @@ def evaluate_and_render_multi(
     show_rewards=False,
     full_pitch=True,
     show_fov=False,
-    show_names=False,       # If True, shows agent IDs above players
-    deterministic=True,     # If True, agents act greedily
-    debug=True,             # If True, save debug info
-    policy_mapping_fn=None  # Optional: mapping from agent_id → policy_id (role-based setup)
+    show_names=False,       # Show agent IDs above players
+    deterministic=True,     # Greedy vs stochastic actions
+    debug=True,             # Save per-agent logs
+    policy_mapping_fn=None  # Map agent_id → policy_id
 ):
     """
-    Evaluate a trained RLlib PPO model in a multi-agent football environment
-    (new API stack). This version saves per-agent debug logs into a folder per episode.
+    Evaluate a trained RLlib PPO model in a multi-agent football environment.
+
+    Runs one full episode with the trained model,
+    optionally saving debug logs and rendering to video.
     """
 
     # Reset environment
-    obs, _ = env.reset()
-
-    # Track rewards and rendering states
+    obs, infos = env.reset()
     states = [env.get_render_state()]
     cumulative_rewards = {agent: 0.0 for agent in env.agents}
 
-    # Prepare debug log folder (one per episode)
+    # Debug log files
     log_files = {}
     if debug:
         base_dir = f"training/debug_logs/episode_{episode}"
         os.makedirs(base_dir, exist_ok=True)
         for agent in env.agents:
-            fname = os.path.join(base_dir, f"episode_{episode}_{agent}.log")
+            fname = os.path.join(base_dir, f"{agent}.log")
             log_files[agent] = open(fname, "w", encoding="utf-8")
             log_files[agent].write(f"Debug log for {agent} (Episode {episode})\n")
             log_files[agent].write("=" * 80 + "\n")
 
-    # Termination flags
-    terminated = {agent: False for agent in env.agents}
-    truncated = {agent: False for agent in env.agents}
-
-    # Evaluation loop
     step_count = 0
-    while not terminated.get("__all__", False) and not truncated.get("__all__", False):
+    terminations, truncations = {}, {}
+
+    # Evaluation loop → stop when ANY agent is terminated or truncated
+    while not any(terminations.values()) and not any(truncations.values()):
         step_count += 1
         action_dict = {}
 
         for agent_id in env.agents:
-            # Select policy
+            # Map agent_id → policy_id
             policy_id = policy_mapping_fn(agent_id) if policy_mapping_fn else agent_id
             module = model.get_module(policy_id)
 
-            # Obs tensor
+            # Obs → tensor
             obs_array = torch.tensor(
                 np.array(obs[agent_id], dtype=np.float32).reshape(1, -1),
                 dtype=torch.float32
@@ -167,44 +159,46 @@ def evaluate_and_render_multi(
                 out = module.forward_inference({"obs": obs_array})
 
             # Build distribution
-            dist_inputs = out["action_dist_inputs"]
+            dist_inputs = out.get("action_dist_inputs", out.get("logits"))
             dist_class = module.get_train_action_dist_cls()
             dist = dist_class.from_logits(dist_inputs)
 
-            # Choose action
+            # Select action
             if deterministic:
-                action = dist.loc if hasattr(dist, "loc") else torch.argmax(dist_inputs, dim=-1)
+                if hasattr(dist, "loc"):  # Gaussian
+                    action = dist.loc
+                else:                     # Categorical
+                    action = torch.argmax(dist_inputs, dim=-1)
             else:
                 action = dist.sample()
 
-            # Convert to numpy
             action = np.array(action.cpu().numpy()).flatten()
             action_dict[agent_id] = action
 
         # Step env
-        obs, rewards, terminated, truncated, infos = env.step(action_dict)
+        obs, rewards, terminations, truncations, infos = env.step(action_dict)
 
-        # Save per-agent debug info
+        # Update rewards + logs
         for agent in env.agents:
             cumulative_rewards[agent] += rewards.get(agent, 0.0)
             if debug and agent in log_files:
                 log_files[agent].write(
                     f"[Step {step_count}] "
                     f"Action={action_dict[agent]} | "
-                    f"Reward={rewards[agent]:+.3f} | "
+                    f"Reward={rewards.get(agent, 0.0):+.3f} | "
                     f"Cum={cumulative_rewards[agent]:+.3f} | "
-                    f"Info={infos[agent]}\n"
+                    f"Info={infos.get(agent, {})}\n"
                 )
 
-        # Save state for rendering
+        # Save render state
         states.append(env.get_render_state())
 
-    # Close log files
+    # Close logs
     if debug:
         for f in log_files.values():
             f.close()
 
-    # Render to video if requested
+    # Render video if requested
     if save_path:
         anim = render_episode_multiAgent(
             states,

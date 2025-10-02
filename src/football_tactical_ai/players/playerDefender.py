@@ -84,27 +84,28 @@ class PlayerDefender(BasePlayer):
 
 
     def execute_action(self, 
-                    action: dict, 
-                    time_step: float, 
-                    x_range: float, 
-                    y_range: float, 
-                    ball: Ball = None) -> dict:
+                       action: np.ndarray, 
+                       time_step: float, 
+                       x_range: float, 
+                       y_range: float, 
+                       ball: Ball = None) -> dict:
         """
         Executes a continuous action for a defensive player (movement, tackle, optional shooting).
 
         Args:
-            action (dict): Action dictionary with keys:
-                - "move": [dx, dy] in [-1, 1] (continuous movement)
-                - "flags": [tackle_flag, shoot_flag] (binary values 0/1)
-                - "power": [p] in [0, 1] (shot/tackle intensity)
-                - "direction": [dir_x, dir_y] in [-1, 1] (shot/tackle direction)
-            time_step (float): Duration of simulation step in seconds
-            x_range (float): Field width in meters
-            y_range (float): Field height in meters
+            action (np.ndarray): Flat action vector [dx, dy, tackle_flag, shoot_flag, power, dir_x, dir_y]
+                - dx, dy ∈ [-1, 1]: movement
+                - tackle_flag > 0.5 → attempt tackle
+                - shoot_flag  > 0.5 → attempt clearance shot
+                - power ∈ [0, 1]: intensity
+                - dir_x, dir_y ∈ [-1, 1]: direction for shot/tackle
+            time_step (float): Duration of simulation step (s)
+            x_range (float): Pitch width (m)
+            y_range (float): Pitch height (m)
             ball (Ball): Current ball object
 
         Returns:
-            dict: Contextual information about the executed actions (for rewards).
+            dict: Context info about the executed actions (for rewards).
         """
 
         # Context dictionary (used for reward shaping and logging)
@@ -121,14 +122,14 @@ class PlayerDefender(BasePlayer):
             "shot_power": None
         }
 
-        # 1. Decode action dictionary
-        dx, dy = action["move"]
-        tackle_flag, shoot_flag = action["flags"]        # MultiBinary(2)
-        desired_power = float(action["power"][0])        # [0,1]
-        desired_direction = np.array(action["direction"], dtype=np.float32)
+        # UNPACK ACTION
+        dx, dy, f0, f1, power, dir_x, dir_y = action
+        tackle_flag, shoot_flag = int(f0 > 0.5), int(f1 > 0.5)
+        desired_power = float(np.clip(power, 0.0, 1.0))
+        desired_direction = np.array([dir_x, dir_y], dtype=np.float32)
 
-        # 2. Movement
-        direction = np.array([dx, dy])
+        # MOVEMENT
+        direction = np.array([dx, dy], dtype=np.float32)
         norm = np.linalg.norm(direction)
 
         fov_visible = None
@@ -136,21 +137,17 @@ class PlayerDefender(BasePlayer):
             direction /= norm
             self.last_action_direction = direction
             fov_visible = self.is_direction_visible(direction)
-        else:
-            direction = np.array([0.0, 0.0])
-            fov_visible = None
 
-        # Apply base movement (only dx,dy passed to BasePlayer)
-        super().execute_action(action, time_step, x_range, y_range)
-
+        # Apply base movement
+        super().execute_action(direction, time_step, x_range, y_range)
 
         # Save FOV information
         context["fov_visible"] = fov_visible
 
-        # 3. Update tackle cooldown timer
+        # Update tackle timer (cooldown)
         self.tackle_timer = max(0.0, self.tackle_timer - time_step)
 
-        # 4. Tackle attempt
+        # TACKLE attempt
         if tackle_flag == 1:
             self.current_action = "tackle"
 
@@ -175,7 +172,7 @@ class PlayerDefender(BasePlayer):
                 if context["tackle_success"]:
                     context["interception_success"] = True
 
-        # 5. Shooting attempt (clearance)
+        # SHOOTING (CLEARANCE) attempt
         elif shoot_flag == 1:
             self.current_action = "shoot"
 
@@ -190,9 +187,7 @@ class PlayerDefender(BasePlayer):
                 "shot_quality": shot_quality,
                 "shot_direction": shot_direction,
                 "shot_power": shot_power,
-                # Invalid if defender does not own the ball
                 "invalid_shot_attempt": self.agent_id != ball.get_owner(),
-                # Invalid if the resulting direction is zero (blocked shot)
                 "invalid_shot_direction": np.allclose(shot_direction, [0.0, 0.0]),
             })
 

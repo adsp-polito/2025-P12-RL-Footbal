@@ -59,12 +59,11 @@ multiagent_params = {
         "framework": "torch",  # Neural network backend
 
         # Learning rate for optimizer (with schedule for decay)
-        "lr": 5e-5,
-        "lr_schedule": [
-            [0,        5e-5],   
-            [500_000,  2e-5],   
-            [1_000_000, 1e-5]
-        ],
+        "lr":[
+                [0,        5e-5],   
+                [500_000,  2e-5],   
+                [1_000_000, 1e-5]
+            ],
 
         # Discount factor & GAE
         "gamma": 0.995,
@@ -75,11 +74,11 @@ multiagent_params = {
         "entropy_coeff": 0.04,
 
         # Rollout / Training settings
-        #"train_batch_size": 16_000,     # Large enough for stable updates
-        "train_batch_size": 8_000,     # Large enough for stable updates
-        "rollout_fragment_length": 400, # Steps per worker before sending batch
-        "minibatch_size": 256,          # For SGD updates
-        "num_epochs": 8,                # Gradient passes per batch
+        #"train_batch_size": 16_000,        # Large enough for stable updates
+        "train_batch_size": 8_000,          # Large enough for stable updates
+        "rollout_fragment_length": 400,     # Steps per worker before sending batch
+        "minibatch_size": 256,              # For SGD updates
+        "num_epochs": 8,                    # Gradient passes per batch
 
         # Parallelism
         "num_workers": 4,               # Number of rollout workers
@@ -87,9 +86,9 @@ multiagent_params = {
 
         # Model architecture
         "model": {
-            "fcnet_hiddens": [256, 128],  # Hidden layers
-            "fcnet_activation": "relu",        # Non-linearity
-            "tanh_squash_output": True,    # Force actions into [-1, 1]
+            "fcnet_hiddens": [256, 128],        # Hidden layers
+            "fcnet_activation": "relu",         # Non-linearity
+            "uses_new_env_api": True,           # Use new API
         },
     },
 }

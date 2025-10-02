@@ -130,8 +130,12 @@ def train_SingleAgent(scenario="move"):
 
 
 def env_creator(config):
-    """Environment creator required by RLlib (wraps FootballMultiEnv)."""
-    return FootballMultiEnv(config)
+    """
+    Create a FootballMultiEnv instance for RLlib.
+    """
+    env_cfg = config.get("env_config", config)
+    return FootballMultiEnv(env_cfg)
+
 
 
 def make_schedule_fn(schedule: list):
@@ -177,36 +181,67 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = True):
 
     # Build a base environment to extract obs/action spaces
     base_env = FootballMultiEnv(cfg["env_config"])
-    obs_space = base_env.observation_space("att_1")  # same format for all agents
-    act_space = base_env.action_space("att_1")
 
     # Define policies and mapping
     if role_based:
-        policies = {
-            "attacker_policy": (None, obs_space, act_space, {}),
-            "defender_policy": (None, obs_space, act_space, {}),
-            "goalkeeper_policy": (None, obs_space, act_space, {}),
-        }
+        # Shared policy per role type (attacker, defender, goalkeeper)
+        policies = {}
+
+        if base_env.attacker_ids:
+            policies["attacker_policy"] = (
+                None,
+                base_env.observation_space(base_env.attacker_ids[0]),
+                base_env.action_space(base_env.attacker_ids[0]),
+                {},
+            )
+        if base_env.defender_ids:
+            policies["defender_policy"] = (
+                None,
+                base_env.observation_space(base_env.defender_ids[0]),
+                base_env.action_space(base_env.defender_ids[0]),
+                {},
+            )
+        if base_env.gk_ids:
+            policies["goalkeeper_policy"] = (
+                None,
+                base_env.observation_space(base_env.gk_ids[0]),
+                base_env.action_space(base_env.gk_ids[0]),
+                {},
+            )
 
         def policy_mapping_fn(agent_id, *args, **kwargs):
-            if agent_id.startswith("att"): return "attacker_policy"
-            if agent_id.startswith("def"): return "defender_policy"
-            if agent_id.startswith("gk"):  return "goalkeeper_policy"
+            if agent_id.startswith("att"):
+                return "attacker_policy"
+            if agent_id.startswith("def"):
+                return "defender_policy"
+            if agent_id.startswith("gk"):
+                return "goalkeeper_policy"
+            raise ValueError(f"Unknown agent_id: {agent_id}")
+
     else:
+        # Independent policy for each agent
         policies = {
-            agent_id: (None, obs_space, act_space, {})
+            agent_id: (
+                None,
+                base_env.observation_space(agent_id),
+                base_env.action_space(agent_id),
+                {},
+            )
             for agent_id in base_env.agents
         }
         policy_mapping_fn = lambda agent_id, *args, **kwargs: agent_id
 
     # Handle LR and entropy schedules (constant or schedule list)
-    lr = cfg["rllib"].get("lr_schedule", cfg["rllib"]["lr"])
-    entropy_coeff = cfg["rllib"].get("entropy_coeff_schedule", cfg["rllib"]["entropy_coeff"])
+    lr = cfg["rllib"]["lr"]  
+    entropy_coeff = cfg["rllib"]["entropy_coeff"] 
 
     # RLlib PPO configuration
     config = (
         PPOConfig()
-        .environment("football_multi_env", env_config=cfg["env_config"])
+        .api_stack(
+            enable_rl_module_and_learner=cfg["rllib"]["model"]["uses_new_env_api"],
+            enable_env_runner_and_connector_v2=cfg["rllib"]["model"]["uses_new_env_api"])
+        .environment("football_multi_env", env_config=cfg)
         .framework(cfg["rllib"]["framework"])
         .training(
             lr=lr,
@@ -217,7 +252,7 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = True):
             minibatch_size=cfg["rllib"]["minibatch_size"],
             num_epochs=cfg["rllib"]["num_epochs"],
         )
-        .rl_module(model_config=cfg["rllib"]["model"])  # proper new API way
+        .rl_module(model_config=cfg["rllib"]["model"])  
         .env_runners(
             num_env_runners=cfg["rllib"]["num_workers"],
             rollout_fragment_length=cfg["rllib"]["rollout_fragment_length"],
