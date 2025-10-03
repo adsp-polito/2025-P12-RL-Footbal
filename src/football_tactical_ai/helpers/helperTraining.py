@@ -161,7 +161,7 @@ def make_schedule_fn(schedule: list):
     return fn
 
 
-def train_MultiAgent(scenario: str = "multiagent", role_based: bool = True):
+def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
     """
     Train a PPO multi-agent setup with RLlib (new API stack).
 

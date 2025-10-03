@@ -112,7 +112,6 @@ class PlayerAttacker(BasePlayer):
 
             # Default context
             context = {
-                "fov_visible": None,
                 "shot_attempted": False,
                 "pass_attempted": False,
             }
@@ -137,14 +136,24 @@ class PlayerAttacker(BasePlayer):
             # PASSING
             if pass_flag > 0.5:
                 self.current_action = "pass"
+
+                # If player does not own the ball → cannot pass
+                if ball.get_owner() != self.agent_id or ball.get_owner() is None:
+                    context["pass_attempted"] = False
+                    context["invalid_pass_attempt"] = True
+                    return context
+
+                # Check FOV visibility (only used for reward shaping, not blocking)
                 fov_visible_pass = self.is_direction_visible(desired_direction)
 
+                # Compute pass parameters
                 pass_quality, pass_direction, pass_power = self.pass_ball(
                     desired_direction=desired_direction,
                     desired_power=desired_power,
-                    enable_fov=False
+                    enable_fov=False   # allow blind pass, but mark it separately
                 )
 
+                # Update context for logging/reward
                 context.update({
                     "pass_attempted": True,
                     "pass_quality": pass_quality,
@@ -152,10 +161,10 @@ class PlayerAttacker(BasePlayer):
                     "pass_direction": pass_direction,
                     "invalid_pass_direction": not fov_visible_pass,
                     "start_pass_bonus": True,
-                    "fov_visible": fov_visible_pass,
                 })
 
                 return context
+
 
             # SHOOTING
             if shoot_flag > 0.5:
@@ -190,7 +199,6 @@ class PlayerAttacker(BasePlayer):
                     "shot_alignment": alignment,
                     "start_shot_bonus": True,
                     "shot_positional_quality": positional_quality,
-                    "fov_visible": fov_visible_shot,
                 })
 
                 return context

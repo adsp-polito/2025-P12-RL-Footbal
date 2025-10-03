@@ -48,9 +48,6 @@ def update_ball_state(ball: Ball,
         ball.set_velocity(velocity_norm)
         ball.set_owner(None)  # ball is now free
 
-        # Reset context after consuming
-        shot_context.update({"shot_by": None, "direction": None, "power": 0.0})
-
 
     # 2. Pass: ball is released toward chosen teammate
     elif (pass_context and 
@@ -86,9 +83,6 @@ def update_ball_state(ball: Ball,
         ball.set_velocity(velocity_norm)
         ball.set_owner(None)  # ball is now free
 
-        # Reset context after consuming
-        pass_context.update({"pass_by": None, "direction": None, "power": 0.0, "pass_to": None})
-
 
     # 3. Dribbling: ball stays close to the owner, slightly in front of their movement
     elif owner_id in players:
@@ -117,7 +111,7 @@ def update_ball_state(ball: Ball,
         if shot_context is not None:
             shot_context.update({"shot_by": None, "direction": None, "power": 0.0})
         if pass_context is not None:
-            pass_context.update({"pass_by": None, "direction": None, "power": 0.0})
+            pass_context.update({"pass_from": None, "direction": None, "power": 0.0})
 
     return collision
 

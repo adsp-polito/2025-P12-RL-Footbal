@@ -41,7 +41,6 @@ def test_multiagent_render(save_path="test/videoTest/testMultiAgent.mp4"):
             for agent_id in env.agents
         }
 
-
         # Step the environment
         obs, rewards, terminated, truncated, infos = env.step(actions)
 
@@ -58,7 +57,6 @@ def test_multiagent_render(save_path="test/videoTest/testMultiAgent.mp4"):
     # Rendering
     print("\nRendering multi-agent episode...")
     time_start = time()
-
 
     anim = render_episode_multiAgent(
         states,

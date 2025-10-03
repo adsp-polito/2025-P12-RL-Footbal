@@ -24,7 +24,7 @@ multiagent_params = {
     "fps": 24,
 
     # Total number of training episodes
-    "episodes": 5000,
+    "episodes": 1000,
 
     # Frequency of evaluation in episodes
     "eval_every": 100,
@@ -58,11 +58,14 @@ multiagent_params = {
     "rllib": {
         "framework": "torch",  # Neural network backend
 
-        # Learning rate for optimizer (with schedule for decay)
+        # Learning rate for optimizer:
         "lr":[
                 [0,        5e-5],   
-                [500_000,  2e-5],   
-                [1_000_000, 1e-5]
+                [240_000,  2e-5],   
+                [480_000, 1e-5],
+                [720_000, 5e-6],   
+                [960_000, 2e-6],   
+                [1_200_000, 1e-6],
             ],
 
         # Discount factor & GAE
@@ -71,13 +74,13 @@ multiagent_params = {
 
         # Exploration
         #"entropy_coeff": 0.01,
-        "entropy_coeff": 0.04,
+        "entropy_coeff": 0.08,
 
         # Rollout / Training settings
         #"train_batch_size": 16_000,        # Large enough for stable updates
-        "train_batch_size": 8_000,          # Large enough for stable updates
-        "rollout_fragment_length": 400,     # Steps per worker before sending batch
-        "minibatch_size": 256,              # For SGD updates
+        "train_batch_size": 12_000,          # Large enough for stable updates
+        "rollout_fragment_length": 500,     # Steps per worker before sending batch
+        "minibatch_size": 512,              # For SGD updates
         "num_epochs": 8,                    # Gradient passes per batch
 
         # Parallelism

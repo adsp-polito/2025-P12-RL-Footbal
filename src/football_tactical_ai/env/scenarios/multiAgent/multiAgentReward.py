@@ -90,7 +90,8 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
 
     # BASE: positioning + small time penalty
     reward += pos_reward
-    reward -= 0.005  # time malus to avoid stalling
+    
+    # reward -= 0.005  # time malus to avoid stalling
 
     # BALL CHASING: encourage attacker to chase free ball
     # small reward up to ~10 meters away because the attacker should be proactive only when he is close enough
@@ -160,12 +161,6 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
     if alignment is not None:
         reward += alignment ** 2 - 0.25  # shaping from -0.25 to +0.75
 
-    # FOV shaping
-    if context.get("fov_visible") is True:
-        reward += 0.1
-    elif context.get("fov_visible") is False:
-        reward -= 0.05
-
     return reward
 
 
@@ -217,12 +212,6 @@ def defender_reward(agent_id, player, pos_reward, ball, context):
         if context.get("goal_team") != player.team:
             reward -= 6.0        # conceding is worst outcome
 
-    # FIELD OF VIEW
-    if context.get("fov_visible") is True:
-        reward += 0.1
-    elif context.get("fov_visible") is False:
-        reward -= 0.05
-
     return reward
 
 
@@ -264,11 +253,5 @@ def goalkeeper_reward(agent_id, player, pos_reward, context):
     if context.get("goal_scored", False):
         if context.get("goal_team") != player.team:
             reward -= 6.0        # conceding goal
-
-    # FIELD OF VIEW
-    if context.get("fov_visible") is True:
-        reward += 0.1
-    elif context.get("fov_visible") is False:
-        reward -= 0.05
 
     return reward

@@ -300,39 +300,34 @@ class BasePlayer(ABC):
 
         return shot_quality, shot_direction, shot_power
     
-    def pass_ball(self, desired_direction, desired_power, enable_fov=False):
+    def pass_ball(self, desired_direction, desired_power, target_pos=None, enable_fov=False):
         """
-        Attempt to pass in a given direction, only if it's within the field of view.
+        Attempt a pass with simplified logic.
 
         Args:
-            desired_direction (np.array): 2D vector representing the pass direction.
-            desired_power (float): Desired pass power in range [0, 1].
-            enable_fov (bool): Whether to check if the pass direction is within FOV.
+            desired_direction (np.array): intended pass direction (2D).
+            desired_power (float): desired power in [0,1].
+            target_pos (np.array): optional position of target teammate.
+            enable_fov (bool): if True, invalid if outside FOV.
 
         Returns:
             tuple: (pass_quality, pass_direction, pass_power)
         """
-
-        # Check if the desired direction is within the player's field of view
-        # If not, the pass is invalid and returns zeroed output
-        if not self.is_direction_visible(desired_direction) and enable_fov:
-            return 0.0, np.array([0.0, 0.0]), 0.0
-
-        # Normalize direction
+        # Normalize desired direction
         norm = np.linalg.norm(desired_direction)
         if norm > 0:
             dir_norm = desired_direction / norm
         else:
-            dir_norm = np.array([1.0, 0.0])
+            dir_norm = np.array([1.0, 0.0])  # fallback → verso destra
 
-        # Add noise to the shot direction based on the player's precision
-        # The less precise, the more deviation from the intended angle
-        max_noise_radians = 0.05  # smaller than shot (~2.9 degrees)
-        noise_strength = (1 - self.precision) * max_noise_radians
-        angle_noise = np.random.uniform(-noise_strength, noise_strength)
+        # FOV check (optional)
+        if enable_fov and not self.is_direction_visible(dir_norm):
+            return 0.0, np.array([0.0, 0.0]), 0.0
+
+        # Add small directional noise based on precision
+        noise = (1 - self.precision) * 0.05  # max ±3° error
+        angle_noise = np.random.uniform(-noise, noise)
         cos_a, sin_a = np.cos(angle_noise), np.sin(angle_noise)
-
-        # Apply rotation to simulate directional inaccuracy
         pass_direction = np.array([
             cos_a * dir_norm[0] - sin_a * dir_norm[1],
             sin_a * dir_norm[0] + cos_a * dir_norm[1]
@@ -340,20 +335,21 @@ class BasePlayer(ABC):
 
         # Clamp power
         desired_power = np.clip(desired_power, 0.0, 1.0)
+        pass_power = self.max_power * (0.3 + 0.7 * self.passing * desired_power)
 
-        # Scale to ball velocity (lower than shot)
-        # based on passing skill
-        pass_power = self.max_power * (0.2 + 0.7 * self.passing * desired_power)
+        # Compute quality (distance + skill)
+        if target_pos is not None:
+            passer_pos = np.array(self.get_position())
+            dist = np.linalg.norm(target_pos - passer_pos)
+            dist_factor = np.exp(-0.1 * dist)   # decay with distance
+        else:
+            dist_factor = 1.0
 
-        # Pass quality (simplified: skill + closeness to center)
-        x_pos, y_pos = self.position
-        x_factor = 0.2 + 0.8 * x_pos         # Better angle as player moves closer to goal (x direction)
-        y_dist = abs(y_pos - 0.5)
-        y_factor = max(0.5, 1 - 2 * y_dist)
-
-        pass_quality = x_factor * y_factor * self.passing
+        pass_quality = self.passing * dist_factor
+        pass_quality = np.clip(pass_quality, 0.0, 1.0)
 
         return pass_quality, pass_direction, pass_power
+
 
 
     def _infer_action_type(self, action: np.ndarray) -> str:
