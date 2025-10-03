@@ -99,11 +99,11 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
         x_b, y_b = denormalize(*ball.get_position())
         dist_to_ball = np.linalg.norm([x_b - x_p, y_b - y_p])
 
-    # Reward decays exponentially with distance
-    # At dist=0  -> reward=0.01
-    # At dist≈5m -> reward≈0.003
-    # At dist≈10m -> reward≈0.0001 (practically zero)
-    reward += 0.01 * np.exp(-0.5 * dist_to_ball)
+        # Reward decays exponentially with distance
+        # At dist=0  -> reward=0.01
+        # At dist≈5m -> reward≈0.003
+        # At dist≈10m -> reward≈0.0001 (practically zero)
+        reward += 0.01 * np.exp(-0.5 * dist_to_ball)
 
     # POSSESSION / OUT OF PLAY
     if context.get("possession_lost", False):
