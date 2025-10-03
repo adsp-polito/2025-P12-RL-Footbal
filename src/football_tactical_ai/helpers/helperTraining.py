@@ -129,6 +129,7 @@ def train_SingleAgent(scenario="move"):
 
 
 
+
 def env_creator(config):
     """
     Create a FootballMultiEnv instance for RLlib.
@@ -241,7 +242,7 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = True):
         .api_stack(
             enable_rl_module_and_learner=cfg["rllib"]["model"]["uses_new_env_api"],
             enable_env_runner_and_connector_v2=cfg["rllib"]["model"]["uses_new_env_api"])
-        .environment("football_multi_env", env_config=cfg)
+        .environment("football_multi_env", env_config=cfg["env_config"])
         .framework(cfg["rllib"]["framework"])
         .training(
             lr=lr,

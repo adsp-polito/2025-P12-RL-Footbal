@@ -142,7 +142,7 @@ class PlayerAttacker(BasePlayer):
                 pass_quality, pass_direction, pass_power = self.pass_ball(
                     desired_direction=desired_direction,
                     desired_power=desired_power,
-                    enable_fov=True
+                    enable_fov=False
                 )
 
                 context.update({
@@ -154,6 +154,7 @@ class PlayerAttacker(BasePlayer):
                     "start_pass_bonus": True,
                     "fov_visible": fov_visible_pass,
                 })
+
                 return context
 
             # SHOOTING
@@ -191,6 +192,7 @@ class PlayerAttacker(BasePlayer):
                     "shot_positional_quality": positional_quality,
                     "fov_visible": fov_visible_shot,
                 })
+
                 return context
 
             # Default = movement

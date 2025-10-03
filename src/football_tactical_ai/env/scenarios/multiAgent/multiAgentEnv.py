@@ -401,7 +401,7 @@ class FootballMultiEnv(MultiAgentEnv):
             new_owner_team = self.players[new_owner].team
 
             if self.pass_owner:
-                target_id = self.pass_context.get("pass_target_id")
+                target_id = self.pass_context.get("pass_to")
 
                 if new_owner_team != self.players[self.pass_owner].team:
                     # Pass intercepted by opponent
@@ -426,7 +426,8 @@ class FootballMultiEnv(MultiAgentEnv):
 
                 # Reset pass context after resolution
                 self.pass_owner = None
-                self.pass_context["pass_target_id"] = None
+                self.pass_context["pass_to"] = None
+                self.pass_just_started = False   
 
 
         # Step 4: Check goal or out
@@ -440,13 +441,19 @@ class FootballMultiEnv(MultiAgentEnv):
         # - If neither exists → no scorer team
         if self.shot_owner is not None:
             scorer_team = self.players[self.shot_owner].team
+
+            # Cleanup in case of goal
+            self.shot_owner = None
+
         elif self.ball.get_owner() is not None:
             scorer_team = self.players[self.ball.get_owner()].team
+            
         else:
             scorer_team = None
 
         # Always check goal conditions if we have a valid scorer_team
         if scorer_team is not None:
+
             # Case 1: Normal goal (ball enters opponent's net)
             if self._is_goal(ball_x, ball_y, scorer_team):
                 goal_team = scorer_team
@@ -456,6 +463,10 @@ class FootballMultiEnv(MultiAgentEnv):
                     # No shooter → fallback to ball owner if available
                     if self.ball.get_owner() is not None:
                         goal_owner = self.ball.get_owner()
+                
+                # Cleanup owners
+                self.shot_owner = None
+                self.pass_owner = None
 
             # Case 2: Own goal (ball enters own net)
             elif self._is_own_goal(ball_x, ball_y, scorer_team):
@@ -467,6 +478,10 @@ class FootballMultiEnv(MultiAgentEnv):
                     if self.ball.get_owner() is not None:
                         goal_owner = self.ball.get_owner()
 
+                # Cleanup owners
+                self.shot_owner = None
+                self.pass_owner = None
+
 
         ball_out_by = None
         if self._is_ball_completely_out(ball_x, ball_y):
@@ -476,6 +491,10 @@ class FootballMultiEnv(MultiAgentEnv):
                 ball_out_by = self.pass_owner
             elif self.ball.get_owner() is not None:
                 ball_out_by = self.ball.get_owner()
+            
+            # Cleanup owners
+            self.shot_owner = None
+            self.pass_owner = None
 
         # Step 5: Build agent info and contextual updates
         for agent_id in self.agents:
@@ -491,15 +510,14 @@ class FootballMultiEnv(MultiAgentEnv):
             })
 
             # ATTACKER-SPECIFIC
-            if role.startswith("att"):  # "attacker"
+            if role in {"CF","LW","RW","LCF","RCF","SS","ATT"}:
                 context.update({
                     "start_pass_bonus": agent_id == self.pass_owner and self.pass_just_started,
                     "possession_lost": self._check_possession_loss(agent_id),
                 })
 
             # GOALKEEPER-SPECIFIC
-            elif role.startswith("gk"):  # "goalkeeper"
-
+            elif role in {"GK"}:
                 # Deflection power
                 deflection_power = np.linalg.norm(self.ball.get_velocity()) if context.get("deflected") else 0.0
                 context.update({
@@ -517,6 +535,7 @@ class FootballMultiEnv(MultiAgentEnv):
                 reward_grid=self.reward_grids[agent_id],  
                 context=infos[agent_id]
             )
+
         # Step 7: Observations
         for agent_id in self.agents:
             observations[agent_id] = self._get_observation(agent_id)
@@ -549,10 +568,8 @@ class FootballMultiEnv(MultiAgentEnv):
         self.shot_just_started = False
         self.pass_just_started = False
 
-        if collision:
-            self._reset_shot_context()
-            self._reset_pass_context()
-
+        self._reset_shot_context()
+        self._reset_pass_context()
 
         return observations, rewards, terminations, truncations, infos
     
@@ -561,16 +578,13 @@ class FootballMultiEnv(MultiAgentEnv):
         Reset the shot context after a shot attempt.
         """
         self.shot_context = {"shot_by": None, "direction": None, "power": 0.0}
-        self.shot_owner = None
         self.shot_just_started = False
 
     def _reset_pass_context(self):
         """
         Reset the pass context after a pass attempt.
         """
-        self.pass_owner = None
-        self.pass_context = {"pass_by": None, "direction": None, "power": 0.0, "pass_target_id": None}
-
+        self.pass_context = {"pass_from": None, "direction": None, "power": 0.0, "pass_to": None}
         self.pass_just_started = False
 
     def _process_shot_attempt(self, agent_id: str, context: dict):
@@ -638,8 +652,8 @@ class FootballMultiEnv(MultiAgentEnv):
 
         # Save pass context
         self.pass_context.update({
-            "pass_by": agent_id,
-            "pass_target_id": target_id,
+            "pass_from": agent_id,
+            "pass_to": target_id,
             "direction": direction,
             "power": power
         })
@@ -648,7 +662,7 @@ class FootballMultiEnv(MultiAgentEnv):
         self.pass_just_started = True
 
         context["pass_attempted"] = True
-        context["pass_target_id"] = target_id
+        context["pass_to"] = target_id
         context["pass_power"] = power
         context["pass_direction"] = direction.tolist()
         context["fov_pass"] = self._is_in_fov(passer, target)
@@ -901,7 +915,7 @@ class FootballMultiEnv(MultiAgentEnv):
         elif role == "GK":
             params = [
                 player.shooting,
-                player.reflexing,
+                player.reflexes,
                 player.punch_power,
                 player.reach,
                 player.catching,
@@ -941,12 +955,12 @@ class FootballMultiEnv(MultiAgentEnv):
                 self.last_known_positions[other_id] = (rel_x, rel_y, action_code)
                 obs.extend([rel_x, rel_y, action_code, 1.0, team_flag, has_ball_flag])
             else:
-                # Use last known position if available, otherwise zeros
+                # Use last known position if available, otherwise -1
                 if self.last_known_positions[other_id] is not None:
                     rel_x, rel_y, action_code = self.last_known_positions[other_id]
                     obs.extend([rel_x, rel_y, action_code, 0.0, team_flag, has_ball_flag])
                 else:
-                    obs.extend([0.0, 0.0, 0.0, 0.0, team_flag, has_ball_flag])
+                    obs.extend([-1.0, -1.0, -1.0, 0.0, team_flag, has_ball_flag])
 
         # Check that the final observation vector matches the expected dimension
         expected_dim = self.observation_spaces[agent_id].shape[0]

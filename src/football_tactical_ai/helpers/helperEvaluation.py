@@ -121,6 +121,7 @@ def evaluate_and_render_multi(
 
     # Reset environment
     obs, infos = env.reset()
+
     states = [env.get_render_state()]
     cumulative_rewards = {agent: 0.0 for agent in env.agents}
 
@@ -163,17 +164,24 @@ def evaluate_and_render_multi(
             dist_class = module.get_train_action_dist_cls()
             dist = dist_class.from_logits(dist_inputs)
 
-            # Select action
             if deterministic:
+
                 if hasattr(dist, "loc"):  # Gaussian
-                    action = dist.loc
-                else:                     # Categorical
+                    action = torch.tanh(dist.loc)
+                else:  # Categorical
                     action = torch.argmax(dist_inputs, dim=-1)
             else:
                 action = dist.sample()
 
+            # Convert to numpy
             action = np.array(action.cpu().numpy()).flatten()
+
+            # clip/tanh actions to valid range
+            low, high = env.action_space(agent_id).low, env.action_space(agent_id).high
+            action = np.clip(action, low, high)
+
             action_dict[agent_id] = action
+
 
         # Step env
         obs, rewards, terminations, truncations, infos = env.step(action_dict)

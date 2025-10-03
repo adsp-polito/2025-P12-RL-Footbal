@@ -54,7 +54,7 @@ def update_ball_state(ball: Ball,
 
     # 2. Pass: ball is released toward chosen teammate
     elif (pass_context and 
-        pass_context.get("pass_by") and 
+        pass_context.get("pass_from") and 
         pass_context.get("direction") is not None and 
         pass_context.get("power", 0.0) > 0.0 and
         not collision):
@@ -62,12 +62,12 @@ def update_ball_state(ball: Ball,
         pitch_width = pitch.x_max - pitch.x_min
         pitch_height = pitch.y_max - pitch.y_min
 
-        passer_id = pass_context["pass_by"]
+        passer_id = pass_context["pass_from"]
         passer_pos = np.array(players[passer_id].get_position())
         power = pass_context["power"]
 
         # Compute direction: target teammate if available, else raw
-        target_id = pass_context.get("pass_target_id")
+        target_id = pass_context.get("pass_to")
         if target_id and target_id in players:
             teammate_pos = np.array(players[target_id].get_position())
             new_dir = teammate_pos - passer_pos
@@ -87,7 +87,7 @@ def update_ball_state(ball: Ball,
         ball.set_owner(None)  # ball is now free
 
         # Reset context after consuming
-        pass_context.update({"pass_by": None, "direction": None, "power": 0.0, "pass_target_id": None})
+        pass_context.update({"pass_by": None, "direction": None, "power": 0.0, "pass_to": None})
 
 
     # 3. Dribbling: ball stays close to the owner, slightly in front of their movement

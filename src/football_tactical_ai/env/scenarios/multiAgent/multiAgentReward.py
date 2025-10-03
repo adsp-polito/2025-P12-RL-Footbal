@@ -93,11 +93,17 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
     reward -= 0.005  # time malus to avoid stalling
 
     # BALL CHASING: encourage attacker to chase free ball
+    # small reward up to ~10 meters away because the attacker should be proactive only when he is close enough
     if ball is not None and ball.get_owner() is None:
         x_p, y_p = denormalize(*player.get_position())
         x_b, y_b = denormalize(*ball.get_position())
         dist_to_ball = np.linalg.norm([x_b - x_p, y_b - y_p])
-        reward += max(0.0, 0.1 - 0.005 * dist_to_ball)  # closer = small positive | range [0, 0.1]
+
+    # Reward decays exponentially with distance
+    # At dist=0  -> reward=0.01
+    # At dist≈5m -> reward≈0.003
+    # At dist≈10m -> reward≈0.0001 (practically zero)
+    reward += 0.01 * np.exp(-0.5 * dist_to_ball)
 
     # POSSESSION / OUT OF PLAY
     if context.get("possession_lost", False):
@@ -113,14 +119,15 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
         reward += 5.0  # shared team bonus
 
     # PASSING
-    if context.get("start_pass_bonus", False):
+    if context.get("start_pass_bonus", False) and not context.get("invalid_pass_attempt", False):
         reward += 0.25  # reward for attempting pass
 
-    if context.get("pass_quality") is not None:
-        reward += 0.5 * context["pass_quality"]
+        # consider pass quality if available only one time
+        if context.get("pass_quality") is not None:
+            reward += 0.5 * context["pass_quality"] # scaled [0, 0.5] (0 if pass is invalid)
 
     if context.get("invalid_pass_attempt", False):
-        reward -= 0.1
+        reward -= 0.3  # passing without ball or outside FOV
 
     if context.get("pass_completed", False):
         # Reward passer and receiver symmetrically
@@ -134,13 +141,15 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
         # Extra small team cooperation bonus
         reward += 1.5
 
+
     # SHOOTING
     if context.get("start_shot_bonus", False):
         reward += 0.5
         reward += context.get("shot_positional_quality", 0.0)
 
-    if context.get("shot_quality") is not None:
-        reward += 0.5 * context["shot_quality"] # scaled [0, 0.5]
+        # consider shot quality if available only one time
+        if context.get("shot_quality") is not None:
+            reward += 0.5 * context["shot_quality"] # scaled [0, 0.5]
 
     if context.get("invalid_shot_attempt", False):
         reward -= 0.2  # shooting without ball or outside FOV
