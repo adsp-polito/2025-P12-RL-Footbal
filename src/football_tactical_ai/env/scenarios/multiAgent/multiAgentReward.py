@@ -91,7 +91,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
     # BASE: positioning + small time penalty
     reward += pos_reward
     
-    # reward -= 0.005  # time malus to avoid stalling
+    reward -= 0.005  # time malus to avoid stalling
 
     # BALL CHASING: encourage attacker to chase free ball
     # small reward up to ~10 meters away because the attacker should be proactive only when he is close enough
@@ -128,7 +128,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
             reward += 0.5 * context["pass_quality"] # scaled [0, 0.5] (0 if pass is invalid)
 
     if context.get("invalid_pass_attempt", False):
-        reward -= 0.3  # passing without ball or outside FOV
+        reward -= 0.4  # passing without ball or outside FOV
 
     if context.get("pass_completed", False):
         # Reward passer and receiver symmetrically
@@ -153,9 +153,9 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
             reward += 0.5 * context["shot_quality"] # scaled [0, 0.5]
 
     if context.get("invalid_shot_attempt", False):
-        reward -= 0.2  # shooting without ball or outside FOV
+        reward -= 0.3  # shooting without ball or outside FOV
     if context.get("invalid_shot_direction", False):
-        reward -= 0.1
+        reward -= 0.2
 
     alignment = context.get("shot_alignment")
     if alignment is not None:

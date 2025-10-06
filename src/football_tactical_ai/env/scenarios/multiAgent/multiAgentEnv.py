@@ -157,7 +157,6 @@ class FootballMultiEnv(MultiAgentEnv):
         # - Defenders interpret (flag1=tackle, flag2=shoot)
         # - Goalkeeper interprets (flag1=dive, flag2=shoot)
         # ======================================================================
-
         self.action_spaces = {}
         for agent_id in self.agents:
             self.action_spaces[agent_id] = spaces.Box(
@@ -192,7 +191,6 @@ class FootballMultiEnv(MultiAgentEnv):
         #
         # Total dim = 3 + 4 + 2 + params_dim + (N-1)*6 ===> min: (3+4+2+9+(0*6))=18, max: (3+4+2+9+(5*6))=48
         # ======================================================================
-
         def _compute_obs_dim(player):
             base_dim = 3 + 4 + 2 + (len(self.agents) - 1) * 6
             role = player.get_role()
@@ -240,13 +238,12 @@ class FootballMultiEnv(MultiAgentEnv):
                 raise ValueError(f"Unknown role {role} for agent {agent_id}")
 
 
-        # Shot context
+        # Shot and pass context
         self.shot_owner = None
-        self.shot_just_started = False
+        self.shot_just_started = False      # useful for start_shot_bonus reward
 
-        # Pass context
         self.pass_owner = None
-        self.pass_just_started = False
+        self.pass_just_started = False      # useful for start_pass_bonus reward
 
         # Pending pass state (ball in flight after a pass)
         self.pass_pending = {
@@ -403,17 +400,40 @@ class FootballMultiEnv(MultiAgentEnv):
                 self._reset_pass_context()
 
         # Step 3: Ball movement
+        # We only apply the physics impulse (shot or pass)
+        # in the exact frame where the owner still possesses the ball
+        # After release → ball moves freely via its current velocity
+        active_pass_context = None
+        active_shot_context = None
+
+        # Step 3a. Determine if we should apply shot physics (release phase)
+        if (
+            self.shot_context
+            and self.shot_context.get("shot_by")
+            and self.ball.get_owner() == self.shot_context.get("shot_by")
+        ):
+            active_shot_context = self.shot_context
+
+        # Step 3b. Determine if we should apply pass physics (release phase)
+        if (
+            self.pass_context
+            and self.pass_context.get("pass_from")
+            and self.ball.get_owner() == self.pass_context.get("pass_from")
+        ):
+            active_pass_context = self.pass_context
+
+        # Step 3c. Update ball state (physics integration)
         collision = update_ball_state(
             ball=self.ball,
             players=self.players,
             pitch=self.pitch,
             actions=actions,
             time_step=self.time_step,
-            shot_context=self.shot_context,
-            pass_context=self.pass_context
+            shot_context=active_shot_context,  # only active when releasing
+            pass_context=active_pass_context,  # only active when releasing
         )
 
-        # Step 3b: Check for possession changes after a pass attempt
+        # Step 4: Check for possession changes after a pass attempt
         if new_owner:
             # If there is a pending pass, resolve it
             if self.pass_pending["active"]:
@@ -446,7 +466,7 @@ class FootballMultiEnv(MultiAgentEnv):
             self.pass_pending["active"] = False
 
 
-        # Step 4: Check goal or out
+        # Step 5: Check goal or out
         goal_owner = None
         goal_team = None
 
@@ -512,7 +532,7 @@ class FootballMultiEnv(MultiAgentEnv):
             self.shot_owner = None
             self.pass_owner = None
 
-        # Step 5: Build agent info and contextual updates
+        # Step 6: Build agent info and contextual updates
         for agent_id in self.agents:
             context = agent_contexts[agent_id]
             role = self.players[agent_id].get_role()
@@ -522,6 +542,7 @@ class FootballMultiEnv(MultiAgentEnv):
                 "goal_scored": goal_owner == agent_id,  # True if this agent scored the goal
                 "goal_team": goal_team,
                 "ball_out_by": ball_out_by,
+                "has_ball": self.ball.get_owner() == agent_id,
                 "start_shot_bonus": agent_id == self.shot_owner and self.shot_just_started
             })
 
@@ -542,7 +563,7 @@ class FootballMultiEnv(MultiAgentEnv):
 
             infos[agent_id] = context
 
-        # Step 6: Reward calculation
+        # Step 7: Reward calculation
         for agent_id in self.agents:
             rewards[agent_id] = get_reward(
                 player=self.players[agent_id],
@@ -552,11 +573,11 @@ class FootballMultiEnv(MultiAgentEnv):
                 context=infos[agent_id]
             )
 
-        # Step 7: Observations
+        # Step 8: Observations
         for agent_id in self.agents:
             observations[agent_id] = self._get_observation(agent_id)
 
-        # Step 8: Termination / Truncation
+        # Step 9: Termination / Truncation
         terminated_event = (goal_team is not None) or (ball_out_by is not None)
         timeout_event = self.episode_step >= self.max_steps
 
@@ -580,13 +601,21 @@ class FootballMultiEnv(MultiAgentEnv):
         terminations["__all__"] = any(terminations.values())
         truncations["__all__"]  = any(truncations.values())
 
-        # Step 9: Cleanup for next step
+        # Step 10: Cleanup for next step
         self.shot_just_started = False
         self.pass_just_started = False
 
+        # Manage reset of shot/pass context after a collision
         if collision:
             self._reset_shot_context()
             self._reset_pass_context()
+
+        # Step 11: Post-processing infos (debugging)
+        for agent_id in self.agents:
+            player = self.players[agent_id]
+            has_ball = self.ball.get_owner() == agent_id
+
+            infos[agent_id]["has_ball"] = has_ball
 
         return observations, rewards, terminations, truncations, infos
     
@@ -740,13 +769,9 @@ class FootballMultiEnv(MultiAgentEnv):
                 last_shooter = self.shot_context.get("shot_by")
                 last_passer  = self.pass_context.get("pass_from")
 
-                print(self.shot_context, self.pass_context)
-
                 # Prevent last shooter or last passer from instantly re-taking the ball
                 if agent_id == last_shooter or agent_id == last_passer:
                     continue  # skip this player
-
-                print("STEP", self.episode_step, "last_shooter:", last_shooter, "last_passer:", last_passer)
 
                 self.ball.set_owner(agent_id)
 

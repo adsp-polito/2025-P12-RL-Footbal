@@ -48,7 +48,6 @@ def update_ball_state(ball: Ball,
         ball.set_velocity(velocity_norm)
         ball.set_owner(None)  # ball is now free
 
-
     # 2. Pass: ball is released toward chosen teammate
     elif (pass_context and 
         pass_context.get("pass_from") and 
@@ -83,7 +82,6 @@ def update_ball_state(ball: Ball,
         ball.set_velocity(velocity_norm)
         ball.set_owner(None)  # ball is now free
 
-
     # 3. Dribbling: ball stays close to the owner, slightly in front of their movement
     elif owner_id in players:
         action = actions.get(owner_id, np.zeros(7, dtype=np.float32))
@@ -105,15 +103,10 @@ def update_ball_state(ball: Ball,
     ball.update(time_step)
 
     collision = _handle_post_collision(ball, pitch)
-
-    if collision:
-        # Reset contexts if collision happens
-        if shot_context is not None:
-            shot_context.update({"shot_by": None, "direction": None, "power": 0.0})
-        if pass_context is not None:
-            pass_context.update({"pass_from": None, "direction": None, "power": 0.0})
-
+    
     return collision
+
+
 
 def _handle_post_collision(ball: Ball, pitch: Pitch, restitution: float = 0.8, prob_goal: float = 0.5) -> bool:
     """

@@ -189,6 +189,7 @@ def evaluate_and_render_multi(
         # Update rewards + logs
         for agent in env.agents:
             cumulative_rewards[agent] += rewards.get(agent, 0.0)
+
             if debug and agent in log_files:
                 log_files[agent].write(
                     f"[Step {step_count}] "
