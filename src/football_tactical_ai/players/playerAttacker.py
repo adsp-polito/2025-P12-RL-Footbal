@@ -150,6 +150,7 @@ class PlayerAttacker(BasePlayer):
                 pass_quality, pass_direction, pass_power = self.pass_ball(
                     desired_direction=desired_direction,
                     desired_power=desired_power,
+
                     enable_fov=False   # allow blind pass, but mark it separately
                 )
 

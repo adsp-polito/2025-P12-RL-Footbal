@@ -172,8 +172,8 @@ class FootballMultiEnv(MultiAgentEnv):
         #
         # Each agent observes a flat vector:
         #
-        # 1. Self (3):
-        #    [self_x, self_y, self_has_ball]
+        # 1. Self (4):
+        #    [self_x, self_y, self_has_ball, is_pass_target]
         #
         # 2. Ball (4):
         #    [ball_x, ball_y, ball_vx, ball_vy]
@@ -189,10 +189,10 @@ class FootballMultiEnv(MultiAgentEnv):
         # 5. Other players (6 per player):
         #    [rel_x, rel_y, action_code, visible_flag, team_flag, has_ball_flag]
         #
-        # Total dim = 3 + 4 + 2 + params_dim + (N-1)*6 ===> min: (3+4+2+9+(0*6))=18, max: (3+4+2+9+(5*6))=48
+        # Total dim = 4 + 4 + 2 + params_dim + (N-1)*6 ===> min: (4+4+2+9+(0*6))=19, max: (4+4+2+9+(5*6))=49
         # ======================================================================
         def _compute_obs_dim(player):
-            base_dim = 3 + 4 + 2 + (len(self.agents) - 1) * 6
+            base_dim = 4 + 4 + 2 + (len(self.agents) - 1) * 6
             role = player.get_role()
             if role in {"CF", "LW", "RW", "LCF", "RCF", "SS", "ATT"}:
                 return base_dim + 7
@@ -477,9 +477,6 @@ class FootballMultiEnv(MultiAgentEnv):
         if self.shot_owner is not None:
             scorer_team = self.players[self.shot_owner].team
 
-            # Cleanup in case of goal
-            self.shot_owner = None
-
         elif self.ball.get_owner() is not None:
             scorer_team = self.players[self.ball.get_owner()].team
             
@@ -516,7 +513,6 @@ class FootballMultiEnv(MultiAgentEnv):
                 # Cleanup owners
                 self.shot_owner = None
                 self.pass_owner = None
-
 
         ball_out_by = None
         if self._is_ball_completely_out(ball_x, ball_y):
@@ -678,58 +674,148 @@ class FootballMultiEnv(MultiAgentEnv):
 
     def _process_pass_attempt(self, agent_id: str, context: dict):
         """
-        Validate and register a pass attempt.
+        Validate and register a pass attempt
 
         Rules:
-        - Only the current ball owner can initiate a pass.
-        - Once triggered, the ball always detaches from the passer.
-        - A 'pending pass' state is activated, meaning the ball is in flight.
+        - Only the current ball owner can initiate a pass
+        - Once triggered, the ball always detaches from the passer
+        - A 'pending pass' state is activated, meaning the ball is in flight
         - Completion (pass_completed / intercepted / failed) will be resolved later
-        in step() when a new owner is assigned or the ball goes out.
+          in step() when a new owner is assigned or the ball goes out
+
+        Improvements:
+        - Target teammate is selected based on the intended pass direction
+
+        PASS EXECUTION PIPELINE — STEP-BY-STEP OVERVIEW
+
+        1. Agent (RL policy) outputs an action vector:
+            [dx, dy, pass_flag, shoot_flag, power, dir_x, dir_y]
+
+            → 'dir_x' and 'dir_y' define the intended pass direction
+              chosen by the RL agent, relative to the pitch
+
+        2. In Player.execute_action():
+            - The agent's chosen direction is normalized as `desired_direction`
+            - Then Player.pass_ball() is called:
+                • Applies precision-based directional noise
+                • Computes pass power, quality, and execution accuracy
+                • Returns (pass_quality, pass_direction, pass_power)
+
+              The resulting `pass_direction` is the technical direction
+              after the player's skill and error simulation
+
+        3. The environment (_process_pass_attempt) receives:
+            • context["pass_direction"] → actual direction used by the player
+            • context["pass_power"] → ball velocity magnitude
+            • context["pass_direction_raw"] (optional) → agent's original intent
+
+            At this stage, the pass is being *registered* by the environment
+            for simulation and ownership tracking.
+
+        4. Target teammate selection:
+            - The environment computes the cosine similarity between
+              the intended direction (raw_dir) and each teammate's relative vector
+            - The teammate most aligned with the intended direction is selected
+            - If no one is even roughly aligned (e.g. wrong direction),
+              fallback → nearest teammate
+
+        5. The environment defines the final pass trajectory:
+            - A normalized direction vector from passer to target
+            - This direction is used by the physics engine in update_ball_state()
+              to move the ball each frame
+
+        6. The environment activates a “pending pass” state:
+            • self.pass_pending = {"from": passer, "to": receiver, "active": True}
+            • self.pass_context stores direction, power, and target
+            • Ball owner is detached immediately (ball now free)
+
+        7. The physics engine (update_ball_state) will then:
+            - Move the ball in the stored direction with given velocity.
+            - Check for collisions, interceptions, or successful reception.
+
+        8. When another player gets close enough (in _assign_ball_if_nearby):
+            - If it matches the intended receiver → pass_completed = True
+            - Otherwise → intercepted or failed
+
+        9. The reward system (attacker_reward) uses:
+            • start_pass_bonus (for the passer)
+            • pass_completed (for passer and receiver)
+            • pass_quality and invalid_pass_direction (for quality shaping)
+            • pass_to / pass_from links (for cooperation shaping)
         """
 
+        # 0. VALIDATION
+        # Prevent overlapping pass attempts
         if self.pass_pending["active"]:
-            # Already a pass in flight, ignore new attempts
             context["pass_attempted"] = False
             return
 
-        # Prevent multiple passes from the same agent within the same pending state
+        # Prevent repeated pass from same owner within one pending phase
         if self.pass_owner == agent_id and self.pass_just_started:
             context["invalid_pass_attempt"] = True
             context["pass_attempted"] = False
             return
-        
+
+        # Retrieve pass power
         power = context.get("pass_power", 0.0)
 
-        # Must own the ball and apply some power
+        # Must currently own the ball and apply non-zero power
         if self.ball.get_owner() != agent_id or power <= 0:
             context["invalid_pass_attempt"] = True
             context["pass_attempted"] = False
             return
 
+        # 1. RETRIEVE TEAMMATES AND POSITIONS
         passer = self.players[agent_id]
         passer_team = passer.team
         passer_pos = np.array(passer.get_position())
 
-        # Find teammates (exclude self)
-        teammates = [(pid, p) for pid, p in self.players.items() if p.team == passer_team and pid != agent_id]
+        # Collect teammates (exclude self)
+        teammates = [
+            (pid, p) for pid, p in self.players.items()
+            if p.team == passer_team and pid != agent_id
+        ]
         if not teammates:
-            # No available receiver → pass fails immediately
+            # No valid receiver → fail immediately
             context["invalid_pass_attempt"] = True
             context["pass_attempted"] = False
             return
 
-        # Choose the closest teammate as target
-        target_id, target = min(teammates, key=lambda kv: np.linalg.norm(np.array(kv[1].get_position()) - passer_pos))
+        # 2. TARGET SELECTION — DIRECTION-BASED
+        # Retrieve raw intended direction from the action (normalized)
+        raw_dir = np.array(context.get("pass_direction_raw", context.get("pass_direction", [1.0, 0.0])))
+        raw_dir = raw_dir / (np.linalg.norm(raw_dir) + 1e-6)
+
+        # Compute cosine similarity between intended pass direction
+        # and each teammate's relative position vector
+        scores = []
+        for tid, teammate in teammates:
+            vec = np.array(teammate.get_position()) - passer_pos
+            vec /= (np.linalg.norm(vec) + 1e-6)
+            similarity = np.dot(raw_dir, vec)  # cosine similarity ∈ [-1, 1]
+            scores.append(similarity)
+
+        # Select the teammate best aligned with the intended direction
+        best_idx = int(np.argmax(scores))
+        target_id, target = teammates[best_idx]
         target_pos = np.array(target.get_position())
 
+        # FALLBACK: if all scores are negative (pass points away), use nearest teammate
+        if np.max(scores) < 0.1:
+            target_id, target = min(
+                teammates,
+                key=lambda kv: np.linalg.norm(np.array(kv[1].get_position()) - passer_pos)
+            )
+            target_pos = np.array(target.get_position())
+
+        # 3. FINALIZE PASS DIRECTION AND REGISTER CONTEXT
         direction = target_pos - passer_pos
         if np.linalg.norm(direction) > 1e-6:
             direction = direction / np.linalg.norm(direction)
         else:
             direction = np.array([1.0, 0.0])  # fallback: to the right
 
-        # Save pass context
+        # Save pass context for the physics engine and reward logic
         self.pass_context.update({
             "pass_from": agent_id,
             "pass_to": target_id,
@@ -737,21 +823,22 @@ class FootballMultiEnv(MultiAgentEnv):
             "power": power
         })
 
-        # Detach the ball immediately
+        # Detach the ball immediately → pass in flight
         self.pass_owner = agent_id
         self.pass_just_started = True
 
-        # Activate pending pass (ball is now in flight)
+        # Activate pending pass (used for ownership transfer tracking)
         self.pass_pending.update({
             "from": agent_id,
             "to": target_id,
             "active": True
         })
 
-        # Update action context for logging/reward
+        # Update context for reward and debugging
         context["pass_to"] = target_id
         context["pass_power"] = power
         context["pass_direction"] = direction.tolist()
+        context["pass_direction_raw"] = raw_dir.tolist()
 
 
 
@@ -775,9 +862,10 @@ class FootballMultiEnv(MultiAgentEnv):
 
                 self.ball.set_owner(agent_id)
 
-                # Reset contexts after a *real* possession change
-                self._reset_shot_context()
-                self._reset_pass_context()
+                # Reset only if the new owner is not the current shooter/passer
+                if agent_id != self.shot_owner and agent_id != self.pass_owner:
+                    self._reset_shot_context()
+                    self._reset_pass_context()
                 return agent_id
 
         return None
@@ -947,7 +1035,7 @@ class FootballMultiEnv(MultiAgentEnv):
         Build the observation vector for a given agent.
 
         Structure:
-        [self_x, self_y, self_has_ball] +
+        [self_x, self_y, self_has_ball, is_pass_target] +
         [ball_x, ball_y, ball_vx, ball_vy] +
         [goal_x, goal_y] +
         [own_parameters...] +
@@ -960,6 +1048,11 @@ class FootballMultiEnv(MultiAgentEnv):
 
         # Self has ball?
         self_has_ball = 1.0 if self.ball.get_owner() == agent_id else 0.0
+
+        # Is this agent the intended receiver of an ongoing pass?
+        is_pass_target = 1.0 if (
+            self.pass_pending["active"] and self.pass_pending["to"] == agent_id
+        ) else 0.0
 
         # Ball info (normalized)
         ball_x, ball_y = self.ball.get_position()
@@ -976,10 +1069,11 @@ class FootballMultiEnv(MultiAgentEnv):
 
         # Start observation vector with base features
         obs = [
-            self_x, self_y, self_has_ball,
+            self_x, self_y, self_has_ball, is_pass_target,
             ball_x, ball_y, ball_vx, ball_vy,
             goal_x, goal_y
         ]
+
 
         # Add own parameters (role-dependent)
         # These values are already normalized in [0, 1].

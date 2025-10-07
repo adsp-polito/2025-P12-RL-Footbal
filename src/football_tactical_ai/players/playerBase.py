@@ -302,54 +302,75 @@ class BasePlayer(ABC):
     
     def pass_ball(self, desired_direction, desired_power, target_pos=None, enable_fov=False):
         """
-        Attempt a pass with simplified logic.
+        Attempt to perform a pass, simulating both technical skill and directional precision
 
         Args:
-            desired_direction (np.array): intended pass direction (2D).
-            desired_power (float): desired power in [0,1].
-            target_pos (np.array): optional position of target teammate.
-            enable_fov (bool): if True, invalid if outside FOV.
+            desired_direction (np.array): Intended pass direction chosen by the agent (2D)
+            desired_power (float): Desired power in range [0, 1]
+            target_pos (np.array, optional): Target teammate position in normalized coordinates (optional)
+            enable_fov (bool): If True, the pass is considered invalid if outside player's field of view
 
         Returns:
             tuple: (pass_quality, pass_direction, pass_power)
+                - pass_quality (float): Final estimated success score of the pass (0 to 1).
+                - pass_direction (np.array): Actual 2D direction after applying inaccuracy noise.
+                - pass_power (float): Final kick velocity in m/s.
         """
-        # Normalize desired direction
+
+        # 1) Normalize intended direction
         norm = np.linalg.norm(desired_direction)
         if norm > 0:
             dir_norm = desired_direction / norm
         else:
-            dir_norm = np.array([1.0, 0.0])  # fallback → verso destra
+            dir_norm = np.array([1.0, 0.0])  # fallback → facing right
 
-        # FOV check (optional)
+        # 2) Field of View check
+        # If the direction is outside player's FOV and FOV enforcement is active → invalid
         if enable_fov and not self.is_direction_visible(dir_norm):
             return 0.0, np.array([0.0, 0.0]), 0.0
 
-        # Add small directional noise based on precision
-        noise = (1 - self.precision) * 0.05  # max ±3° error
-        angle_noise = np.random.uniform(-noise, noise)
+        # 3) Apply directional noise based on player precision
+        # The higher the precision, the smaller the angular error
+        max_noise_radians = 0.1  # ~6 degrees of maximum deviation
+        noise_strength = (1 - self.precision) * max_noise_radians
+        angle_noise = np.random.uniform(-noise_strength, noise_strength)
         cos_a, sin_a = np.cos(angle_noise), np.sin(angle_noise)
+
+        # Rotate intended direction to simulate imprecision
         pass_direction = np.array([
             cos_a * dir_norm[0] - sin_a * dir_norm[1],
             sin_a * dir_norm[0] + cos_a * dir_norm[1]
         ])
 
-        # Clamp power
+        # 4) Compute final pass power
         desired_power = np.clip(desired_power, 0.0, 1.0)
+        # Passing skill scales both base and variable components
         pass_power = self.max_power * (0.3 + 0.7 * self.passing * desired_power)
 
-        # Compute quality (distance + skill)
+        # 5) Distance-based success decay
         if target_pos is not None:
             passer_pos = np.array(self.get_position())
             dist = np.linalg.norm(target_pos - passer_pos)
-            dist_factor = np.exp(-0.1 * dist)   # decay with distance
+            dist_factor = np.exp(-0.1 * dist)  # exponential decay with distance
         else:
             dist_factor = 1.0
 
-        pass_quality = self.passing * dist_factor
+        # 6) Directional execution accuracy
+        # Measures how much the actual executed direction deviates from the intended one
+        norm_eff = np.linalg.norm(pass_direction)
+        norm_raw = np.linalg.norm(dir_norm)
+        if norm_eff > 0 and norm_raw > 0:
+            execution_accuracy = np.dot(pass_direction / norm_eff, dir_norm / norm_raw)
+            execution_accuracy = np.clip(execution_accuracy, 0.0, 1.0)
+        else:
+            execution_accuracy = 1.0  # neutral if vectors invalid
+
+        # 7) Final pass quality
+        # Combines skill, distance decay, and execution accuracy
+        pass_quality = self.passing * dist_factor * execution_accuracy
         pass_quality = np.clip(pass_quality, 0.0, 1.0)
 
         return pass_quality, pass_direction, pass_power
-
 
 
     def _infer_action_type(self, action: np.ndarray) -> str:
