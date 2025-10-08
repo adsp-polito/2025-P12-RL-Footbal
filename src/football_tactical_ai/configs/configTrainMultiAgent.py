@@ -18,16 +18,16 @@ multiagent_params = {
     ),
 
     # Episode duration in real-world seconds
-    "seconds_per_episode": 15,
+    "seconds_per_episode": 10,
 
     # Frames per second (simulation runs at 24 steps per second)
     "fps": 24,
 
     # Total number of training episodes
-    "episodes": 500,
+    "episodes": 1000,
 
     # Frequency of evaluation in episodes
-    "eval_every": 125,
+    "eval_every": 100,
 
     # Rendering configuration (used in evaluation/visualization)
     "render": {
@@ -73,7 +73,7 @@ multiagent_params = {
         "lambda": 0.95,
 
         # Exploration
-        "entropy_coeff": 0.05,
+        "entropy_coeff": 0.005,
 
         # Rollout / Training settings
         "train_batch_size": 16_000,          # Large enough for stable updates

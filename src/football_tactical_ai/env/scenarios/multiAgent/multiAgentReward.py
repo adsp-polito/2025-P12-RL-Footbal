@@ -10,16 +10,18 @@ def get_reward(player: BasePlayer,
                ball: Ball,
                pitch: Pitch,
                reward_grid: np.ndarray,
-               context: Dict = None) -> float:
+               context: Dict = None,
+               pass_pending: Dict = None) -> float:
     """
     General reward dispatcher by role.
 
     Args:
-        player (BasePlayer): Player instance (att, def, gk).
-        ball (Ball): Ball instance.
-        pitch (Pitch): Pitch instance.
-        reward_grid (np.ndarray): Grid with position-based reward for this role.
-        context (Dict): Action result context (e.g. {'shot': True}, {'tackle': success}).
+        player (BasePlayer): Player instance (att, def, gk)
+        ball (Ball): Ball instance
+        pitch (Pitch): Pitch instance
+        reward_grid (np.ndarray): Grid with position-based reward for this role
+        context (Dict): Action result context (e.g. {'shot': True}, {'tackle': success})
+        pass_pending (Dict): Info about ongoing pass, if any
     """
 
     role = player.get_role()
@@ -41,7 +43,7 @@ def get_reward(player: BasePlayer,
 
     # Dispatch logic
     if role in attacker_roles:
-        return attacker_reward(agent_id, player, pos_reward, ball, context)
+        return attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending)
     elif role in defender_roles:
         return defender_reward(agent_id, player, pos_reward, ball, context)
     elif role in goalkeeper_roles:
@@ -49,6 +51,7 @@ def get_reward(player: BasePlayer,
     else:
         # Unknown role → neutral reward
         return 0.0
+
 
 
 def get_position_reward_from_grid(pitch: Pitch,
@@ -71,96 +74,86 @@ def get_position_reward_from_grid(pitch: Pitch,
 
 
 
-
-def attacker_reward(agent_id, player, pos_reward, ball, context):
+def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending):
     """
-    Attacker reward function (balanced version with pass chain decay).
+    Attacker reward function (enhanced for realistic pass reception).
 
     Main principles:
     1. Positioning → dense shaping from reward grid + small time penalty
-    2. Ball pursuit → small reward for chasing a free ball (close distance)
-    3. Possession / Ball-out → penalties for losing ball or sending it out
-    4. Goals → large reward for scoring; medium for team goals
+    2. Ball pursuit → small reward for chasing a free ball
+    3. Possession / Ball-out → penalties for losing or sending out the ball
+    4. Goals → large positive reward for scoring
     5. Passing → rewarded for both passer and receiver
-       - Blind pass (outside FOV) gets smaller reward
-       - Pass inside FOV is preferred, larger reward
-       - Consecutive passes decay progressively to avoid infinite loops
-       - Receiver is rewarded for stabilizing and waiting for the ball
-    6. Shooting → stricter rules:
-       - Shots outside FOV are invalid and penalized
-       - Valid shots inside FOV get rewards based on quality, alignment, and position
+       - Receiver is now strongly encouraged to stay stable and wait for the ball
+    6. Shooting → reward based on alignment and quality
     """
 
-    # GLOBAL COUNTER: tracks consecutive completed passes across all agents
-    # Resets on shot, goal, ball out, or loss of possession
     if not hasattr(attacker_reward, "consecutive_passes"):
         attacker_reward.consecutive_passes = 0
 
     reward = 0.0
 
     # 1) POSITIONING BASE REWARD
-    reward += pos_reward       # dense spatial shaping
-    #reward -= 0.005            # small time penalty to prevent stalling
+    reward += pos_reward
 
-    # 2) BALL CHASING: encourage approaching the free ball
+    # 2) BALL CHASING: small positive incentive
     if ball is not None and ball.get_owner() is None:
         x_p, y_p = denormalize(*player.get_position())
         x_b, y_b = denormalize(*ball.get_position())
         dist_to_ball = np.linalg.norm([x_b - x_p, y_b - y_p])
-        # Reward decays exponentially with distance
-        # At dist=0  -> reward=0.0015
-        # At dist≈5m -> reward≈0.0005
-        # At dist≈10m -> reward≈0.0001 (almost zero)
         reward += 0.0015 * np.exp(-0.4 * dist_to_ball)
 
     # 3) POSSESSION AND BALL OUT
     if context.get("possession_lost", False):
         reward -= 0.25
-        attacker_reward.consecutive_passes = 0  # reset chain
+        attacker_reward.consecutive_passes = 0
     if context.get("ball_out_by") == agent_id:
         reward -= 0.5
-        attacker_reward.consecutive_passes = 0  # reset chain
+        attacker_reward.consecutive_passes = 0
 
     # 4) GOALS
     if context.get("goal_scored", False):
-        reward += 8.0                 # scorer bonus
+        reward += 8.0
         attacker_reward.consecutive_passes = 0
     if context.get("goal_team") == player.team:
-        reward += 5.0                 # shared team goal bonus
+        reward += 5.0
         attacker_reward.consecutive_passes = 0
 
     # 5) PASSING BEHAVIOR
-    # Reward logic:
-    # - Start of pass → small encouragement to attempt
-    # - Invalid pass → penalty
-    # - Pass in flight → strong shaping for receiver (move toward the ball)
-    # - Completed pass → moderate bonus for passer, strong for receiver
-    # - Receiver learns to stabilize when targeted by a pass
-
-    # PASS INITIATION (valid attempt)
+    # PASS INITIATION
     if context.get("start_pass_bonus", False) and not context.get("invalid_pass_attempt", False):
         reward += 0.4
         if context.get("pass_quality") is not None:
             reward += 0.4 * context["pass_quality"]
 
-    # INVALID PASS ATTEMPT (no ball / outside FOV)
     if context.get("invalid_pass_attempt", False):
         reward -= 0.3
 
-    # PASS IN FLIGHT (receiver shaping)
-    if context.get("pass_to") == agent_id and not context.get("pass_completed", False):
-        # Receiver should move toward the ball, not away from it
+    # PASS IN FLIGHT (no velocity-based shaping)
+    is_pass_target = (
+        pass_pending is not None and
+        pass_pending.get("active", False) and
+        pass_pending.get("to") == agent_id
+    )
+
+    if is_pass_target and not context.get("pass_completed", False):
+        # Get positions (in meters)
         x_p, y_p = denormalize(*player.get_position())
         x_b, y_b = denormalize(*ball.get_position())
         dist = np.linalg.norm([x_b - x_p, y_b - y_p])
 
-        # Reward approaching the ball (strong shaping)
-        if dist < 12.0:
-            reward += 0.6 * np.exp(-0.12 * dist)   # up to +0.6 when very close
-        else:
-            reward -= 0.15                         # mild penalty if far
+        # Reward proximity to ball (stronger when close)
+        reward += 0.6 * np.exp(-0.25 * dist)  # up to +0.6 when < 2m
 
-        # Penalize moving away from ball trajectory
+        # Light penalty when too far (>10m)
+        if dist > 10:
+            reward -= 0.15
+
+        # Light positional stability bonus (close and consistent)
+        if dist < 5:
+            reward += 0.2 * np.exp(-0.15 * dist)
+
+        # Penalize moving away from the ball trajectory
         vx, vy = ball.get_velocity()
         if np.linalg.norm([vx, vy]) > 1e-6:
             ball_dir = np.array([vx, vy]) / np.linalg.norm([vx, vy])
@@ -168,65 +161,50 @@ def attacker_reward(agent_id, player, pos_reward, ball, context):
             player_dir /= (np.linalg.norm(player_dir) + 1e-6)
             alignment = np.dot(ball_dir, player_dir)
             if alignment < 0:
-                reward -= 0.4 * abs(alignment)  # stronger penalty for running away
+                reward -= 0.2 * abs(alignment)  # smaller penalty than before
 
-        # BONUS FOR STABILIZING (waiting for the ball)
-        # Encourage receiver to slow down if the ball is coming
-        speed = np.linalg.norm(player.velocity)
-        ball_speed = np.linalg.norm(ball.get_velocity())
-        if ball_speed > 1e-6:  # only if ball is moving
-            reward += 0.1 * np.exp(-0.4 * speed / (ball_speed + 1e-6))
-            # Small penalty if moving too much compared to ball
-            if speed > ball_speed:
-                reward -= 0.05
+        # Final patience shaping (bonus for staying in “good zone”)
+        if dist < 3:
+            reward += 0.3
 
-        # Small penalty if increasing distance from the ball (moving away)
-        ball_to_player = np.array([x_p - x_b, y_p - y_b])
-        dist_change = np.dot(ball_to_player, player.velocity)
-        if dist_change > 0:  # moving away
-            reward -= 0.05
 
     # PASS COMPLETION
     if context.get("pass_completed", False):
-        # Passer
+
         if context.get("pass_from") == agent_id:
             if context.get("invalid_pass_direction", False):
-                reward += 0.8      # blind pass succeeded
+                reward += 0.8
             else:
-                reward += 1.0      # good visible pass
-            reward += 0.2          # small cooperative team bonus
+                reward += 1.0
+            reward += 0.2  # teamwork
 
-        # Receiver
         if context.get("pass_to") == agent_id:
-            reward += 1.5          # major bonus for successful reception
+            reward += 1.8  # slightly higher bonus for successful reception
 
-        # Global light team cooperation bonus
+        # Team bonus
         reward += 0.25
 
-        # DECAY LOGIC: reduce reward for consecutive passing loops
+        # Decay for long passing chains
         attacker_reward.consecutive_passes += 1
-        decay = max(0.3, 1.0 - 0.1 * attacker_reward.consecutive_passes)
+        decay = max(0.4, 1.0 - 0.08 * attacker_reward.consecutive_passes)
         reward *= decay
 
     # 6) SHOOTING BEHAVIOR
-    # Reward for shooting depends on quality and position
-    # Invalid shots (outside FOV / without ball) are penalized
     if context.get("start_shot_bonus", False):
         reward += 0.5
         reward += context.get("shot_positional_quality", 0.0)
         if context.get("shot_quality") is not None:
             reward += 0.4 * context["shot_quality"]
-        attacker_reward.consecutive_passes = 0  # reset chain after shot
+        attacker_reward.consecutive_passes = 0
 
     if context.get("invalid_shot_attempt", False):
         reward -= 0.3
     if context.get("invalid_shot_direction", False):
         reward -= 0.2
 
-    # Alignment shaping (penalty for misalignment, reward for accurate aiming)
     alignment = context.get("shot_alignment")
     if alignment is not None:
-        reward += alignment ** 2 - 0.25  # range [-0.25, +0.75]
+        reward += alignment ** 2 - 0.25
 
     return reward
 

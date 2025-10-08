@@ -361,12 +361,13 @@ class FootballMultiEnv(MultiAgentEnv):
         # Step 1: Execute actions (movement, pass, shot, tackle, dive)
         for agent_id, action in actions.items():
             player = self.players[agent_id]
+
             context = player.execute_action(
                 action=action,
                 time_step=self.time_step,
                 x_range=self.x_range,
                 y_range=self.y_range,
-                ball=self.ball
+                ball=self.ball,
             )
 
             # Check if this agent attempted a shot
@@ -444,13 +445,15 @@ class FootballMultiEnv(MultiAgentEnv):
                     # Intended receiver successfully got the ball
                     agent_contexts[to_id]["pass_completed"] = True
                     agent_contexts[to_id]["pass_from"] = from_id
+                    agent_contexts[to_id]["pass_to"] = to_id
+
                     agent_contexts[from_id]["pass_completed"] = True
                     agent_contexts[from_id]["pass_to"] = to_id
-                    self.pass_pending["active"] = False
+                    agent_contexts[from_id]["pass_from"] = from_id
+
                 elif new_owner is not None and new_owner != from_id:
                     # Ball intercepted or received by the wrong teammate
                     agent_contexts[from_id]["pass_failed"] = True
-                    self.pass_pending["active"] = False
 
                 # Reset pending pass state after resolution
                 self.pass_owner = None
@@ -528,9 +531,11 @@ class FootballMultiEnv(MultiAgentEnv):
             self.shot_owner = None
             self.pass_owner = None
 
+
         # Step 6: Build agent info and contextual updates
         for agent_id in self.agents:
-            context = agent_contexts[agent_id]
+            # Start from existing agent_context (which may already contain pass info)
+            context = agent_contexts.get(agent_id, {}).copy()
             role = self.players[agent_id].get_role()
 
             # COMMON FIELDS 
@@ -557,16 +562,20 @@ class FootballMultiEnv(MultiAgentEnv):
                     "deflection_power": deflection_power
                 })
 
-            infos[agent_id] = context
-
+            infos[agent_id] = context.copy()  # shallow copy to avoid reference issues
+ 
         # Step 7: Reward calculation
+        # Make shallow copies to avoid shared reference issues in get_reward()
         for agent_id in self.agents:
+            reward_context = dict(infos[agent_id])  # <-- shallow copy
+
             rewards[agent_id] = get_reward(
                 player=self.players[agent_id],
                 ball=self.ball,
                 pitch=self.pitch,
-                reward_grid=self.reward_grids[agent_id],  
-                context=infos[agent_id]
+                reward_grid=self.reward_grids[agent_id],
+                context=reward_context,
+                pass_pending=self.pass_pending
             )
 
         # Step 8: Observations
@@ -602,11 +611,11 @@ class FootballMultiEnv(MultiAgentEnv):
         self.pass_just_started = False
 
         # Manage reset of shot/pass context after a collision
-        if collision:
+        if collision or new_owner is not None or ball_out_by is not None or goal_team is not None:
             self._reset_shot_context()
             self._reset_pass_context()
 
-        # Step 11: Post-processing infos (debugging)
+        # Step 11: Post-processing infos
         for agent_id in self.agents:
             player = self.players[agent_id]
             has_ball = self.ball.get_owner() == agent_id
@@ -843,6 +852,7 @@ class FootballMultiEnv(MultiAgentEnv):
 
 
     def _assign_ball_if_nearby(self, threshold: float = 0.017):  # ~2m in normalized units
+
         if self.ball.get_owner() is not None:
             return None  # Already owned
 
@@ -862,11 +872,9 @@ class FootballMultiEnv(MultiAgentEnv):
 
                 self.ball.set_owner(agent_id)
 
-                # Reset only if the new owner is not the current shooter/passer
-                if agent_id != self.shot_owner and agent_id != self.pass_owner:
-                    self._reset_shot_context()
-                    self._reset_pass_context()
-                return agent_id
+                # If the new owner is the intended receiver of a pending pass → complete it
+                if agent_id == self.pass_pending.get("to"):
+                    return agent_id
 
         return None
 

@@ -10,7 +10,7 @@ def build_attacker_grid(pitch: Pitch,
                         min_reward: float = -0.01, 
                         max_reward: float = 0.01,
                         y_center_penalty_scale: float = 0.5,
-                        focus_sharpness: float = 4.5) -> np.ndarray:
+                        focus_sharpness: float = 2.5) -> np.ndarray:
     """
     Reward grid for attackers (role-specific, team-oriented):
     - Encourages attacking play in opponent's half (X axis)
@@ -92,7 +92,7 @@ def build_defender_grid(pitch: Pitch,
                         min_reward: float = -0.01,
                         max_reward: float = 0.01,
                         amplification: float = 4.5, 
-                        focus_sharpness: float = 4.5) -> np.ndarray:
+                        focus_sharpness: float = 2.5) -> np.ndarray:
     """
     Reward grid for defenders (LCB, RCB, CB)
 

@@ -4,7 +4,6 @@ from football_tactical_ai.env.scenarios.multiAgent.multiAgentEnv import Football
 from football_tactical_ai.helpers.visuals import render_episode_multiAgent
 from football_tactical_ai.env.objects.pitch import Pitch
 
-
 def test_multiagent_render(save_path="test/videoTest/testMultiAgent.mp4"):
     """
     Run a single episode in FootballMultiEnv with random actions
@@ -69,13 +68,13 @@ def test_multiagent_render(save_path="test/videoTest/testMultiAgent.mp4"):
         show_fov=False,
         show_names=True,
     )
+    
 
     anim.save(save_path, writer="ffmpeg", fps=env.fps)
 
     time_end = time()
     print(f"Rendering complete. Animation saved in '{save_path}'")
     print(f"Rendering took {time_end - time_start:.2f} seconds.\n")
-
 
 if __name__ == "__main__":
     test_multiagent_render()
