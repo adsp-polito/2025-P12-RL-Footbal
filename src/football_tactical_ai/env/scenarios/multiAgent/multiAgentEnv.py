@@ -175,8 +175,8 @@ class FootballMultiEnv(MultiAgentEnv):
         # 1. Self (4):
         #    [self_x, self_y, self_has_ball, is_pass_target]
         #
-        # 2. Ball (4):
-        #    [ball_x, ball_y, ball_vx, ball_vy]
+        # 2. Ball (6):
+        #    [ball_x, ball_y, ball_vx, ball_vy, ball_dir_x, ball_dir_y]
         #
         # 3. Goal (2):
         #    [goal_x, goal_y]
@@ -189,10 +189,10 @@ class FootballMultiEnv(MultiAgentEnv):
         # 5. Other players (6 per player):
         #    [rel_x, rel_y, action_code, visible_flag, team_flag, has_ball_flag]
         #
-        # Total dim = 4 + 4 + 2 + params_dim + (N-1)*6 ===> min: (4+4+2+9+(0*6))=19, max: (4+4+2+9+(5*6))=49
+        # Total dim = 4 + 6 + 2 + params_dim + (N-1)*6 ===> min: (4+6+2+9+(0*6))=21, max: (4+6+2+9+(5*6))=51
         # ======================================================================
         def _compute_obs_dim(player):
-            base_dim = 4 + 4 + 2 + (len(self.agents) - 1) * 6
+            base_dim = 4 + 6 + 2 + (len(self.agents) - 1) * 6
             role = player.get_role()
             if role in {"CF", "LW", "RW", "LCF", "RCF", "SS", "ATT"}:
                 return base_dim + 7
@@ -1044,7 +1044,7 @@ class FootballMultiEnv(MultiAgentEnv):
 
         Structure:
         [self_x, self_y, self_has_ball, is_pass_target] +
-        [ball_x, ball_y, ball_vx, ball_vy] +
+        [ball_x, ball_y, ball_vx, ball_vy, ball_dir_x, ball_dir_y] +
         [goal_x, goal_y] +
         [own_parameters...] +
         For each other player:
@@ -1066,6 +1066,13 @@ class FootballMultiEnv(MultiAgentEnv):
         ball_x, ball_y = self.ball.get_position()
         ball_vx, ball_vy = self.ball.get_velocity()
 
+        # Compute normalized direction of the ball
+        speed = np.linalg.norm([ball_vx, ball_vy])
+        if speed > 1e-6:
+            ball_dir_x, ball_dir_y = ball_vx / speed, ball_vy / speed
+        else:
+            ball_dir_x, ball_dir_y = 0.0, 0.0 
+
         # Goal position (depends on team)
         if player.team == "A":  # attacking team → right goal
             goal_x, goal_y = self.pitch.width, self.pitch.center_y
@@ -1078,7 +1085,7 @@ class FootballMultiEnv(MultiAgentEnv):
         # Start observation vector with base features
         obs = [
             self_x, self_y, self_has_ball, is_pass_target,
-            ball_x, ball_y, ball_vx, ball_vy,
+            ball_x, ball_y, ball_vx, ball_vy, ball_dir_x, ball_dir_y,
             goal_x, goal_y
         ]
 

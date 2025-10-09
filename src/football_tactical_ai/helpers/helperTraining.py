@@ -232,10 +232,6 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
         }
         policy_mapping_fn = lambda agent_id, *args, **kwargs: agent_id
 
-    # Handle LR and entropy schedules (constant or schedule list)
-    lr = cfg["rllib"]["lr"]  
-    entropy_coeff = cfg["rllib"]["entropy_coeff"] 
-
     # RLlib PPO configuration
     config = (
         PPOConfig()
@@ -245,10 +241,14 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
         .environment("football_multi_env", env_config=cfg["env_config"])
         .framework(cfg["rllib"]["framework"])
         .training(
-            lr=lr,
+            lr=cfg["rllib"]["lr"],
             gamma=cfg["rllib"]["gamma"],
             lambda_=cfg["rllib"]["lambda"],
-            entropy_coeff=entropy_coeff,
+            entropy_coeff=cfg["rllib"]["entropy_coeff"],
+            clip_param=cfg["rllib"]["clip_param"],
+            vf_clip_param=cfg["rllib"].get("vf_clip_param", None),
+            vf_loss_coeff=cfg["rllib"].get("vf_loss_coeff", None),
+            grad_clip=cfg["rllib"].get("grad_clip", None),
             train_batch_size=cfg["rllib"]["train_batch_size"],
             minibatch_size=cfg["rllib"]["minibatch_size"],
             num_epochs=cfg["rllib"]["num_epochs"],

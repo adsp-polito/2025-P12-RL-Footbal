@@ -56,42 +56,53 @@ multiagent_params = {
 
     # RLlib PPO configuration parameters
     "rllib": {
-        "framework": "torch",  # Neural network backend
+        "framework": "torch",  # Use PyTorch backend for PPO
 
-        # Learning rate for optimizer:
-        "lr":[
-                [0,        1e-4],   
-                [400_000,  5e-5],   
-                [800_000, 2e-5],
-                [1_200_000, 1e-5],   
-                [1_600_000, 5e-6],   
-                [2_000_000, 1e-6],
-            ],
+        # Learning Rate Schedule
+        # The LR starts higher to encourage fast learning in early stages,
+        # then decays progressively to stabilize the policy
+        "lr": [
+            [0,         2e-4],     # Initial exploration phase
+            [300_000,   1e-4],     # Gradual decay
+            [600_000,   5e-5],
+            [900_000,   2e-5],
+            [1_200_000, 1e-5],
+        ],
 
-        # Discount factor & GAE
-        "gamma": 0.995,
-        "lambda": 0.95,
 
-        # Exploration
-        "entropy_coeff": 0.005,
+        # Core RL Parameters
+        "gamma": 0.96,          # Discount factor for future rewards → shorter horizon
+        "lambda": 0.97,         # GAE smoothing factor → balances bias vs. variance
 
-        # Rollout / Training settings
-        "train_batch_size": 16_000,          # Large enough for stable updates
-        "rollout_fragment_length": 500,     # Steps per worker before sending batch
-        "minibatch_size": 512,              # For SGD updates
-        "num_epochs": 8,                    # Gradient passes per batch
+        # Exploration and Stability
+        "entropy_coeff": 0.05,
+        "clip_param": 0.2,           # PPO clipping parameter for stable updates
+        "vf_clip_param": 20.0,       # Clipping for value function updates → avoids large jumps
+        "vf_loss_coeff": 1.5,        # Weight of value function loss → higher stabilizes training
+        "grad_clip": 1.0,            # Clipping for gradients → prevents exploding gradients
+                
+
+
+        # Training Dynamics
+        "train_batch_size": 4_000,       # Number of timesteps per training batch (~15 episodes of experience)
+        "rollout_fragment_length": 240,  # 10 seconds of experience per rollout
+        "minibatch_size": 512,
+        "num_epochs": 10,                # Number of passes over each batch of data
 
         # Parallelism
-        "num_workers": 4,               # Number of rollout workers
-        "num_envs_per_worker": 2,       # Each worker runs 2 envs → total 8 envs in parallel
+        # Each worker simulates multiple environments in parallel
+        # This setup balances speed and diversity of experience
+        "num_workers": 4,
+        "num_envs_per_worker": 2,
 
-        # Model architecture
+        # Model Architecture
         "model": {
-            "fcnet_hiddens": [256, 128],        # Hidden layers
-            "fcnet_activation": "relu",         # Non-linearity
-            "uses_new_env_api": True,           # Use new API
+            "fcnet_hiddens": [256, 128, 64],
+            "fcnet_activation": "relu",
+            "uses_new_env_api": True,
         },
     },
+
 }
 
 # Build the full environment configuration (ensures consistency)
