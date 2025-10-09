@@ -172,18 +172,26 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending):
 
     # 8) PASS COMPLETION (both passer and receiver)
     if context.get("pass_completed", False):
+
+        # PASSER REWARD
         if context.get("pass_from") == agent_id:
-            reward += 0.8  # passer bonus
+            if context.get("invalid_pass_direction", False):
+                reward += 0.5  # lower bonus for suboptimal direction
+            else:
+                reward += 0.8  # normal passer bonus
 
+        # RECEIVER REWARD
         if context.get("pass_to") == agent_id:
-            reward += 1.0  # receiver bonus
+            reward += 1.0  # same reward regardless of direction
 
-        reward += 0.3  # shared team synergy bonus
+        # TEAM SYNERGY BONUS
+        reward += 0.3
 
-        # Logarithmic decay for long pass chains
+        # LOGARITHMIC DECAY FOR PASS CHAINS
         attacker_reward.consecutive_passes += 1
         chain_bonus = 0.3 / (1.0 + np.log1p(attacker_reward.consecutive_passes))
         reward += chain_bonus
+
 
     # 9) SHOOTING BEHAVIOR
     if context.get("start_shot_bonus", False):

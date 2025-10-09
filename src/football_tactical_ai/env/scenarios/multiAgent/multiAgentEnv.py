@@ -659,12 +659,25 @@ class FootballMultiEnv(MultiAgentEnv):
         if direction is None or np.linalg.norm(direction) < 1e-6 or power <= 0:
             context["invalid_shot_attempt"] = True
             context["shot_attempted"] = False
+            context.pop("shot_direction", None)
+            context.pop("shot_power", None)
+            context.pop("invalid_shot_direction", None)
+            context.pop("shot_quality", None)
+            context.pop("shot_allignment", None)
+            context.pop("shot_positional_quality", None)
+
             return
 
         # Shooter must currently own the ball
         if self.ball.get_owner() != agent_id:
             context["invalid_shot_attempt"] = True
             context["shot_attempted"] = False
+            context.pop("shot_direction", None)
+            context.pop("shot_power", None)
+            context.pop("invalid_shot_direction", None)
+            context.pop("shot_quality", None)
+            context.pop("shot_allignment", None)
+            context.pop("shot_positional_quality", None)
             return
 
         # Register shot context
@@ -757,12 +770,24 @@ class FootballMultiEnv(MultiAgentEnv):
         # Prevent overlapping pass attempts
         if self.pass_pending["active"]:
             context["pass_attempted"] = False
+            context["invalid_pass_attempt"] = True
+            context.pop("pass_direction_raw", None)
+            context.pop("pass_direction", None)
+            context.pop("pass_power", None)
+            context.pop("pass_quality", None)
+            context.pop("invalid_pass_direction", None)
             return
 
         # Prevent repeated pass from same owner within one pending phase
         if self.pass_owner == agent_id and self.pass_just_started:
             context["invalid_pass_attempt"] = True
             context["pass_attempted"] = False
+            context.pop("pass_direction_raw", None)
+            context.pop("pass_direction", None)
+            context.pop("pass_power", None)
+            context.pop("pass_quality", None)
+            context.pop("invalid_pass_direction", None)
+
             return
 
         # Retrieve pass power
@@ -772,6 +797,10 @@ class FootballMultiEnv(MultiAgentEnv):
         if self.ball.get_owner() != agent_id or power <= 0:
             context["invalid_pass_attempt"] = True
             context["pass_attempted"] = False
+            context.pop("pass_direction_raw", None)
+            context.pop("pass_direction", None)
+            context.pop("pass_power", None)
+            context.pop("pass_quality", None)
             return
 
         # 1. RETRIEVE TEAMMATES AND POSITIONS

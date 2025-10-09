@@ -198,7 +198,6 @@ class PlayerAttacker(BasePlayer):
                     "shot_direction": shot_direction,
                     "invalid_shot_direction": not fov_visible_shot,
                     "shot_alignment": alignment,
-                    "start_shot_bonus": True,
                     "shot_positional_quality": positional_quality,
                 })
 

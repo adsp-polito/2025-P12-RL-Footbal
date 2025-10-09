@@ -84,7 +84,7 @@ multiagent_params = {
 
 
         # Training Dynamics
-        "train_batch_size": 4_000,       # Number of timesteps per training batch (~15 episodes of experience)
+        "train_batch_size": 4_800,       # Number of timesteps per training batch
         "rollout_fragment_length": 240,  # 10 seconds of experience per rollout
         "minibatch_size": 512,
         "num_epochs": 10,                # Number of passes over each batch of data
