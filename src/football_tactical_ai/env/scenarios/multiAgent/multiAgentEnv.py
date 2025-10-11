@@ -360,7 +360,22 @@ class FootballMultiEnv(MultiAgentEnv):
 
         # Step 1: Execute actions (movement, pass, shot, tackle, dive)
         for agent_id, action in actions.items():
+
             player = self.players[agent_id]
+
+            # PASS-TARGET MOVEMENT LIMIT
+            # Small movements near zero are treated as idle, and pass receivers are slowed down to stay in place.
+            dx, dy = action[0], action[1]
+
+            # If this player is the intended receiver of a pass → heavily limit motion (98% reduction)
+            if (self.pass_pending.get("active", False)
+                and self.pass_pending.get("to") == agent_id):
+                
+                dx *= 0
+                dy *= 0
+
+            # Update the action vector with processed movement
+            action[0], action[1] = dx, dy
 
             context = player.execute_action(
                 action=action,
@@ -468,7 +483,6 @@ class FootballMultiEnv(MultiAgentEnv):
             agent_contexts[from_id]["pass_failed"] = True
             self.pass_pending["active"] = False
 
-
         # Step 5: Check goal or out
         goal_owner = None
         goal_team = None
@@ -519,10 +533,10 @@ class FootballMultiEnv(MultiAgentEnv):
 
         ball_out_by = None
         if self._is_ball_completely_out(ball_x, ball_y):
-            if self.shot_owner is not None:
-                ball_out_by = self.shot_owner
-            elif self.pass_owner is not None:
-                ball_out_by = self.pass_owner
+            if self.shot_context.get("shot_by") is not None:
+                ball_out_by = self.shot_context.get("shot_by")
+            elif self.pass_context.get("pass_from") is not None:
+                ball_out_by = self.pass_context.get("pass_from")
                 self.pass_pending["active"] = False
             elif self.ball.get_owner() is not None:
                 ball_out_by = self.ball.get_owner()
@@ -663,9 +677,10 @@ class FootballMultiEnv(MultiAgentEnv):
             context.pop("shot_power", None)
             context.pop("invalid_shot_direction", None)
             context.pop("shot_quality", None)
-            context.pop("shot_allignment", None)
+            context.pop("shot_alignment", None)
             context.pop("shot_positional_quality", None)
-
+            self.shot_owner = None
+            self.shot_just_started = False
             return
 
         # Shooter must currently own the ball
@@ -676,8 +691,10 @@ class FootballMultiEnv(MultiAgentEnv):
             context.pop("shot_power", None)
             context.pop("invalid_shot_direction", None)
             context.pop("shot_quality", None)
-            context.pop("shot_allignment", None)
+            context.pop("shot_alignment", None)
             context.pop("shot_positional_quality", None)
+            self.shot_owner = None
+            self.shot_just_started = False
             return
 
         # Register shot context
@@ -776,6 +793,9 @@ class FootballMultiEnv(MultiAgentEnv):
             context.pop("pass_power", None)
             context.pop("pass_quality", None)
             context.pop("invalid_pass_direction", None)
+
+            self.pass_owner = None
+            self.pass_just_started = False
             return
 
         # Prevent repeated pass from same owner within one pending phase
@@ -787,6 +807,9 @@ class FootballMultiEnv(MultiAgentEnv):
             context.pop("pass_power", None)
             context.pop("pass_quality", None)
             context.pop("invalid_pass_direction", None)
+
+            self.pass_owner = None
+            self.pass_just_started = False
 
             return
 

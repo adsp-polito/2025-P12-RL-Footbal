@@ -7,9 +7,9 @@ def is_out_of_play(pitch: Pitch, x: float, y: float) -> bool:
 def build_attacker_grid(pitch: Pitch,
                         role: str,
                         team: str = "A",
-                        min_reward: float = -0.05,
-                        max_reward: float = 0.05,
-                        focus_sharpness: float = 2.0
+                        min_reward: float = -0.03,
+                        max_reward: float = 0.07,
+                        focus_sharpness: float = 2.5
                     ) -> np.ndarray:
     """
     Build the spatial reward grid for attacking players (role-dependent)
@@ -37,8 +37,8 @@ def build_attacker_grid(pitch: Pitch,
     # DEFINE TARGET HOTSPOTS FOR EACH ROLE (in field meters)
     if team == "A":  # Attacking to the RIGHT
         role_targets = {
-            "LW":  (0.75 * pitch.width, 0.15),
-            "RW":  (0.75 * pitch.width, 0.85),
+            "LW":  (pitch.width - 8, 0.25),
+            "RW":  (pitch.width - 8, 0.75),
             "CF":  (pitch.width - 8, 0.50),
             "LCF": (pitch.width - 10, 0.35),
             "RCF": (pitch.width - 10, 0.65),
@@ -47,8 +47,8 @@ def build_attacker_grid(pitch: Pitch,
 
     elif team == "B":  # Attacking to the LEFT
         role_targets = {
-            "LW":  (0.25 * pitch.width, 0.85),  # vertically mirrored
-            "RW":  (0.25 * pitch.width, 0.15),
+            "LW":  (8, 0.75),  # vertically mirrored
+            "RW":  (8, 0.25),
             "CF":  (8, 0.50),
             "LCF": (10, 0.65),
             "RCF": (10, 0.35),  
@@ -71,7 +71,7 @@ def build_attacker_grid(pitch: Pitch,
 
             # Out-of-play cells: strong negative value
             if is_out_of_play(pitch, cell_x, cell_y):
-                grid[i, j] = -0.2
+                grid[i, j] = -1.0
                 continue
 
             # Normalized coordinates [0, 1]
@@ -110,9 +110,9 @@ def build_attacker_grid(pitch: Pitch,
 def build_defender_grid(pitch: Pitch,
                         role: str,
                         team: str = "B",
-                        min_reward: float = -0.05,
-                        max_reward: float = 0.05,
-                        focus_sharpness: float = 2.0
+                        min_reward: float = -0.03,
+                        max_reward: float = 0.07,
+                        focus_sharpness: float = 2.5
                     ) -> np.ndarray:
     """
     Build the spatial reward grid for defensive players (LCB, RCB, CB)
@@ -171,7 +171,7 @@ def build_defender_grid(pitch: Pitch,
 
             # Out-of-play → negative value
             if is_out_of_play(pitch, cell_x, cell_y):
-                grid[i, j] = -0.2
+                grid[i, j] = -1.0
                 continue
 
             # Normalize Y coordinate [0, 1]
@@ -224,7 +224,7 @@ def build_defender_grid(pitch: Pitch,
 
 def build_goalkeeper_grid(pitch: Pitch,
                           team: str = "B",
-                          min_reward: float = -0.05,
+                          min_reward: float = -0.10,
                           max_reward: float = 0.05
                         ) -> np.ndarray:
     """
@@ -278,7 +278,7 @@ def build_goalkeeper_grid(pitch: Pitch,
 
             # Out-of-play check (outside the pitch boundaries)
             if is_out_of_play(pitch, cell_x, cell_y):
-                grid[i, j] = -0.2  # Strong penalty for invalid positions
+                grid[i, j] = -1.0  # Strong penalty for invalid positions
                 continue
 
             # Inside own goal area → maximum reward

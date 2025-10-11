@@ -170,6 +170,7 @@ class PlayerAttacker(BasePlayer):
             # SHOOTING
             if shoot_flag > 0.5:
                 self.current_action = "shoot"
+                
                 fov_visible_shot = self.is_direction_visible(desired_direction)
 
                 shot_quality, shot_direction, shot_power = self.shoot(
