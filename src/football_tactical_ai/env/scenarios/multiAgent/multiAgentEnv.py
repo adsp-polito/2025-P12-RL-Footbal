@@ -371,8 +371,8 @@ class FootballMultiEnv(MultiAgentEnv):
             if (self.pass_pending.get("active", False)
                 and self.pass_pending.get("to") == agent_id):
                 
-                dx *= 0
-                dy *= 0
+                dx *= 0.0000025
+                dy *= 0.0000025
 
             # Update the action vector with processed movement
             action[0], action[1] = dx, dy
@@ -451,6 +451,7 @@ class FootballMultiEnv(MultiAgentEnv):
 
         # Step 4: Check for possession changes after a pass attempt
         if new_owner:
+
             # If there is a pending pass, resolve it
             if self.pass_pending["active"]:
                 from_id = self.pass_pending["from"]
@@ -464,6 +465,17 @@ class FootballMultiEnv(MultiAgentEnv):
 
                     agent_contexts[from_id]["pass_completed"] = True
                     agent_contexts[from_id]["pass_to"] = to_id
+                    agent_contexts[from_id]["pass_from"] = from_id
+
+                elif new_owner != to_id and new_owner.startswith("att_"):
+                    # Passage intercepted or received by the wrong teammate
+                    # It is still ok, no penalty
+                    agent_contexts[to_id]["pass_completed"] = True
+                    agent_contexts[to_id]["pass_from"] = from_id
+                    agent_contexts[to_id]["pass_to"] = new_owner
+
+                    agent_contexts[from_id]["pass_completed"] = True
+                    agent_contexts[from_id]["pass_to"] = new_owner
                     agent_contexts[from_id]["pass_from"] = from_id
 
                 elif new_owner is not None and new_owner != from_id:

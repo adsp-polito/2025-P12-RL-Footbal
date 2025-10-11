@@ -18,7 +18,7 @@ multiagent_params = {
     ),
 
     # Episode duration in real-world seconds
-    "seconds_per_episode": 15,
+    "seconds_per_episode": 20,
 
     # Frames per second (simulation runs at 24 steps per second)
     "fps": 24,
@@ -49,7 +49,7 @@ multiagent_params = {
     # Environment-specific settings for multi-agent scenario
     "env_settings": {
         "n_attackers": 3,            # Number of attackers (Team A)
-        "n_defenders": 0,            # Number of defenders (Team B)
+        "n_defenders": 2,            # Number of defenders (Team B)
         "include_goalkeeper": True, # Whether to include a goalkeeper
         # NOTE: increase defenders/GK here to test larger scenarios (e.g. 2v2, 3v3, 3v2+GK)
     },
@@ -63,10 +63,10 @@ multiagent_params = {
         # then decays progressively to stabilize the policy
         "lr": [
             [0,         2e-4],     # Initial exploration phase
-            [270_000,   1e-4],     # Gradual decay
-            [540_000,   5e-5],
-            [810_000,   2e-5],
-            [1_080_000, 1e-5],
+            [360_000,   1e-4],     # Gradual decay
+            [720_000,   5e-5],
+            [1_080_000, 2e-5],
+            [1_440_000, 1e-5],
         ],
 
 
@@ -76,11 +76,11 @@ multiagent_params = {
 
         # Exploration and Stability
         "entropy_coeff": [
-            [0,         0.1],    # Encourage exploration early on
-            [270_000,   0.05],   # Decay entropy bonus over time
-            [540_000,   0.01],
-            [810_000,   0.0005],
-            [1_080_000, 0.0001],
+            [0,         0.2],    # Encourage exploration early on
+            [360_000,   0.1],   # Decay entropy bonus over time
+            [720_000,   0.05],
+            [1_080_000, 0.01],
+            [1_440_000, 0.005],
         ],
         "clip_param": 0.2,           # PPO clipping parameter for stable updates
         "vf_clip_param": 20.0,       # Clipping for value function updates → avoids large jumps

@@ -224,8 +224,8 @@ def build_defender_grid(pitch: Pitch,
 
 def build_goalkeeper_grid(pitch: Pitch,
                           team: str = "B",
-                          min_reward: float = -0.10,
-                          max_reward: float = 0.05
+                          min_reward: float = -0.025,
+                          max_reward: float = 0.10
                         ) -> np.ndarray:
     """
     Build the spatial reward grid for goalkeepers (team-aware)

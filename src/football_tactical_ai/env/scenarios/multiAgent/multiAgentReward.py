@@ -254,6 +254,13 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
         if dist_goal < 11 and not context.get("start_shot_bonus", False):
             reward -= 0.1  # stronger impatience very close to goal
 
+    # 11) DEFENSIVE POSSESSION PENALTY
+    if ball is not None and ball.get_owner() is not None:
+        owner_id = ball.get_owner()
+        if owner_id.startswith("def") or owner_id.startswith("gk"):
+            reward -= 0.1  # attackers lose reward if defenders have the ball
+
+
     return reward
 
 
@@ -272,7 +279,7 @@ def defender_reward(agent_id, player, pos_reward, ball, context):
     reward += pos_reward            # dense shaping
     reward += 0.005                 # small time survival bonus
 
-    # BALL CHASING (less aggressive than attackers)
+    # BALL CHASING
     if ball is not None and ball.get_owner() is None:
         x_p, y_p = denormalize(*player.get_position())
         x_b, y_b = denormalize(*ball.get_position())
