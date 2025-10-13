@@ -27,7 +27,7 @@ multiagent_params = {
     "episodes": 3000,
 
     # Frequency of evaluation in episodes
-    "eval_every": 300,
+    "eval_every": 500,
 
     # Rendering configuration (used in evaluation/visualization)
     "render": {
@@ -62,7 +62,7 @@ multiagent_params = {
         # The LR starts higher to encourage fast learning in early stages,
         # then decays progressively to stabilize the policy
         "lr": [
-            [0,         2e-4],     # Initial exploration phase
+            [0,         5e-4],     # Initial exploration phase
             [360_000,   1e-4],     # Gradual decay
             [720_000,   5e-5],
             [1_080_000, 2e-5],
@@ -76,12 +76,13 @@ multiagent_params = {
 
         # Exploration and Stability
         "entropy_coeff": [
-            [0,         0.2],    # Encourage exploration early on
-            [360_000,   0.1],   # Decay entropy bonus over time
-            [720_000,   0.05],
-            [1_080_000, 0.01],
-            [1_440_000, 0.005],
+            [0,         0.25],    # Encourage exploration early on
+            [360_000,   0.2],     # Decay over time to focus on exploitation
+            [720_000,   0.1],      
+            [1_080_000, 0.05],
+            [1_440_000, 0.01],
         ],
+
         "clip_param": 0.2,           # PPO clipping parameter for stable updates
         "vf_clip_param": 20.0,       # Clipping for value function updates → avoids large jumps
         "vf_loss_coeff": 1.5,        # Weight of value function loss → higher stabilizes training
@@ -90,16 +91,16 @@ multiagent_params = {
 
 
         # Training Dynamics
-        "train_batch_size": 7_200,       # Number of timesteps per training batch
-        "rollout_fragment_length": 360,  # 15 seconds of experience per rollout
-        "minibatch_size": 512,
-        "num_epochs": 10,                # Number of passes over each batch of data
+        "train_batch_size": 12_000,       # Number of timesteps per training batch
+        "rollout_fragment_length": 480,   # Number of steps per rollout fragment
+        "minibatch_size": 512,            # Size of minibatches for SGD
+        "num_epochs": 6,                  # Number of passes over each batch of data
 
         # Parallelism
         # Each worker simulates multiple environments in parallel
         # This setup balances speed and diversity of experience
-        "num_workers": 4,
-        "num_envs_per_worker": 2,
+        "num_workers": 3,
+        "num_envs_per_worker": 3,
 
         # Model Architecture
         "model": {

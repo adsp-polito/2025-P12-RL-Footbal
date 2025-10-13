@@ -48,5 +48,5 @@ def plot_grids(selected_roles):
 
 if __name__ == "__main__":
     # choose up to 2 roles here
-    roles_to_plot = ["CF", "LW", "RW"]
+    roles_to_plot = ["GK", "LCB"]
     plot_grids(roles_to_plot)

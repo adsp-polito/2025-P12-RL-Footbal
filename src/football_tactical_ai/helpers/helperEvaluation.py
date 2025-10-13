@@ -196,7 +196,7 @@ def evaluate_and_render_multi(
                     f"Action={action_dict[agent]} | "
                     f"Reward={rewards.get(agent, 0.0):+.3f} | "
                     f"Cum={cumulative_rewards[agent]:+.3f} | "
-                    f"Info={infos.get(agent, {})}\n"
+                    f"Info={infos.get(agent, {})}\n\n"
                 )
 
         # Save render state

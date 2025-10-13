@@ -71,7 +71,7 @@ def build_attacker_grid(pitch: Pitch,
 
             # Out-of-play cells: strong negative value
             if is_out_of_play(pitch, cell_x, cell_y):
-                grid[i, j] = -1.0
+                grid[i, j] = -2.5
                 continue
 
             # Normalized coordinates [0, 1]
@@ -107,125 +107,110 @@ def build_attacker_grid(pitch: Pitch,
     return grid
 
 
+
 def build_defender_grid(pitch: Pitch,
                         role: str,
                         team: str = "B",
                         min_reward: float = -0.03,
                         max_reward: float = 0.07,
-                        focus_sharpness: float = 2.5
+                        focus_sharpness: float = 4.5
                     ) -> np.ndarray:
     """
     Build the spatial reward grid for defensive players (LCB, RCB, CB)
+    without vertical alignment or depth penalties.
 
     PURPOSE:
-    - Encourage defenders to maintain compact positioning near the defensive line
-    - Reward staying close to the goal and within their vertical defensive channel
-    - Mirror logic depending on which side the team is defending
-    - Penalize wide or advanced positions (moving too far from goal)
+    - Encourage defenders to remain close to their defensive role hotspot.
+    - Maintain tactical compactness near the penalty area.
+    - Mirror logic for both teams: A defends LEFT, B defends RIGHT.
+    - Simplified version: no explicit vertical or depth penalties,
+      only exponential decay around the ideal role zone.
 
     PARAMETERS:
         pitch (Pitch): pitch geometry and discretization settings
-        role (str): defensive role ('LCB', 'RCB', 'CB', or others)
+        role (str): defensive role ('LCB', 'RCB', 'CB')
         team (str): 'A' defends LEFT goal, 'B' defends RIGHT goal
-        min_reward (float): lowest cell value (farthest / wrong positions)
-        max_reward (float): highest cell value (ideal defensive zone)
-        focus_sharpness (float): controls decay from the role hotspot
+        min_reward (float): minimum possible reward value
+        max_reward (float): maximum possible reward value
+        focus_sharpness (float): controls how fast the reward decays
+                                 from the ideal defensive position
 
     RETURNS:
-        np.ndarray: 2D grid (num_cells_x * num_cells_y) with spatial rewards
+        np.ndarray: 2D reward grid of shape (num_cells_x, num_cells_y)
     """
 
+    # Initialize the reward grid
     grid = np.zeros((pitch.num_cells_x, pitch.num_cells_y))
 
-    # DEFENSIVE REFERENCE PARAMETERS
-    # Y-axis alignment penalty → keeps vertical structure (0=center, 1=stronger)
-    y_alignment_penalty = 0.4
-
-    # Defensive depth bonus → how much we encourage staying near own penalty area
-    depth_importance = 1.0  # scaling factor for distance to base_x
-
-    # DEFINE TARGET ZONES BASED ON TEAM SIDE AND ROLE
-    if team == "A":  # Defending the LEFT goal
+    # Define role-specific target zones for each team
+    if team == "A":  # Team A defends LEFT
         base_x = pitch.penalty_depth
         y_targets = {"LCB": 0.35, "RCB": 0.65, "CB": 0.50}
-    elif team == "B":  # Defending the RIGHT goal
+    elif team == "B":  # Team B defends RIGHT
         base_x = pitch.width - pitch.penalty_depth
         y_targets = {"LCB": 0.65, "RCB": 0.35, "CB": 0.50}
     else:
         raise ValueError(f"Unknown team: {team}")
 
-    # Role-based hotspot targets (in meters)
+    # Role-based hotspots (in meters)
     role_targets = {
         "LCB": (base_x, y_targets["LCB"]),
         "RCB": (base_x, y_targets["RCB"]),
         "CB":  (base_x, y_targets["CB"]),
     }
 
-    # BUILD GRID VALUES
+    # Iterate through all grid cells
     for i in range(pitch.num_cells_x):
         for j in range(pitch.num_cells_y):
 
-            # Cell center coordinates
+            # Compute cell center coordinates (in meters)
             cell_x = pitch.x_min + (i + 0.5) * pitch.cell_size
             cell_y = pitch.y_min + (j + 0.5) * pitch.cell_size
 
-            # Out-of-play → negative value
+            # Out-of-play → strong negative reward
             if is_out_of_play(pitch, cell_x, cell_y):
-                grid[i, j] = -1.0
+                grid[i, j] = -2.5
                 continue
 
-            # Normalize Y coordinate [0, 1]
+            # Normalize Y coordinate to [0, 1]
             y_norm = (cell_y - pitch.y_min) / (pitch.y_max - pitch.y_min)
 
-            # ROLE-SPECIFIC HOTSPOT
+            # ROLE-SPECIFIC HOTSPOT LOGIC
             if role in role_targets:
                 target_x, target_y = role_targets[role]
 
-                # Normalized distances
+                # Compute normalized distances from the role target
                 dx = abs(cell_x - target_x) / pitch.width
                 dy = abs(y_norm - target_y)
                 dist = np.sqrt(dx**2 + dy**2)
 
-                # Exponential decay around the hotspot (local tactical zone)
+                # Exponential decay: closer cells get higher reward
                 score = np.exp(-focus_sharpness * dist)
 
-                # Apply vertical alignment penalty
-                y_penalty = y_alignment_penalty * abs(y_norm - target_y)
-                score = np.clip(score - y_penalty, 0, 1)
-
-                # Encourage staying closer to own goal (depth reward)
-                if team == "A":
-                    depth_factor = np.exp(-depth_importance * (cell_x / pitch.width))
-                else:
-                    depth_factor = np.exp(-depth_importance * ((pitch.width - cell_x) / pitch.width))
-
-                score *= depth_factor
-
             else:
-                # GENERIC DEFENDER FALLBACK (for undefined roles)
-                # Reward proximity to penalty box depth
+                # Generic fallback behavior (if role not recognized)
+                # Simply reward staying close to the penalty area center
                 if team == "A":
-                    dist_x = cell_x / pitch.width
+                    x_target = pitch.penalty_depth
                 else:
-                    dist_x = (pitch.width - cell_x) / pitch.width
+                    x_target = pitch.width - pitch.penalty_depth
 
-                base_reward = np.exp(-depth_importance * dist_x)
-                y_penalty = y_alignment_penalty * abs(y_norm - 0.5)
-                score = np.clip(base_reward - y_penalty, 0, 1)
+                dx = abs(cell_x - x_target) / pitch.width
+                dy = abs(y_norm - 0.5)
+                dist = np.sqrt(dx**2 + dy**2)
+                score = np.exp(-focus_sharpness * dist)
 
-            # MAP TO [min_reward, max_reward]
+            # Map score into the defined reward range
             grid[i, j] = min_reward + (max_reward - min_reward) * score
 
     return grid
 
 
 
-
-
 def build_goalkeeper_grid(pitch: Pitch,
                           team: str = "B",
-                          min_reward: float = -0.025,
-                          max_reward: float = 0.10
+                          min_reward: float = -0.03,
+                          max_reward: float = 0.07
                         ) -> np.ndarray:
     """
     Build the spatial reward grid for goalkeepers (team-aware)
@@ -278,7 +263,7 @@ def build_goalkeeper_grid(pitch: Pitch,
 
             # Out-of-play check (outside the pitch boundaries)
             if is_out_of_play(pitch, cell_x, cell_y):
-                grid[i, j] = -1.0  # Strong penalty for invalid positions
+                grid[i, j] = -2.5  # Strong penalty for invalid positions
                 continue
 
             # Inside own goal area → maximum reward

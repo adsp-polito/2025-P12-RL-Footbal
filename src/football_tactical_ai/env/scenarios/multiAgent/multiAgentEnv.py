@@ -371,8 +371,8 @@ class FootballMultiEnv(MultiAgentEnv):
             if (self.pass_pending.get("active", False)
                 and self.pass_pending.get("to") == agent_id):
                 
-                dx *= 0.0000025
-                dy *= 0.0000025
+                dx *= 0
+                dy *= 0
 
             # Update the action vector with processed movement
             action[0], action[1] = dx, dy
