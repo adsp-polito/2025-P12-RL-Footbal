@@ -19,13 +19,16 @@ from football_tactical_ai.helpers.helperEvaluation import evaluate_and_render_mu
 import warnings
 import ray
 import logging
-ray.init(ignore_reinit_error=True, log_to_driver=False)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 logging.getLogger("ray").setLevel(logging.ERROR)
 
 # Reduce RLlib/Ray log verbosity
 logger = logging.getLogger("ray")
 logger.setLevel(logging.ERROR)
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+ray.shutdown()
+ray.init(ignore_reinit_error=True, log_to_driver=False, include_dashboard=False, num_gpus=1)
 
 
 def train_SingleAgent(scenario="move"):
@@ -267,7 +270,6 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
             policy_mapping_fn=policy_mapping_fn,
             policies_to_train=list(policies.keys()),
         )
-        .resources(num_gpus=0)
     )
 
     # Build PPO algorithm
