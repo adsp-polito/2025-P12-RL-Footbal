@@ -232,6 +232,7 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
         }
         policy_mapping_fn = lambda agent_id, *args, **kwargs: agent_id
 
+
     # RLlib PPO configuration
     config = (
         PPOConfig()
@@ -263,6 +264,7 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
             policy_mapping_fn=policy_mapping_fn,
             policies_to_train=list(policies.keys()),
         )
+        .resources(num_gpus=0)
     )
 
     # Build PPO algorithm

@@ -97,16 +97,16 @@ multiagent_params = {
         "num_epochs": 6,                  # Number of passes over each batch of data
 
         # Parallelism
-        # Each worker simulates multiple environments in parallel
-        # This setup balances speed and diversity of experience
-        "num_workers": 3,
-        "num_envs_per_worker": 3,
+        # Each worker simulates multiple environments in parallel (if in local ==> 3 is ok)
+        "num_workers": 0,
+        "num_envs_per_worker": 1,
 
         # Model Architecture
         "model": {
             "fcnet_hiddens": [256, 128, 64],
             "fcnet_activation": "relu",
-            "uses_new_env_api": True,
+            #"uses_new_env_api": True,  # True if it is in local, False if in remote
+            "uses_new_env_api": False, 
         },
     },
 
