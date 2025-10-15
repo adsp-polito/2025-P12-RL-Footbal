@@ -243,11 +243,11 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
         .framework(cfg["rllib"]["framework"])
         .training(
             lr=cfg["rllib"]["lr"],
-            lr_schedule=cfg["rllib"].get("lr_schedule", None),
+            #lr_schedule=cfg["rllib"].get("lr_schedule", None),
             gamma=cfg["rllib"]["gamma"],
             lambda_=cfg["rllib"]["lambda"],
             entropy_coeff=cfg["rllib"]["entropy_coeff"],
-            entropy_coeff_schedule=cfg["rllib"].get("entropy_coeff_schedule", None),
+            #entropy_coeff_schedule=cfg["rllib"].get("entropy_coeff_schedule", None),
             clip_param=cfg["rllib"]["clip_param"],
             vf_clip_param=cfg["rllib"].get("vf_clip_param", None),
             vf_loss_coeff=cfg["rllib"].get("vf_loss_coeff", None),
