@@ -124,7 +124,7 @@ multiagent_params = {
             "fcnet_hiddens": [256, 128, 64],
             "fcnet_activation": "relu",
             #"uses_new_env_api": True,  # True if it is in local, False if in remote
-            "uses_new_env_api": False, 
+            "uses_new_env_api": True, 
         },
     },
 
