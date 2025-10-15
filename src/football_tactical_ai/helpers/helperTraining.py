@@ -277,40 +277,62 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
     algo = config.build_algo()
 
 
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"\n✅ Forcing all RLlib policies to {device} ...")
 
     try:
-        # New API stack (Ray >= 2.9)
-        if hasattr(algo, "env_runner_group"):
-            for env_runner in algo.env_runner_group.env_runners:
-                for pid, policy in env_runner._policy_map.items():
+        # New API stack (RLlib >= 2.30) — module store inside algo.env_runner
+        if hasattr(algo, "env_runner") and hasattr(algo.env_runner, "module"):
+            module_store = algo.env_runner.module
+            if hasattr(module_store, "_policy_map"):
+                # Multi-policy setup
+                for pid, module in module_store._policy_map.items():
                     try:
-                        policy.model.to(device)
-                        print(f"Moved policy '{pid}' to {device}")
+                        module.to(device)
+                        print(f"Moved policy module '{pid}' to {device}")
                     except Exception as e:
-                        print(f"⚠️ Could not move policy '{pid}': {e}")
-        # Fallback for old stack (Ray <= 2.8)
+                        print(f"⚠️ Could not move module '{pid}': {e}")
+            else:
+                # Single-policy case
+                module_store.to(device)
+                print(f"Moved single module to {device}")
+
+        # Fallback: older API (< 2.30)
         elif hasattr(algo, "workers"):
             for worker in algo.workers.foreach_worker(lambda w: w):
                 for pid, policy in worker.policy_map.items():
-                    try:
-                        policy.model.to(device)
-                        print(f"Moved policy '{pid}' to {device}")
-                    except Exception as e:
-                        print(f"⚠️ Could not move policy '{pid}': {e}")
+                    policy.model.to(device)
+                    print(f"Moved policy '{pid}' to {device}")
+
         else:
-            print("⚠️ No workers or env_runners found — cannot move models.")
+            print("⚠️ No module or workers found — nothing to move.")
+
     except Exception as e:
         print(f"❌ GPU-forcing step failed: {e}")
 
-    # Check device for at least one policy
+    # --- Sanity check ---
     try:
-        first_policy = list(algo._learner_group._learner._module_cache.values())[0]
-        param_device = next(first_policy.parameters()).device
-        print(f"✅ Device check → {param_device}")
+        policy = algo.get_policy()
+        first_param = next(policy.model.parameters())
+        print(f"✅ Device check → {first_param.device}")
     except Exception as e:
         print(f"⚠️ Could not verify device: {e}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # LOGGING HEADER
     print("\n" + "=" * 125)
