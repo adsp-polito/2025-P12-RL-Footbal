@@ -365,7 +365,7 @@ class FootballMultiEnv(MultiAgentEnv):
 
             # PASS-TARGET MOVEMENT LIMIT
             # Small movements near zero are treated as idle, and pass receivers are slowed down to stay in place.
-            dx, dy = action[0], action[1]
+            dx, dy = float(action[0]), float(action[1])
 
             # If this player is the intended receiver of a pass → heavily limit motion (98% reduction)
             if (self.pass_pending.get("active", False)
