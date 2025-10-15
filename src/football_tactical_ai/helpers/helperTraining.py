@@ -276,9 +276,19 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
     # Build PPO algorithm
     algo = config.build_algo()
 
-    # --- FORCE MODEL TO CUDA ---
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"\n\n\n\nUsing device: {device}\n\n\n\n")
+    print(f"Forcing all RLlib policies to {device} ...")
+
+    for worker in algo.workers.foreach_worker(lambda w: w):
+        for pid, policy in worker.policy_map.items():
+            try:
+                policy.model.to(device)
+                print(f"Moved policy '{pid}' to {device}")
+            except Exception as e:
+                print(f"Could not move policy '{pid}': {e}")
+
+    print("Device check →", next(algo.get_policy().model.parameters()).device)
+
 
     # LOGGING HEADER
     print("\n" + "=" * 125)
