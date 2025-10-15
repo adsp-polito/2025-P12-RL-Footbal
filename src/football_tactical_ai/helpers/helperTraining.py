@@ -276,19 +276,41 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
     # Build PPO algorithm
     algo = config.build_algo()
 
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Forcing all RLlib policies to {device} ...")
+    print(f"\n✅ Forcing all RLlib policies to {device} ...")
 
-    for worker in algo.workers.foreach_worker(lambda w: w):
-        for pid, policy in worker.policy_map.items():
-            try:
-                policy.model.to(device)
-                print(f"Moved policy '{pid}' to {device}")
-            except Exception as e:
-                print(f"Could not move policy '{pid}': {e}")
+    try:
+        # New API stack (Ray >= 2.9)
+        if hasattr(algo, "env_runner_group"):
+            for env_runner in algo.env_runner_group.env_runners:
+                for pid, policy in env_runner._policy_map.items():
+                    try:
+                        policy.model.to(device)
+                        print(f"Moved policy '{pid}' to {device}")
+                    except Exception as e:
+                        print(f"⚠️ Could not move policy '{pid}': {e}")
+        # Fallback for old stack (Ray <= 2.8)
+        elif hasattr(algo, "workers"):
+            for worker in algo.workers.foreach_worker(lambda w: w):
+                for pid, policy in worker.policy_map.items():
+                    try:
+                        policy.model.to(device)
+                        print(f"Moved policy '{pid}' to {device}")
+                    except Exception as e:
+                        print(f"⚠️ Could not move policy '{pid}': {e}")
+        else:
+            print("⚠️ No workers or env_runners found — cannot move models.")
+    except Exception as e:
+        print(f"❌ GPU-forcing step failed: {e}")
 
-    print("Device check →", next(algo.get_policy().model.parameters()).device)
-
+    # Check device for at least one policy
+    try:
+        first_policy = list(algo._learner_group._learner._module_cache.values())[0]
+        param_device = next(first_policy.parameters()).device
+        print(f"✅ Device check → {param_device}")
+    except Exception as e:
+        print(f"⚠️ Could not verify device: {e}")
 
     # LOGGING HEADER
     print("\n" + "=" * 125)
