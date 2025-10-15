@@ -278,9 +278,7 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
 
     # --- FORCE MODEL TO CUDA ---
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    for pid, policy in algo.workers.local_worker().policy_map.items():
-        policy.model.to(device)
-    print(f"Policies moved to {device}")
+    print(f"\n\n\n\nUsing device: {device}\n\n\n\n")
 
     # LOGGING HEADER
     print("\n" + "=" * 125)

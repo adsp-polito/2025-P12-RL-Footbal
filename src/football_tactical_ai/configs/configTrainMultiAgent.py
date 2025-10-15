@@ -116,7 +116,7 @@ multiagent_params = {
 
         # Parallelism
         # Each worker simulates multiple environments in parallel (if in local ==> 3 is ok)
-        "num_workers": 1, 
+        "num_workers": 0, 
         "num_envs_per_worker": 1,
 
         # Use GPUs if available (set to 0 if none available)
