@@ -1215,7 +1215,7 @@ class FootballMultiEnv(MultiAgentEnv):
                 ox, oy = other.get_position()
                 rel_x = ox - self_x
                 rel_y = oy - self_y
-                action_code = other.get_current_action_code()
+                action_code = other.get_current_action_code() # code of current action normalized to [0, 1]
 
                 # Store last known info
                 self.last_known_positions[other_id] = (rel_x, rel_y, action_code)

@@ -411,10 +411,10 @@ class BasePlayer(ABC):
 
     def get_current_action_code(self) -> int:
         """
-        Map the current action string to a discrete integer code.
+        Get the normalized discrete action code for observations.
 
-        Returns:
-            int: Encoded action for observations (0 = idle, 1 = move, etc.).
+        Maps the current action (0-5) into the [0, 1] interval,
+        ensuring consistency with the observation space.
         """
         mapping = {
             "idle": 0,
@@ -424,7 +424,9 @@ class BasePlayer(ABC):
             "tackle": 4,
             "dive": 5,
         }
-        return mapping.get(self.current_action, 0)
+        code = mapping.get(self.current_action, 0)
+        return code / 5.0  # normalize to [0, 1]
+
 
 
 
