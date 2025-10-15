@@ -282,44 +282,44 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
     print(f"\n✅ Forcing all RLlib policies to {device} ...")
 
     try:
-        # New API stack (RLlib >= 2.30) — module store inside algo.env_runner
+        # New API stack: algo.env_runner.module -> MultiRLModule
         if hasattr(algo, "env_runner") and hasattr(algo.env_runner, "module"):
-            module_store = algo.env_runner.module
-            if hasattr(module_store, "_policy_map"):
-                # Multi-policy setup
-                for pid, module in module_store._policy_map.items():
-                    try:
-                        module.to(device)
-                        print(f"Moved policy module '{pid}' to {device}")
-                    except Exception as e:
-                        print(f"⚠️ Could not move module '{pid}': {e}")
-            else:
-                # Single-policy case
-                module_store.to(device)
-                print(f"Moved single module to {device}")
+            multi_module = algo.env_runner.module
+            moved = False
 
-        # Fallback: older API (< 2.30)
+            if hasattr(multi_module, "_rl_modules"):
+                for pid, submodule in multi_module._rl_modules.items():
+                    if hasattr(submodule, "model"):
+                        try:
+                            submodule.model.to(device)
+                            print(f"Moved submodule '{pid}' → {device}")
+                            moved = True
+                        except Exception as e:
+                            print(f"⚠️ Could not move '{pid}': {e}")
+            if not moved:
+                print("⚠️ No submodules moved — structure may differ.")
+
+        # Fallback (older API)
         elif hasattr(algo, "workers"):
             for worker in algo.workers.foreach_worker(lambda w: w):
                 for pid, policy in worker.policy_map.items():
                     policy.model.to(device)
-                    print(f"Moved policy '{pid}' to {device}")
+                    print(f"Moved policy '{pid}' → {device}")
 
         else:
-            print("⚠️ No module or workers found — nothing to move.")
+            print("⚠️ No recognized RLlib module structure found.")
 
     except Exception as e:
         print(f"❌ GPU-forcing step failed: {e}")
 
-    # --- Sanity check ---
+    # --- Verification ---
     try:
-        policy = algo.get_policy()
-        first_param = next(policy.model.parameters())
-        print(f"✅ Device check → {first_param.device}")
+        multi_module = algo.env_runner.module
+        first_submodule = next(iter(multi_module._rl_modules.values()))
+        device_name = next(first_submodule.model.parameters()).device
+        print(f"✅ Device check → {device_name}")
     except Exception as e:
         print(f"⚠️ Could not verify device: {e}")
-
-
 
 
 
