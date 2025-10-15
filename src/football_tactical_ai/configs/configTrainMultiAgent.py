@@ -119,6 +119,9 @@ multiagent_params = {
         "num_workers": 0,
         "num_envs_per_worker": 1,
 
+        # Use GPUs if available (set to 0 if none available)
+        "num_gpus": 1,  # Adjust based on your hardware
+
         # Model Architecture
         "model": {
             "fcnet_hiddens": [256, 128, 64],

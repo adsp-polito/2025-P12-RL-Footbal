@@ -256,6 +256,7 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
             minibatch_size=cfg["rllib"]["minibatch_size"],
             num_epochs=cfg["rllib"]["num_epochs"],
         )
+        .resources(num_gpus=cfg["rllib"].get("num_gpus", 0))
         .rl_module(model_config=cfg["rllib"]["model"])  
         .env_runners(
             num_env_runners=cfg["rllib"]["num_workers"],
