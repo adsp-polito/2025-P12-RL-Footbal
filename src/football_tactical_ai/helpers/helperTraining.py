@@ -2,6 +2,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import importlib
+import torch
 from tqdm import trange
 from stable_baselines3 import PPO
 from stable_baselines3.common.monitor import Monitor
@@ -274,6 +275,12 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
 
     # Build PPO algorithm
     algo = config.build_algo()
+
+    # --- FORCE MODEL TO CUDA ---
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    for pid, policy in algo.workers.local_worker().policy_map.items():
+        policy.model.to(device)
+    print(f"Policies moved to {device}")
 
     # LOGGING HEADER
     print("\n" + "=" * 125)
