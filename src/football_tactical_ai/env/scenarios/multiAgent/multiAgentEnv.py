@@ -375,10 +375,11 @@ class FootballMultiEnv(MultiAgentEnv):
                 dy *= 0
 
             # Update the action vector with processed movement
-            action[0], action[1] = dx, dy
+            modified_action = np.array([dx, dy, *action[2:]], dtype=np.float32)
+
 
             context = player.execute_action(
-                action=action,
+                action=modified_action,
                 time_step=self.time_step,
                 x_range=self.x_range,
                 y_range=self.y_range,
