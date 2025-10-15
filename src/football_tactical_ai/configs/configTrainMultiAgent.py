@@ -61,12 +61,21 @@ multiagent_params = {
         # Learning Rate Schedule
         # The LR starts higher to encourage fast learning in early stages,
         # then decays progressively to stabilize the policy
-        "lr": [
+        #"lr": [
+        #    [0,         2e-4],     # Initial exploration phase
+        #    [180_000,   1e-4],     # Gradual decay
+        #    [360_000,   5e-5],
+        #    [480_000, 2e-5],
+        #    [720_000, 1e-5],
+        #],
+
+        "lr": 2e-4,  # Fixed learning rate
+        "lr_schedule" : [
             [0,         2e-4],     # Initial exploration phase
             [180_000,   1e-4],     # Gradual decay
             [360_000,   5e-5],
             [480_000, 2e-5],
-            [720_000, 1e-5],
+            [720_000, 1e-5],    
         ],
 
 
@@ -75,7 +84,16 @@ multiagent_params = {
         "lambda": 0.97,         # GAE smoothing factor → balances bias vs. variance
 
         # Exploration and Stability
-        "entropy_coeff": [
+        #"entropy_coeff": [
+        #    [0,        0.1],    # Encourage exploration early on
+        #    [180_000,  0.075],     # Decay over time to focus on exploitation
+        #    [360_000,  0.05],      
+        #    [480_000,  0.025],
+        #    [720_000,  0.01],
+        #],
+
+        "entropy_coeff": 0.01,  # Fixed entropy coefficient
+        "entropy_coeff_schedule": [
             [0,        0.1],    # Encourage exploration early on
             [180_000,  0.075],     # Decay over time to focus on exploitation
             [360_000,  0.05],      
