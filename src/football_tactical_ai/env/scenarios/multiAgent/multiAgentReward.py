@@ -44,9 +44,9 @@ def get_reward(player: BasePlayer,
     if role in attacker_roles:
         return attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, pitch)
     elif role in defender_roles:
-        return defender_reward(agent_id, player, pos_reward, ball, context)
+        return defender_reward(agent_id, player, pos_reward, ball, context, pitch)
     elif role in goalkeeper_roles:
-        return goalkeeper_reward(agent_id, player, pos_reward, context)
+        return goalkeeper_reward(agent_id, player, pos_reward, context, pitch)
     else:
         # Unknown role → neutral reward
         return 0.0
@@ -126,9 +126,9 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
 
     # Reward valid pass attempts
     if context.get("start_pass_bonus", False) and not context.get("invalid_pass_attempt", False):
-        reward += 0.2  # small bonus for starting a pass
+        reward += 0.5  # small bonus for starting a pass
         if context.get("pass_quality") is not None:
-            reward += 0.5 * context["pass_quality"]
+            reward += 1.0 * context["pass_quality"]
 
     elif context.get("pass_completed", False):
         attacker_reward.consecutive_passes += 1
@@ -136,13 +136,13 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
         # Reward passer
         if context.get("pass_from") == agent_id:
             if context.get("invalid_pass_direction", False):
-                reward += 0.25  # less reward for wrong direction
+                reward += 0.75  # less reward for wrong direction
             else:
-                reward += 0.5  # normal passer reward
+                reward += 1.25  # normal passer reward
 
         # Reward receiver
         if context.get("pass_to") == agent_id:
-            reward += 0.25
+            reward += 0.75
 
         # Small synergy bonus for teamwork
         reward += 0.25
@@ -158,7 +158,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
         #   chain_effect = (positive_decay_term) - (negative_penalty_term)
         #
         #   The two parts combined ensure that:
-        #     - Pass 1–2 → slightly positive reward (+0.3 → +0.2)
+        #     - Pass 1–2 → slightly positive reward
         #     - Pass 3 → roughly neutral (≈ 0)
         #     - Pass ≥4 → negative, discouraging excessive circulation
         # This way, the agent learns to prefer fast, purposeful combinations
@@ -167,7 +167,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
         if not attacker_reward.shot_started:
             chain_effect = (
                 0.5 / (1.0 + np.log1p(attacker_reward.consecutive_passes))
-                - 0.3 * max(0, attacker_reward.consecutive_passes - 2)
+                - 0.1 * max(0, attacker_reward.consecutive_passes - 2)
             )
             reward += chain_effect
 
@@ -182,7 +182,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
 
     # 5. SHOOTING BEHAVIOR
     if context.get("start_shot_bonus", False):
-        reward += 1.0  # base shooting reward
+        reward += 1.5  # base shooting reward
         reward += 1.0 * context.get("shot_positional_quality", 0.0)
         if context.get("shot_quality") is not None:
             reward += 0.5 * context["shot_quality"]
@@ -231,7 +231,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
 
     return reward
 
-def defender_reward(agent_id, player, pos_reward, ball, context):
+def defender_reward(agent_id, player, pos_reward, ball, context, pitch):
     """
     Defender reward function (refined and balanced).
 
@@ -259,7 +259,7 @@ def defender_reward(agent_id, player, pos_reward, ball, context):
     if context.get("tackle_success", False):
         # Stronger reward when close to goal (critical zone)
         x_p, _ = denormalize(*player.get_position())
-        goal_x = 0.0 if player.team == "A" else player.env.pitch.width
+        goal_x = 0.0 if player.team == "A" else pitch.width
         dist_goal = abs(goal_x - x_p)
         zone_factor = np.exp(-0.1 * dist_goal)  # higher near goal
         reward += 0.8 + 0.3 * zone_factor
@@ -290,7 +290,7 @@ def defender_reward(agent_id, player, pos_reward, ball, context):
     # 7. POSITIONAL DISCIPLINE
     # Slight penalty if too far from defensive line
     x_p, _ = denormalize(*player.get_position())
-    goal_x = 0.0 if player.team == "A" else player.env.pitch.width
+    goal_x = 0.0 if player.team == "A" else pitch.width
     dist_from_goal = abs(goal_x - x_p)
     if dist_from_goal > 25:  # far outside defensive zone
         reward -= 0.1 * (dist_from_goal - 25) / 10.0  # gradual penalty
@@ -298,7 +298,7 @@ def defender_reward(agent_id, player, pos_reward, ball, context):
     return reward
 
 
-def goalkeeper_reward(agent_id, player, pos_reward, context):
+def goalkeeper_reward(agent_id, player, pos_reward, context, pitch):
     """
     Goalkeeper reward function (refined and balanced).
 
@@ -344,7 +344,7 @@ def goalkeeper_reward(agent_id, player, pos_reward, context):
     # 5. POSITIONAL DISCIPLINE
     # Encourage staying near goal center, penalize excessive wandering
     x_gk, y_gk = denormalize(*player.get_position())
-    goal_center_y = player.env.pitch.center_y
+    goal_center_y = pitch.center_y
     dy_from_center = abs(y_gk - goal_center_y)
 
     # Penalize leaving the central corridor (beyond ~5m off center)

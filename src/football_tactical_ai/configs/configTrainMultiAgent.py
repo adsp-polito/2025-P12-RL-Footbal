@@ -18,7 +18,7 @@ multiagent_params = {
     ),
 
     # Episode duration in real-world seconds
-    "seconds_per_episode": 20,
+    "seconds_per_episode": 15,
 
     # Frames per second (simulation runs at 24 steps per second)
     "fps": 24,
@@ -27,7 +27,7 @@ multiagent_params = {
     "episodes": 3000,
 
     # Frequency of evaluation in episodes
-    "eval_every": 500,
+    "eval_every": 300,
 
     # Rendering configuration (used in evaluation/visualization)
     "render": {
@@ -62,11 +62,11 @@ multiagent_params = {
         # The LR starts higher to encourage fast learning in early stages,
         # then decays progressively to stabilize the policy
         "lr": [
-            [0,         5e-4],     # Initial exploration phase
-            [360_000,   1e-4],     # Gradual decay
-            [720_000,   5e-5],
-            [1_080_000, 2e-5],
-            [1_440_000, 1e-5],
+            [0,         2e-4],     # Initial exploration phase
+            [180_000,   1e-4],     # Gradual decay
+            [360_000,   5e-5],
+            [480_000, 2e-5],
+            [720_000, 1e-5],
         ],
 
 
@@ -76,11 +76,11 @@ multiagent_params = {
 
         # Exploration and Stability
         "entropy_coeff": [
-            [0,         0.25],    # Encourage exploration early on
-            [360_000,   0.2],     # Decay over time to focus on exploitation
-            [720_000,   0.1],      
-            [1_080_000, 0.05],
-            [1_440_000, 0.01],
+            [0,        0.1],    # Encourage exploration early on
+            [180_000,  0.075],     # Decay over time to focus on exploitation
+            [360_000,  0.05],      
+            [480_000,  0.025],
+            [720_000,  0.01],
         ],
 
         "clip_param": 0.2,           # PPO clipping parameter for stable updates
@@ -91,8 +91,8 @@ multiagent_params = {
 
 
         # Training Dynamics
-        "train_batch_size": 12_000,       # Number of timesteps per training batch
-        "rollout_fragment_length": 480,   # Number of steps per rollout fragment
+        "train_batch_size": 10_800,       # Number of timesteps per training batch
+        "rollout_fragment_length": 360,   # Number of steps per rollout fragment
         "minibatch_size": 512,            # Size of minibatches for SGD
         "num_epochs": 6,                  # Number of passes over each batch of data
 

@@ -269,9 +269,9 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
     algo = config.build_algo()
 
     # LOGGING HEADER
-    print("\n" + "=" * 100)
-    print("Starting PPO Multi-Agent Training".center(100))
-    print("=" * 100)
+    print("\n" + "=" * 125)
+    print("Starting PPO Multi-Agent Training".center(125))
+    print("=" * 125)
 
     print(f"{'Scenario:':25} {scenario}")
     print(f"{'Episodes:':25} {cfg['episodes']}")
@@ -284,7 +284,7 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
     print("\nRLlib Training Parameters:")
     for key, val in cfg["rllib"].items():
         print(f"  {key:25} {val}")
-    print("=" * 100 + "\n")
+    print("=" * 125 + "\n")
 
     # TRAINING LOOP
     for ep in trange(1, cfg["episodes"] + 1, desc="Episodes Progress"):
