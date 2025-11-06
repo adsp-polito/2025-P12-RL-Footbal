@@ -49,7 +49,7 @@ multiagent_params = {
     # Environment-specific settings for multi-agent scenario
     "env_settings": {
         "n_attackers": 3,            # Number of attackers (Team A)
-        "n_defenders": 2,            # Number of defenders (Team B)
+        "n_defenders": 0,            # Number of defenders (Team B)
         "include_goalkeeper": True, # Whether to include a goalkeeper
         # NOTE: increase defenders/GK here to test larger scenarios (e.g. 2v2, 3v3, 3v2+GK)
     },

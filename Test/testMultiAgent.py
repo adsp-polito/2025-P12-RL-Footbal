@@ -69,7 +69,6 @@ def test_multiagent_render(save_path="test/videoTest/testMultiAgent.mp4"):
         show_fov=False,
         show_names=True,
     )
-    
 
     anim.save(save_path, writer="ffmpeg", fps=env.fps)
 

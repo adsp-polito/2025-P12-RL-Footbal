@@ -17,10 +17,11 @@ class BasePlayer(ABC):
     """
 
     # Physical maxima (real-world units)
-    MAX_SPEED: float      = 10.0   # m/s
-    MAX_POWER: float      = 15.0   # m/s (ball velocity)
-    MAX_FOV_ANGLE: float  = 180.0  # degrees
-    MAX_FOV_RANGE: float  = 90.0   # metres
+    MAX_SPEED: float          = 10.0    # m/s (top sprint speed)
+    MAX_POWER: float          = 42.0    # m/s (ball velocity cap for shots ≈ 151 km/h)
+    PASS_POWER_RATIO: float   = 0.5     # pass velocity ≈ 50% of max shot power
+    MAX_FOV_ANGLE: float      = 180.0   # degrees
+    MAX_FOV_RANGE: float      = 90.0    # metres
 
     def __init__(
         self,
@@ -344,8 +345,13 @@ class BasePlayer(ABC):
 
         # 4) Compute final pass power
         desired_power = np.clip(desired_power, 0.0, 1.0)
-        # Passing skill scales both base and variable components
-        pass_power = self.max_power * (0.3 + 0.7 * self.passing * desired_power)
+        # Passing power is computed as a fraction of the player's maximum kicking power.
+        # The PASS_POWER_RATIO models the physical difference between shooting and passing:
+        # passes are executed with approximately 40–50% of the kinetic intensity of a shot.
+        # This preserves a single power scale for both actions (shared action space)
+        # while ensuring realistic ball velocities for passes.
+        pass_power = self.max_power * self.PASS_POWER_RATIO * (0.3 + 0.7 * self.passing * desired_power)
+
 
         # 5) Distance-based success decay
         if target_pos is not None:

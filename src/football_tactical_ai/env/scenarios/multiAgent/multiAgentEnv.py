@@ -369,7 +369,8 @@ class FootballMultiEnv(MultiAgentEnv):
 
             # If this player is the intended receiver of a pass → heavily limit motion (98% reduction)
             if (self.pass_pending.get("active", False)
-                and self.pass_pending.get("to") == agent_id):
+                and self.pass_pending.get("to") == agent_id
+                and self.ball.get_owner() is None):
                 
                 dx *= 0
                 dy *= 0

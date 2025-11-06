@@ -278,8 +278,11 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
 
 
 
+
+
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"\n✅ Forcing all RLlib policies to {device} ...")
+    print(f"\nForcing all RLlib policies to {device} ...")
 
     try:
         # New API stack: algo.env_runner.module -> MultiRLModule
@@ -295,9 +298,9 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
                             print(f"Moved submodule '{pid}' → {device}")
                             moved = True
                         except Exception as e:
-                            print(f"⚠️ Could not move '{pid}': {e}")
+                            print(f"Could not move '{pid}': {e}")
             if not moved:
-                print("⚠️ No submodules moved — structure may differ.")
+                print("No submodules moved — structure may differ.")
 
         # Fallback (older API)
         elif hasattr(algo, "workers"):
@@ -307,19 +310,19 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
                     print(f"Moved policy '{pid}' → {device}")
 
         else:
-            print("⚠️ No recognized RLlib module structure found.")
+            print("No recognized RLlib module structure found.")
 
     except Exception as e:
-        print(f"❌ GPU-forcing step failed: {e}")
+        print(f"GPU-forcing step failed: {e}")
 
-    # --- Verification ---
+    # Verification
     try:
         multi_module = algo.env_runner.module
         first_submodule = next(iter(multi_module._rl_modules.values()))
         device_name = next(first_submodule.model.parameters()).device
-        print(f"✅ Device check → {device_name}")
+        print(f"Device check → {device_name}")
     except Exception as e:
-        print(f"⚠️ Could not verify device: {e}")
+        print(f"Could not verify device: {e}")
 
 
 

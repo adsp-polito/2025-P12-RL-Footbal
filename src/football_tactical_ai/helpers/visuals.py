@@ -51,10 +51,10 @@ def render_episode_singleAgent(states, pitch, save_path=None, fps=24, stripes=Fa
                               show_heatmap=show_heatmap, show_rewards=show_rewards, reward_grid=reward_grid)
 
     # Create patches representing players and ball; add to axis
-    player_circle = Circle((0, 0), radius=1.0, color='crimson', ec='black', lw=1, zorder=5)
+    player_circle = Circle((0, 0), radius=1.0, color='crimson', ec='black', lw=1, zorder=3)
     ax.add_patch(player_circle)
 
-    ball_circle = Circle((0, 0), radius=0.5, color='white', ec='black', lw=1, zorder=5)
+    ball_circle = Circle((0, 0), radius=0.5, color='white', ec='black', lw=1, zorder=3)
     ax.add_patch(ball_circle)
 
     # Create a wedge for the field of view if show_fov is True
@@ -65,7 +65,7 @@ def render_episode_singleAgent(states, pitch, save_path=None, fps=24, stripes=Fa
     max_opponents = max(len(state.get('opponents', [])) for state in states)
     defender_circles = []
     for _ in range(max_opponents):
-        c = Circle((0, 0), radius=1.0, color='dodgerblue', ec='black', lw=1, zorder=5)
+        c = Circle((0, 0), radius=1.0, color='dodgerblue', ec='black', lw=1, zorder=3)
         ax.add_patch(c)
         defender_circles.append(c)
 
@@ -337,7 +337,7 @@ def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=Fal
         role = player.get_role()
         color = colors_by_role.get(role, "gray")
 
-        circle = Circle((0, 0), radius=1.0, color=color, ec='black', lw=1, zorder=5)
+        circle = Circle((0, 0), radius=1.0, color=color, ec='black', lw=1, zorder=3)
         wedge = Wedge(center=(0, 0), r=20, theta1=0, theta2=0, color=color, alpha=0.15, zorder=3)
 
         ax.add_patch(circle)
@@ -349,12 +349,12 @@ def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=Fal
         if show_names:
             label = ax.text(
                 0, 0, f"{agent_id}", ha='center', va='top',
-                fontsize=10, fontweight='bold', color="black", zorder=10
+                fontsize=10, fontweight='bold', color="black", zorder=3
             )
             player_labels[agent_id] = label
 
     # Create the ball
-    ball_circle = Circle((0, 0), radius=0.5, color='white', ec='black', lw=1, zorder=6)
+    ball_circle = Circle((0, 0), radius=0.5, color='white', ec='black', lw=1, zorder=3)
     ax.add_patch(ball_circle)
 
     # Dictionary to hold references to info text objects (for updating/removal)

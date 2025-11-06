@@ -70,13 +70,13 @@ anim = render_episode_singleAgent(
     pitch=pitch,
     fps=env.fps,
     full_pitch=True,
-    show_grid=True,
+    show_grid=False,
     show_heatmap=False,
     show_rewards=False,
     reward_grid=env.reward_grid,
     save_path="test/videoTest/testView_SA.mp4",  # Output video file path
     rewards_per_frame=rewards,
-    show_info=True,
+    show_info=False,
     show_fov=True
 )
 
