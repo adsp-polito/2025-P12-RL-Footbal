@@ -18,7 +18,7 @@ multiagent_params = {
     ),
 
     # Episode duration in real-world seconds
-    "seconds_per_episode": 15,
+    "seconds_per_episode": 10,
 
     # Frames per second (simulation runs at 24 steps per second)
     "fps": 24,
@@ -80,7 +80,7 @@ multiagent_params = {
 
 
         # Core RL Parameters
-        "gamma": 0.96,          # Discount factor for future rewards → shorter horizon
+        "gamma": 0.95,          # Discount factor for future rewards → shorter horizon
         "lambda": 0.97,         # GAE smoothing factor → balances bias vs. variance
 
         # Exploration and Stability
@@ -110,10 +110,10 @@ multiagent_params = {
 
 
         # Training Dynamics
-        "train_batch_size": 10_800,       # Number of timesteps per training batch
-        "rollout_fragment_length": 360,   # Number of steps per rollout fragment
-        "minibatch_size": 512,            # Size of minibatches for SGD
-        "num_epochs": 6,                  # Number of passes over each batch of data
+        "train_batch_size": 2048,       # Number of timesteps per training batch
+        "rollout_fragment_length": 128,   # Number of steps per rollout fragment
+        "minibatch_size": 256,            # Size of minibatches for SGD
+        "num_epochs": 3,                  # Number of passes over each batch of data
 
         # Parallelism
         # Each worker simulates multiple environments in parallel (if in local ==> 3 is ok)
