@@ -49,8 +49,8 @@ multiagent_params = {
     # Environment-specific settings for multi-agent scenario
     "env_settings": {
         "n_attackers": 3,            # Number of attackers (Team A)
-        "n_defenders": 0,            # Number of defenders (Team B)
-        "include_goalkeeper": True, # Whether to include a goalkeeper
+        "n_defenders": 2,            # Number of defenders (Team B)
+        "include_goalkeeper": True,  # Whether to include a goalkeeper
         # NOTE: increase defenders/GK here to test larger scenarios (e.g. 2v2, 3v3, 3v2+GK)
     },
 
@@ -107,7 +107,6 @@ multiagent_params = {
         "vf_loss_coeff": 1.5,        # Weight of value function loss → higher stabilizes training
         "grad_clip": 1.0,            # Clipping for gradients → prevents exploding gradients
                 
-
 
         # Training Dynamics
         "train_batch_size": 2048,       # Number of timesteps per training batch
