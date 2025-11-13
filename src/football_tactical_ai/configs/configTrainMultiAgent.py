@@ -109,7 +109,7 @@ multiagent_params = {
                 
 
         # Training Dynamics
-        "train_batch_size": 2048,       # Number of timesteps per training batch
+        "train_batch_size": 2048,         # Number of timesteps per training batch
         "rollout_fragment_length": 128,   # Number of steps per rollout fragment
         "minibatch_size": 256,            # Size of minibatches for SGD
         "num_epochs": 3,                  # Number of passes over each batch of data
@@ -126,8 +126,7 @@ multiagent_params = {
         "model": {
             "fcnet_hiddens": [256, 128, 64],
             "fcnet_activation": "relu",
-            #"uses_new_env_api": True,  # True if it is in local, False if in remote
-            "uses_new_env_api": True, 
+            "uses_new_env_api": True,   # True to use the new env API
         },
     },
 

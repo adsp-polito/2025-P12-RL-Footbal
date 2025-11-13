@@ -71,7 +71,7 @@ def build_attacker_grid(pitch: Pitch,
 
             # Out-of-play cells: strong negative value
             if is_out_of_play(pitch, cell_x, cell_y):
-                grid[i, j] = -2.5
+                grid[i, j] = -0.5
                 continue
 
             # Normalized coordinates [0, 1]
@@ -169,7 +169,7 @@ def build_defender_grid(pitch: Pitch,
 
             # Out-of-play → strong negative reward
             if is_out_of_play(pitch, cell_x, cell_y):
-                grid[i, j] = -2.5
+                grid[i, j] = -0.5
                 continue
 
             # Normalize Y coordinate to [0, 1]
@@ -263,7 +263,7 @@ def build_goalkeeper_grid(pitch: Pitch,
 
             # Out-of-play check (outside the pitch boundaries)
             if is_out_of_play(pitch, cell_x, cell_y):
-                grid[i, j] = -2.5  # Strong penalty for invalid positions
+                grid[i, j] = -0.5  # Strong penalty for invalid positions
                 continue
 
             # Inside own goal area → maximum reward
