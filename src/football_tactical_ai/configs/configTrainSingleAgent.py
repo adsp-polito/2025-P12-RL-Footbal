@@ -7,6 +7,7 @@ Usage:
     model = PPO("MlpPolicy", env, **cfg["ppo"])
 """
 
+
 SCENARIOS: dict[str, dict] = {
     # MOVE scenario configuration
     "move": {

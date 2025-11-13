@@ -166,11 +166,11 @@ class BasePlayer(ABC):
           into meters per step → then back to normalized pitch coordinates.
 
         Args:
-            action (np.array): Array [dx, dy] with movement direction.
-            time_per_step (float): Simulation step duration (s).
-            x_range (float): Pitch width in meters.
-            y_range (float): Pitch height in meters.
-            enable_fov (bool): If True, blocks movement outside the player's FOV.
+            action (np.array): Array [dx, dy] with movement direction
+            time_per_step (float): Simulation step duration (s)
+            x_range (float): Pitch width in meters
+            y_range (float): Pitch height in meters
+            enable_fov (bool): If True, blocks movement outside the player's FOV
         """
 
 
@@ -204,7 +204,6 @@ class BasePlayer(ABC):
 
 
     # Execute the action (to be overridden by subclasses if needed)
-    # This method is specifically used in multi-agent environments
     def execute_action(self, action: np.ndarray, time_step: float, x_range: float, y_range: float):
         """
         Executes a continuous action vector for the player.
