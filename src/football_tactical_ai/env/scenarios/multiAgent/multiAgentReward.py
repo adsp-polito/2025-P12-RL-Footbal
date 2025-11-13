@@ -115,11 +115,11 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
 
     # 3. POSSESSION EVENTS
     if context.get("possession_lost", False):
-        reward -= 0.5
+        reward -= 0.25
         attacker_reward.consecutive_passes = 0
 
     if context.get("ball_out_by") == agent_id:
-        reward -= 0.5
+        reward -= 0.35
         attacker_reward.consecutive_passes = 0
 
     # 4. PASSING BEHAVIOR

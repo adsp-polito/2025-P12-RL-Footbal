@@ -69,10 +69,13 @@ def build_attacker_grid(pitch: Pitch,
             cell_x = pitch.x_min + (i + 0.5) * pitch.cell_size
             cell_y = pitch.y_min + (j + 0.5) * pitch.cell_size
 
-            # Out-of-play cells: strong negative value
+            # Out-of-play cells: negative value
             if is_out_of_play(pitch, cell_x, cell_y):
-                grid[i, j] = -0.5
-                continue
+                if abs(cell_x - pitch.x_min) < 1.0 or abs(cell_x - pitch.x_max) < 1.0:
+                    grid[i,j] = -0.03   # Mild penalty for out-of-bounds near goal lines
+                else:
+                    grid[i,j] = -0.05
+
 
             # Normalized coordinates [0, 1]
             x_norm = (cell_x - pitch.x_min) / (pitch.x_max - pitch.x_min)
@@ -167,10 +170,13 @@ def build_defender_grid(pitch: Pitch,
             cell_x = pitch.x_min + (i + 0.5) * pitch.cell_size
             cell_y = pitch.y_min + (j + 0.5) * pitch.cell_size
 
-            # Out-of-play → strong negative reward
+            # Out-of-play → negative reward
             if is_out_of_play(pitch, cell_x, cell_y):
-                grid[i, j] = -0.5
-                continue
+                if abs(cell_x - pitch.x_min) < 1.0 or abs(cell_x - pitch.x_max) < 1.0:
+                    grid[i,j] = -0.03   # Mild penalty for out-of-bounds near goal lines
+                else:
+                    grid[i,j] = -0.05
+
 
             # Normalize Y coordinate to [0, 1]
             y_norm = (cell_y - pitch.y_min) / (pitch.y_max - pitch.y_min)
@@ -263,8 +269,11 @@ def build_goalkeeper_grid(pitch: Pitch,
 
             # Out-of-play check (outside the pitch boundaries)
             if is_out_of_play(pitch, cell_x, cell_y):
-                grid[i, j] = -0.5  # Strong penalty for invalid positions
-                continue
+                if abs(cell_x - pitch.x_min) < 1.0 or abs(cell_x - pitch.x_max) < 1.0:
+                    grid[i,j] = -0.03   # Mild penalty for out-of-bounds near goal lines
+                else:
+                    grid[i,j] = -0.05
+
 
             # Inside own goal area → maximum reward
             if x_min_area <= cell_x <= x_max_area and y_min_area <= cell_y <= y_max_area:
