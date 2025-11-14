@@ -252,52 +252,61 @@ class BaseOffensiveScenario(gym.Env):
         else:
             self.ball.update(self.time_per_step)
 
+
+
+
     def _build_reward_grid(self):
         """
-        Builds the reward grid based on pitch dimensions and stores it.
-        Out of bounds cells are assigned strong negative rewards (-5.0).
-        Cells inside the goal area (behind goal line and within goal height) get high positive reward (+5.0).
+        Exact same spatial logic as multi-agent attacker grid.
+        - Negative reward in own half
+        - Smooth rise to 0 around midfield
+        - Positive in attacking third
+        - Penalty for deviating vertically
         """
-        grid = np.zeros((self.num_cells_x, self.num_cells_y))
 
-        # Define scales for position and y-center penalty
-        position_reward_scale = 1.0
-        y_center_penalty_scale = 0.5
+        pitch = self.pitch
 
+        min_reward = -0.05
+        max_reward = 0.05
+        focus_sharpness = 2.5  
 
-        goal_min_y = self.pitch.center_y - self.pitch.goal_width / 2
-        goal_max_y = self.pitch.center_y + self.pitch.goal_width / 2
-        goal_x_min = self.pitch.width  # goal line
-        goal_x_max = self.pitch.width + self.pitch.goal_depth  # depth of the goal area
+        grid = np.zeros((pitch.num_cells_x, pitch.num_cells_y))
 
-        for i in range(self.num_cells_x):
-            for j in range(self.num_cells_y):
+        for i in range(pitch.num_cells_x):
+            for j in range(pitch.num_cells_y):
 
-                # Calculate center of the cell in meters
-                cell_x = self.pitch.x_min + (i + 0.5) * self.cell_size
-                cell_y = self.pitch.y_min + (j + 0.5) * self.cell_size
+                # Compute center of cell in meters
+                cell_x = pitch.x_min + (i + 0.5) * pitch.cell_size
+                cell_y = pitch.y_min + (j + 0.5) * pitch.cell_size
 
-                # Check if out of bounds (excluding goal area)
-                is_out = (cell_x < 0 or cell_x > self.pitch.width or cell_y < 0 or cell_y > self.pitch.height)
+                # Out-of-play → hard penalty
+                if cell_x < 0 or cell_x > pitch.width or cell_y < 0 or cell_y > pitch.height:
+                    grid[i, j] = -0.05
+                    continue
 
-                # Check if inside the goal area (behind goal line, within goal height)
-                is_goal_area = (goal_x_min <= cell_x <= goal_x_max) and (goal_min_y <= cell_y <= goal_max_y)
+                # NORMALIZED COORDINATES
+                x_norm = (cell_x - pitch.x_min) / (pitch.x_max - pitch.x_min)
+                y_norm = (cell_y - pitch.y_min) / (pitch.y_max - pitch.y_min)
 
-                # Assign rewards
-                if is_out and not is_goal_area:
-                    grid[i, j] = -5.0  # penalty out of bounds
-                elif is_goal_area:
-                    grid[i, j] = 5.0   # high reward for goal area
-                else:
-                    x_norm = (cell_x - self.pitch.x_min) / (self.pitch.x_max - self.pitch.x_min)
-                    y_norm = (cell_y - self.pitch.y_min) / (self.pitch.y_max - self.pitch.y_min)
+                # IDENTICAL SHAPE TO MULTI-AGENT:
+                # Exponential progression reward
+                dx = (pitch.width - 8) - cell_x    # multi-agent attacker targets last ~8m
+                dx = abs(dx) / pitch.width
+                dist = dx  # in multi-agent X-target dominates for attackers
 
-                    x_reward = -0.5 * position_reward_scale + position_reward_scale * x_norm # range [-0.5, 0.5] if position_reward_scale = 1.0
-                    y_penalty = -0.5 * y_center_penalty_scale * abs(y_norm - 0.5) * 2 # range [-0.25, 0.0] if y_center_penalty_scale = 0.5
+                score = np.exp(-focus_sharpness * dist)
 
-                    grid[i, j] = x_reward + y_penalty
+                # Map score into [-0.03, +0.07]
+                x_reward = min_reward + (max_reward - min_reward) * score
+
+                # Vertical alignment penalty (multi-agent style)
+                y_penalty = -0.03 * abs(y_norm - 0.5) * 2
+
+                grid[i, j] = x_reward + y_penalty
 
         self.reward_grid = grid
+
+
 
     def _get_position_reward(self, x, y):
         """
