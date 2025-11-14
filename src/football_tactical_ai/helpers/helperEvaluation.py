@@ -4,76 +4,68 @@ import torch
 import numpy as np
 import os
 
-def evaluate_and_render(model, env, pitch, save_path=None, episode=0, fps=24,
-                        show_grid=False, show_heatmap=False,
-                        show_rewards=False, full_pitch=True, show_info=True, show_fov=False):
+def evaluate_and_render(
+    model,
+    env,
+    pitch,
+    save_path=None,
+    episode=0,
+    fps=24,
+    show_grid=False,
+    show_heatmap=False,
+    show_rewards=False,
+    full_pitch=True,
+    show_info=True,
+    show_fov=False,
+    eval_mode="full",        
+):
     """
-    Evaluate a trained model on a single episode and optionally render it as a video.
-
-    Args:
-        model: Trained PPO agent.
-        env: Evaluation environment instance.
-        pitch: Pitch instance for rendering.
-        save_path (str): Optional path to save the video. If None, no rendering is saved.
-        episode (int): Current episode number (used for logging).
-        fps (int): Frames per second for rendering.
-        show_grid (bool): Whether to draw grid lines on the pitch.
-        show_heatmap (bool): Whether to color cells based on reward values.
-        show_rewards (bool): Whether to display numeric reward values inside cells.
-        full_pitch (bool): Whether to render the full pitch or only half.
-        show_info (bool): Whether to show cumulative reward and extra info in the video.
+    Evaluate a trained SB3 PPO model on a single-agent environment.
+    Supports both:
+        - eval_mode='fast'  (no render, no logging, no state copies)
+        - eval_mode='full'  (full render + every frame stored)
 
     Returns:
-        float: The cumulative reward accumulated during this evaluation episode.
+        float: cumulative reward for this evaluation episode
     """
+
     # Reset environment
     obs, _ = env.reset()
     terminated = truncated = False
-    states = []
-    rewards_per_frame = [] if save_path else None
     cumulative_reward = 0.0
 
-    # Initial state
-    attacker_copy = env.attacker.copy()
-    defender_copy = env.defender.copy()
-    ball_copy = env.ball.copy()
+    # FAST MODE → no rendering, no state storage
+    fast_mode = (eval_mode == "fast")
 
-    # Store initial state
-    states.append({
-        "player": attacker_copy,
-        "ball": ball_copy,
-        "opponents": [defender_copy]
-    })
-
-    # If rendering is enabled, initialize rewards per frame
-    if save_path:
+    # Only store states in full mode
+    if not fast_mode:
+        states = []
+        rewards_per_frame = []
+        # Initial frame
+        states.append({
+            "player": env.attacker.copy(),
+            "ball": env.ball.copy(),
+            "opponents": [env.defender.copy()],
+        })
         rewards_per_frame.append(0.0)
 
-    # Main episode loop
+    # MAIN LOOP
     while not terminated and not truncated:
-        # Get action from the model
         action, _ = model.predict(obs)
-        # Step the environment
         obs, reward, terminated, truncated, _ = env.step(action)
         cumulative_reward += reward
 
-        # Store state for rendering
-        attacker_copy = env.attacker.copy()
-        defender_copy = env.defender.copy()
-        ball_copy = env.ball.copy()
-
-        states.append({
-            "player": attacker_copy,
-            "ball": ball_copy,
-            "opponents": [defender_copy]
-        })
-
-        # If rendering is enabled, store the reward for this frame
-        if save_path:
+        if not fast_mode:
+            # Store deep copies for rendering
+            states.append({
+                "player": env.attacker.copy(),
+                "ball": env.ball.copy(),
+                "opponents": [env.defender.copy()],
+            })
             rewards_per_frame.append(reward)
 
-    # Final state after episode ends
-    if save_path:
+    # FULL MODE → produce video
+    if not fast_mode and save_path:
         render_episode_singleAgent(
             states,
             pitch=pitch,
@@ -86,11 +78,10 @@ def evaluate_and_render(model, env, pitch, save_path=None, episode=0, fps=24,
             reward_grid=env.reward_grid,
             rewards_per_frame=rewards_per_frame,
             show_info=show_info,
-            show_fov=show_fov
+            show_fov=show_fov,
         )
 
     return cumulative_reward
-
 
 
 

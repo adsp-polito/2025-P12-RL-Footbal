@@ -128,7 +128,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
     if context.get("start_pass_bonus", False) and not context.get("invalid_pass_attempt", False):
         reward += 0.5  # small bonus for starting a pass
         if context.get("pass_quality") is not None:
-            reward += 1.0 * context["pass_quality"]
+            reward += context["pass_quality"]
 
     elif context.get("pass_completed", False):
         attacker_reward.consecutive_passes += 1
@@ -136,13 +136,13 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
         # Reward passer
         if context.get("pass_from") == agent_id:
             if context.get("invalid_pass_direction", False):
-                reward += 0.75  # less reward for wrong direction
+                reward += 0.5  # less reward for wrong direction
             else:
-                reward += 1.25  # normal passer reward
+                reward += 1.0  # normal passer reward
 
         # Reward receiver
         if context.get("pass_to") == agent_id:
-            reward += 0.75
+            reward += 0.5
 
         # Small synergy bonus for teamwork
         reward += 0.25
@@ -184,10 +184,10 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
 
     # 5. SHOOTING BEHAVIOR
     if context.get("start_shot_bonus", False) and not context.get("invalid_shot_attempt", False):
-        reward += 1.5  # base shooting reward
-        reward += context.get("shot_positional_quality", 0.0)
+        reward += 0.5  # base shooting reward
+        reward += 0.5 * context.get("shot_positional_quality", 0.0)
         if context.get("shot_quality") is not None:
-            reward += context["shot_quality"]
+            reward += 0.5 * context["shot_quality"]
 
     # Penalize bad or misaligned shots
     if context.get("invalid_shot_attempt", False):
@@ -197,8 +197,8 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
 
     # Reward alignment with goal (squared for smoother scaling)
     alignment = context.get("shot_alignment")
-    if alignment is not None:
-        reward += 0.1 * (alignment ** 2 - 0.25)
+    if alignment is not None:  
+        reward += 0.1 * (alignment ** 2 - 0.25) # from -0.025 to +0.075
 
     # 6. SHOT OPPORTUNITY BONUS
     x_p, _ = denormalize(*player.get_position())
@@ -206,7 +206,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
     dist_goal = abs(goal_x - x_p)
 
     # Small bonus for entering a realistic shooting area
-    shot_zone_bonus = 0.01 / (1.0 + np.exp(0.3 * (dist_goal - 20)))
+    shot_zone_bonus = 0.01 / (1.0 + np.exp(0.3 * (dist_goal - 20))) # from ~0.01 at 10m to ~0.001 at 30m
 
     if ball is not None and ball.get_owner() == agent_id:
         reward += shot_zone_bonus

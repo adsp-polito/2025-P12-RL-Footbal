@@ -28,21 +28,21 @@ logging.getLogger("ray").setLevel(logging.ERROR)
 logger = logging.getLogger("ray")
 logger.setLevel(logging.ERROR)
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 ray.shutdown()
 ray.init(ignore_reinit_error=True, log_to_driver=False, include_dashboard=False, num_gpus=1)
 
 
+
+
+
+
+
 def train_SingleAgent(scenario="move"):
     """
-    Train a PPO agent on the specified single-agent scenario defined in the config.
-    
-    This function performs training, evaluation and rendering at defined intervals, 
-    and saves both the model and plots of cumulative reward.
-
-    Args:
-        scenario (str): The key of the scenario to train (e.g., "move", "shot", "view").
+    Train a PPO agent for a single-agent scenario (move, shot, view),
+    using the configuration in configTrainSingleAgent.
     """
+
     # Load scenario configuration
     cfg = CFG_SA.SCENARIOS[scenario]
 
@@ -51,81 +51,119 @@ def train_SingleAgent(scenario="move"):
     module = importlib.import_module(env_path)
     env_class = getattr(module, class_name)
 
-    # Ensure output directories exist
+    # Prepare directories
     ensure_dirs(cfg["paths"]["save_render_dir"])
     ensure_dirs(os.path.dirname(cfg["paths"]["save_model_path"]))
+    ensure_dirs(cfg["paths"]["rewards_dir"])
 
-    # Unpack core parameters
+    # Core parameters
     fps = cfg["fps"]
     episodes = cfg["episodes"]
-    max_steps_per_episode = cfg["max_steps"]
-    total_timesteps = episodes * max_steps_per_episode
     eval_every = cfg["eval_every"]
+    max_steps = cfg["max_steps"]
+    total_timesteps = episodes * max_steps
 
-    # Create pitch
     pitch = Pitch()
 
-    # Create training and evaluation environments
-    env = Monitor(env_class(pitch=pitch, max_steps=max_steps_per_episode, fps=fps))
-    eval_env = env_class(pitch=pitch, max_steps=max_steps_per_episode, fps=fps)
+    # Create environments
+    env = Monitor(env_class(pitch=pitch, max_steps=max_steps, fps=fps))
+    eval_env = env_class(pitch=pitch, max_steps=max_steps, fps=fps)
 
-    # Create PPO model using scenario config
+    # SB3 PPO
     model = PPO("MlpPolicy", env, **cfg["ppo"])
 
-    # Initialize tracking for evaluation
-    eval_rewards = []
-    eval_episodes = []
+    # Storage for rewards
+    episode_rewards_log = []
 
-    # Logging training configuration
-    print("\n" + "=" * 100)
-    print("Starting PPO Training".center(100))
-    print("=" * 100)
+    # HEADER
+    print("\n" + "=" * 125)
+    print("Starting PPO Single-Agent Training".center(125))
+    print("=" * 125)
+
     print(f"{'Scenario:':25} {scenario}")
     print(f"{'Episodes:':25} {episodes}")
-    print(f"{'Evaluation every:':25} {eval_every} episodes")
-    print(f"{'FPS:':25} {fps}")
+    print(f"{'Evaluation every:':25} {eval_every}")
     print(f"{'Seconds per episode:':25} {cfg['seconds_per_episode']}")
-    print(f"{'Steps per episode:':25} {max_steps_per_episode}")
+    print(f"{'FPS:':25} {fps}")
+    print(f"{'Steps per episode:':25} {max_steps}")
     print(f"{'Total timesteps:':25} {total_timesteps}")
-    print("=" * 100 + "\n")
 
-    print("\nStarting training...")
+    print("\nPPO Training Parameters:")
+    for key, val in cfg["ppo"].items():
+        print(f"  {key:25} {val}")
+    print("=" * 125 + "\n")
 
-    # Training loop with progress bar
-    for ep in trange(episodes, desc="Episodes Progress"):
-        episode = ep + 1  # true episode number starting from 1
-        model.learn(total_timesteps=max_steps_per_episode, reset_num_timesteps=False)
+    print("Starting training...\n")
 
-        # Periodic evaluation and rendering
-        if episode % eval_every == 0 or episode == 1:
-            save_render = os.path.join(cfg["paths"]["save_render_dir"], f"episode_{episode}.mp4")
-            cumulative_reward = evaluate_and_render(
-                model,
-                eval_env,
-                pitch,
+    # TRAINING LOOP
+    for ep in trange(1, episodes + 1, desc="Episodes Progress"):
+
+        # One episode worth of timesteps
+        model.learn(total_timesteps=max_steps, reset_num_timesteps=False)
+
+        # FAST EVALUATION (no render)
+        cumulative_reward_quick = evaluate_and_render(
+            model=model,
+            env=eval_env,
+            pitch=pitch,
+            save_path=None,
+            episode=ep,
+            fps=fps,
+            eval_mode="fast",
+            **cfg["render"],
+        )
+
+        episode_rewards_log.append({
+            "episode": ep,
+            "reward": cumulative_reward_quick
+        })
+
+        # FULL EVALUATION (with render)
+        if ep % eval_every == 0 or ep in (1, episodes):
+
+            save_render = os.path.join(cfg["paths"]["save_render_dir"],
+                                       f"episode_{ep}.mp4")
+
+            cumulative_reward_full = evaluate_and_render(
+                model=model,
+                env=eval_env,
+                pitch=pitch,
                 save_path=save_render,
-                episode=episode,
+                episode=ep,
                 fps=fps,
-                **cfg["render"]
+                eval_mode="full",
+                **cfg["render"],
             )
-            print(f"[Episode {episode}] Evaluation cumulative reward: {cumulative_reward:.4f}")
-            eval_rewards.append(cumulative_reward)
-            eval_episodes.append(episode)
 
-    # Save trained model
+            print(f"[Episode {ep}] Eval reward = {cumulative_reward_full:.4f}")
+
+    # SAVE REWARD LOG
+    rewards_path = os.path.join(cfg["paths"]["rewards_dir"], "rewards.json")
+    with open(rewards_path, "w") as f:
+        json.dump(episode_rewards_log, f, indent=2)
+
+    print(f"\nSaved reward log → {rewards_path}")
+
+    # SAVE MODEL
     model.save(cfg["paths"]["save_model_path"])
+    print(f"Model saved → {cfg['paths']['save_model_path']}")
 
-    # Plot cumulative rewards
+    # PLOT
     plt.close('all')
     plt.figure(figsize=(10, 4))
-    plt.plot(eval_episodes, eval_rewards, marker='o', linestyle='-')
-    plt.title(f"{scenario.capitalize()} - Cumulative Reward", fontsize=16, fontweight='bold')
-    plt.xlabel("Episodes", fontsize=14, fontweight='bold')
-    plt.ylabel("Cumulative Rewards", fontsize=14, fontweight='bold')
+    plt.plot(
+        [x["episode"] for x in episode_rewards_log],
+        [x["reward"] for x in episode_rewards_log],
+        marker='o', linestyle='-'
+    )
+    plt.title(f"{scenario.capitalize()} - Cumulative Reward", fontsize=16)
+    plt.xlabel("Episodes", fontsize=14)
+    plt.ylabel("Cumulative Reward", fontsize=14)
     plt.grid(True)
     plt.tight_layout()
     plt.savefig(cfg["paths"]["plot_path"])
     plt.show()
+    print(f"Saved reward plot → {cfg['paths']['plot_path']}")
 
 
 
@@ -367,10 +405,10 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
 
 
     # SAVE REWARD LOG
-    save_plot_dir = os.path.abspath(cfg["paths"]["save_plot_dir"])
+    save_plot_dir = os.path.abspath(cfg["paths"]["rewards_dir"])
 
     # Ensure directory exists
-    os.makedirs(save_plot_dir, exist_ok=True)
+    ensure_dirs(save_plot_dir)
 
     rewards_path = os.path.join(save_plot_dir, "rewards.json")
     with open(rewards_path, "w") as f:

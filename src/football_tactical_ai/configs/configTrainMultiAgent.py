@@ -24,10 +24,10 @@ multiagent_params = {
     "fps": 24,
 
     # Total number of training episodes
-    "episodes": 4,
+    "episodes": 3000,
 
     # Frequency of evaluation in episodes
-    "eval_every": 2,
+    "eval_every": 150,
 
     # Rendering configuration (used in evaluation/visualization)
     "render": {
@@ -41,7 +41,7 @@ multiagent_params = {
 
     # Paths for saving models, renders, and plots
     "paths": {
-        "save_plot_dir": "training/plots/multiAgent",              # Directory for plots
+        "rewards_dir": "training/plots/multiAgent",              # Directory for plots
         "save_model_path": "training/models/multiAgentModel",               # Checkpoint directory
         "save_render_dir": "training/renders/multiAgent",                   # Folder for rendered videos
         "plot_path": "training/plots/multiAgent/multiAgentRewards.png",   # Reward curve output
@@ -86,11 +86,11 @@ multiagent_params = {
 
         # Exploration and Stability
         "entropy_coeff": [
-            [0,        0.2],    # Encourage exploration early on
-            [180_000,  0.15],     # Decay over time to focus on exploitation
-            [360_000,  0.1],      
-            [480_000,  0.05],
-            [720_000,  0.01],
+            [0,        0.1],    # Encourage exploration early on
+            [180_000,  0.075],     # Decay over time to focus on exploitation
+            [360_000,  0.05],      
+            [480_000,  0.025],
+            [720_000,  0.001],
         ],
 
         #"entropy_coeff": 0.01,  # Fixed entropy coefficient
