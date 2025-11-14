@@ -291,6 +291,8 @@ def render_episode_singleAgent(states, pitch, save_path=None, fps=24, stripes=Fa
 
     return anim
 
+
+
 def render_episode_multiAgent(states, pitch, save_path=None, fps=24, stripes=False, full_pitch=True,
                                show_grid=False, show_heatmap=False, show_rewards=False, reward_grid=None,
                                show_fov=False, show_names = False):

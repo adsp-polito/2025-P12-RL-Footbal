@@ -1,31 +1,31 @@
 """
-Single-agent training settings fully aligned with the multi-agent configuration style,
-with optimized hyperparameters for stable learning.
+Single-agent training settings fully aligned with Stable-Baselines3 PPO.
+Minimal, clean and stable hyperparameter sets for MOVE, SHOT and VIEW.
 """
 
 SCENARIOS: dict[str, dict] = {
 
-    # MOVE scenario
+    #  MOVE SCENARIO
     "move": {
         "env_class": (
             "football_tactical_ai.env.scenarios.singleAgent."
             "move:OffensiveScenarioMoveSingleAgent"
         ),
 
-        # Episode parameters
+        # Episode timing
         "seconds_per_episode": 10,
         "fps": 24,
         "episodes": 10000,
         "eval_every": 500,
 
-        # Rendering
+        # Rendering settings
         "render": {
             "show_grid": False,
             "show_heatmap": False,
             "show_rewards": False,
             "full_pitch": True,
             "show_fov": False,
-            "show_names": False,
+            "show_info": True,
         },
 
         # Paths
@@ -38,54 +38,23 @@ SCENARIOS: dict[str, dict] = {
 
         # PPO hyperparameters
         "ppo": {
-            # Learning dynamics
-            "learning_rate": 1e-3,
+            "learning_rate": 3e-4,
             "gamma": 0.99,
-            "lambda": 0.95,
+            "gae_lambda": 0.95,
 
-            # Entropy schedule
-            "entropy_coeff": [
-                [0,       0.015],
-                [200000,  0.010],
-                [400000,  0.005],
-                [600000,  0.003],
-            ],
+            "ent_coef": 0.005,  
+            "clip_range": 0.2,
 
-            # PPO stability
-            "clip_param": 0.2,
-            "vf_clip_param": 20.0,
-            "vf_loss_coeff": 1.5,
-            "grad_clip": 1.0,
-
-            # Training batches
-            "train_batch_size": 2048,
-            "rollout_fragment_length": 128,
-            "minibatch_size": 256,
-            "num_epochs": 3,
-
-            # Parallelism
-            "num_workers": 0,
-            "num_envs_per_worker": 1,
-            "num_gpus": 1,
-
-            # Model architecture
-            "model": {
-                "fcnet_hiddens": [256, 128, 64],
-                "fcnet_activation": "relu",
-                "uses_new_env_api": True,
-            },
+            "batch_size": 120,
+            "n_epochs": 4,
 
             "seed": 42,
-            "device": "cpu",
             "verbose": 0,
         },
     },
 
 
-
-
-
-    # SHOT scenario
+    #  SHOT SCENARIO
     "shot": {
         "env_class": (
             "football_tactical_ai.env.scenarios.singleAgent."
@@ -103,7 +72,7 @@ SCENARIOS: dict[str, dict] = {
             "show_rewards": False,
             "full_pitch": True,
             "show_fov": False,
-            "show_names": False,
+            "show_info": True,
         },
 
         "paths": {
@@ -115,47 +84,26 @@ SCENARIOS: dict[str, dict] = {
 
         # PPO hyperparameters
         "ppo": {
-            "learning_rate": 1e-3,
+            "learning_rate": 2.5e-4,
             "gamma": 0.99,
-            "lambda": 0.95,
+            "gae_lambda": 0.95,
 
-            # Entropy schedule
-            "entropy_coeff": [
-                [0,       0.015],
-                [200000,  0.010],
-                [400000,  0.005],
-                [600000,  0.003],
-            ],
+            "ent_coef": 0.01,    
+            "clip_range": 0.2,
 
-            "clip_param": 0.2,
-            "vf_clip_param": 20.0,
-            "vf_loss_coeff": 1.5,
-            "grad_clip": 1.0,
+            "batch_size": 120,   # 120 is a clean divisor of the rollout buffer (240 steps), 
+                                 # ensuring SB3 can form full mini-batches without truncation 
+                                 # and avoiding stability warnings
 
-            "train_batch_size": 2048,
-            "rollout_fragment_length": 128,
-            "minibatch_size": 256,
-            "num_epochs": 3,
-
-            "num_workers": 0,
-            "num_envs_per_worker": 1,
-            "num_gpus": 1,
-
-            "model": {
-                "fcnet_hiddens": [256, 128, 64],
-                "fcnet_activation": "relu",
-                "uses_new_env_api": True,
-            },
+            "n_epochs": 4,
 
             "seed": 42,
-            "device": "cpu",
             "verbose": 0,
         },
     },
 
 
-
-    # VIEW scenario
+    #  VIEW SCENARIO
     "view": {
         "env_class": (
             "football_tactical_ai.env.scenarios.singleAgent."
@@ -172,8 +120,8 @@ SCENARIOS: dict[str, dict] = {
             "show_heatmap": False,
             "show_rewards": False,
             "full_pitch": True,
-            "show_fov": True,
-            "show_names": False,
+            "show_fov": True,   # VIEW needs FOV
+            "show_info": True,
         },
 
         "paths": {
@@ -185,46 +133,24 @@ SCENARIOS: dict[str, dict] = {
 
         # PPO hyperparameters
         "ppo": {
-            "learning_rate": 1e-4,   # lower LR helps complex perception tasks
+            "learning_rate": 1e-4,    # low LR = stability for perceptual tasks
             "gamma": 0.99,
-            "lambda": 0.95,
+            "gae_lambda": 0.95,
 
-            # VIEW needs more exploration (entropy is higher)
-            "entropy_coeff": [
-                [0,       0.02],
-                [200000,  0.015],
-                [400000,  0.010],
-                [600000,  0.005],
-            ],
+            "ent_coef": 0.02,         # strong exploration
+            "clip_range": 0.2,
 
-            "clip_param": 0.2,
-            "vf_clip_param": 20.0,
-            "vf_loss_coeff": 1.5,
-            "grad_clip": 1.0,
-
-            "train_batch_size": 2048,
-            "rollout_fragment_length": 128,
-            "minibatch_size": 256,
-            "num_epochs": 3,
-
-            "num_workers": 0,
-            "num_envs_per_worker": 1,
-            "num_gpus": 1,
-
-            "model": {
-                "fcnet_hiddens": [256, 128, 64],
-                "fcnet_activation": "relu",
-                "uses_new_env_api": True,
-            },
+            "batch_size": 120,
+            "n_epochs": 4,
 
             "seed": 42,
-            "device": "cpu",
             "verbose": 0,
         },
     },
 }
 
-# Compute max_steps and n_steps
+
+#  Compute n_steps and max_steps for each scenario
 for cfg in SCENARIOS.values():
     cfg["ppo"]["n_steps"] = cfg["seconds_per_episode"] * cfg["fps"]
     cfg["max_steps"] = cfg["ppo"]["n_steps"]
