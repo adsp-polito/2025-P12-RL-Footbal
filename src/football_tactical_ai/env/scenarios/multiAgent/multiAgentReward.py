@@ -189,7 +189,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
 
     # Penalize bad or misaligned shots
     if context.get("invalid_shot_attempt", False):
-        reward -= 0.25
+        reward -= 0.1
     if context.get("invalid_shot_direction", False):
         reward -= 0.1
 
@@ -298,6 +298,10 @@ def defender_reward(agent_id, player, pos_reward, ball, context, pitch):
     return reward
 
 
+
+
+
+
 def goalkeeper_reward(agent_id, player, pos_reward, context, pitch):
     """
     Goalkeeper reward function (refined and balanced).
@@ -340,16 +344,6 @@ def goalkeeper_reward(agent_id, player, pos_reward, context, pitch):
         reward -= 0.1
     if context.get("invalid_shot_direction", False):
         reward -= 0.1
-
-    # 5. POSITIONAL DISCIPLINE
-    # Encourage staying near goal center, penalize excessive wandering
-    x_gk, y_gk = denormalize(*player.get_position())
-    goal_center_y = pitch.center_y
-    dy_from_center = abs(y_gk - goal_center_y)
-
-    # Penalize leaving the central corridor (beyond ~5m off center)
-    if dy_from_center > 5:
-        reward -= 0.05 * (dy_from_center - 5) / 2.0  # gradual penalty
 
     # 6. GOALS CONCEDED
     if context.get("goal_scored", False):

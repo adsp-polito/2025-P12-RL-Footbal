@@ -683,7 +683,7 @@ class FootballMultiEnv(MultiAgentEnv):
         power = context.get("shot_power", 0.0)
 
         # Basic validation: must have valid direction and non-zero power
-        if direction is None or np.linalg.norm(direction) < 1e-6 or power <= 0:
+        if direction is None or power <= 0:
             context["invalid_shot_attempt"] = True
             context["shot_attempted"] = False
             context.pop("shot_direction", None)

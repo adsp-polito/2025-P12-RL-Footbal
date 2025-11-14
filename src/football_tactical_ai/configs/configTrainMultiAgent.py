@@ -27,7 +27,7 @@ multiagent_params = {
     "episodes": 3000,
 
     # Frequency of evaluation in episodes
-    "eval_every": 300,
+    "eval_every": 100,
 
     # Rendering configuration (used in evaluation/visualization)
     "render": {
