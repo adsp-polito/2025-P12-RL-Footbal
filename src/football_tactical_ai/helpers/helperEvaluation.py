@@ -105,15 +105,16 @@ def evaluate_and_render_multi(
     save_path=None,
     episode=0,
     fps=24,
+    eval_mode="full",       
     show_grid=False,
     show_heatmap=False,
     show_rewards=False,
     full_pitch=True,
     show_fov=False,
-    show_names=False,       # Show agent IDs above players
-    deterministic=True,     # Greedy vs stochastic actions
-    debug=True,             # Save per-agent logs
-    policy_mapping_fn=None  # Map agent_id → policy_id
+    show_names=False,
+    deterministic=True,
+    debug=True,
+    policy_mapping_fn=None
 ):
     """
     Evaluate a trained RLlib PPO model in a multi-agent football environment.
@@ -122,13 +123,21 @@ def evaluate_and_render_multi(
     optionally saving debug logs and rendering to video.
     """
 
+    # FAST MODE DISABLES DEBUG + RENDER
+    FAST = (eval_mode == "fast")
+
+    if FAST:
+        debug = False
+        save_path = None
+
     # Reset environment
     obs, infos = env.reset()
 
-    states = [env.get_render_state()]
+    # Only store states if we need rendering
+    states = [] if FAST else [env.get_render_state()]
     cumulative_rewards = {agent: 0.0 for agent in env.agents}
 
-    # Debug log files
+    # Debug logs (disabled in FAST mode)
     log_files = {}
     if debug:
         base_dir = f"training/debug_logs/episode_{episode}"
@@ -142,13 +151,13 @@ def evaluate_and_render_multi(
     step_count = 0
     terminations, truncations = {}, {}
 
-    # Evaluation loop → stop when ANY agent is terminated or truncated
+    # Loop until any agent terminates
     while not any(terminations.values()) and not any(truncations.values()):
         step_count += 1
         action_dict = {}
 
         for agent_id in env.agents:
-            # Map agent_id → policy_id
+
             policy_id = policy_mapping_fn(agent_id) if policy_mapping_fn else agent_id
             module = model.get_module(policy_id)
 
@@ -167,29 +176,27 @@ def evaluate_and_render_multi(
             dist_class = module.get_train_action_dist_cls()
             dist = dist_class.from_logits(dist_inputs)
 
+            # Deterministic or sampled
             if deterministic:
-
                 if hasattr(dist, "loc"):  # Gaussian
                     action = torch.tanh(dist.loc)
-                else:  # Categorical
+                else:
                     action = torch.argmax(dist_inputs, dim=-1)
             else:
                 action = dist.sample()
 
-            # Convert to numpy
             action = np.array(action.cpu().numpy()).flatten()
 
-            # clip/tanh actions to valid range
+            # clip to valid action space
             low, high = env.action_space(agent_id).low, env.action_space(agent_id).high
             action = np.clip(action, low, high)
 
             action_dict[agent_id] = action
 
-
-        # Step env
+        # Step environment
         obs, rewards, terminations, truncations, infos = env.step(action_dict)
 
-        # Update rewards + logs
+        # Update reward + logs
         for agent in env.agents:
             cumulative_rewards[agent] += rewards.get(agent, 0.0)
 
@@ -202,16 +209,17 @@ def evaluate_and_render_multi(
                     f"Info={infos.get(agent, {})}\n\n"
                 )
 
-        # Save render state
-        states.append(env.get_render_state())
+        # Save render states ONLY in full mode
+        if not FAST:
+            states.append(env.get_render_state())
 
-    # Close logs
+    # Close debug logs
     if debug:
         for f in log_files.values():
             f.close()
 
-    # Render video if requested
-    if save_path:
+    # Render only in FULL mode
+    if not FAST and save_path:
         anim = render_episode_multiAgent(
             states,
             pitch=pitch,
@@ -228,4 +236,3 @@ def evaluate_and_render_multi(
         anim.save(save_path, writer="ffmpeg", fps=fps)
 
     return cumulative_rewards
-

@@ -119,7 +119,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
         attacker_reward.consecutive_passes = 0
 
     if context.get("ball_out_by") == agent_id:
-        reward -= 0.35
+        reward -= 1.5
         attacker_reward.consecutive_passes = 0
 
     # 4. PASSING BEHAVIOR
@@ -180,18 +180,20 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
         attacker_reward.consecutive_passes = 0
         attacker_reward.shot_started = True
 
+
+
     # 5. SHOOTING BEHAVIOR
-    if context.get("start_shot_bonus", False):
+    if context.get("start_shot_bonus", False) and not context.get("invalid_shot_attempt", False):
         reward += 1.5  # base shooting reward
-        reward += 1.0 * context.get("shot_positional_quality", 0.0)
+        reward += context.get("shot_positional_quality", 0.0)
         if context.get("shot_quality") is not None:
-            reward += 0.5 * context["shot_quality"]
+            reward += context["shot_quality"]
 
     # Penalize bad or misaligned shots
     if context.get("invalid_shot_attempt", False):
-        reward -= 0.1
+        reward -= 0.25
     if context.get("invalid_shot_direction", False):
-        reward -= 0.1
+        reward -= 0.25
 
     # Reward alignment with goal (squared for smoother scaling)
     alignment = context.get("shot_alignment")

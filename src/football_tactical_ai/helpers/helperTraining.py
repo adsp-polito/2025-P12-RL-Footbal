@@ -2,6 +2,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import importlib
+import json
 import torch
 from tqdm import trange
 from stable_baselines3 import PPO
@@ -282,66 +283,20 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
     # Build PPO algorithm
     algo = config.build_algo()
 
-
-
-
-
-
+    # Force policies on GPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"\nForcing all RLlib policies to {device} ...")
+    print(f"\nForcing all RLlib modules to device: {device} ...")
 
-    try:
-        # New API stack: algo.env_runner.module -> MultiRLModule
-        if hasattr(algo, "env_runner") and hasattr(algo.env_runner, "module"):
-            multi_module = algo.env_runner.module
-            moved = False
-
-            if hasattr(multi_module, "_rl_modules"):
-                for pid, submodule in multi_module._rl_modules.items():
-                    if hasattr(submodule, "model"):
-                        try:
-                            submodule.model.to(device)
-                            print(f"Moved submodule '{pid}' → {device}")
-                            moved = True
-                        except Exception as e:
-                            print(f"Could not move '{pid}': {e}")
-            if not moved:
-                print("No submodules moved — structure may differ.")
-
-        # Fallback (older API)
-        elif hasattr(algo, "workers"):
-            for worker in algo.workers.foreach_worker(lambda w: w):
-                for pid, policy in worker.policy_map.items():
-                    policy.model.to(device)
-                    print(f"Moved policy '{pid}' → {device}")
-
-        else:
-            print("No recognized RLlib module structure found.")
-
-    except Exception as e:
-        print(f"GPU-forcing step failed: {e}")
-
-    # Verification
     try:
         multi_module = algo.env_runner.module
-        first_submodule = next(iter(multi_module._rl_modules.values()))
-        device_name = next(first_submodule.model.parameters()).device
-        print(f"Device check → {device_name}")
+        for pid, submodule in multi_module._rl_modules.items():
+            try:
+                submodule.model.to(device)
+                print(f"  → moved '{pid}' to {device}")
+            except Exception as e:
+                print(f"  → failed to move '{pid}': {e}")
     except Exception as e:
-        print(f"Could not verify device: {e}")
-
-
-
-
-
-
-
-
-
-
-
-
-
+        print(f"Could not move RLlib modules: {e}")
 
     # LOGGING HEADER
     print("\n" + "=" * 125)
@@ -361,9 +316,31 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
         print(f"  {key:25} {val}")
     print("=" * 125 + "\n")
 
+
+    # List to store (all) episode rewards
+    episode_rewards_log = []
+
     # TRAINING LOOP
     for ep in trange(1, cfg["episodes"] + 1, desc="Episodes Progress"):
         result = algo.train()
+
+        # Always evaluate INSTANTLY without render to get per-agent rewards
+        eval_env_quick = FootballMultiEnv(cfg["env_config"])
+        cumulative_reward_quick = evaluate_and_render_multi(
+            model=algo,
+            env=eval_env_quick,
+            pitch=Pitch(),
+            episode=ep,
+            fps=cfg["fps"],
+            policy_mapping_fn=policy_mapping_fn,
+            eval_mode="fast",      # <-- FAST MODE
+        )
+
+        # save episode rewards
+        episode_rewards_log.append({
+            "episode": ep,
+            "rewards": cumulative_reward_quick
+        })
 
         # Evaluate at first, every eval_every, and last episode
         if ep % cfg["eval_every"] == 0 or ep in (1, cfg["episodes"]):
@@ -371,11 +348,14 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
             save_render = os.path.join(cfg["paths"]["save_render_dir"], f"episode_{ep}.mp4")
 
             cumulative_reward = evaluate_and_render_multi(
-                algo, eval_env, Pitch(),
+                model=algo,
+                env=eval_env,
+                pitch=Pitch(),
                 save_path=save_render,
                 episode=ep,
                 fps=cfg["fps"],
                 policy_mapping_fn=policy_mapping_fn,
+                eval_mode="full",     # <-- FULL MODE
                 **cfg["render"],
             )
 
@@ -384,6 +364,19 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
             for aid, rew in cumulative_reward.items():
                 role = eval_env.players[aid].get_role()
                 print(f"  {aid:10s} ({role}) -> {rew:.2f}")
+
+
+    # SAVE REWARD LOG
+    save_plot_dir = os.path.abspath(cfg["paths"]["save_plot_dir"])
+
+    # Ensure directory exists
+    os.makedirs(save_plot_dir, exist_ok=True)
+
+    rewards_path = os.path.join(save_plot_dir, "rewards.json")
+    with open(rewards_path, "w") as f:
+        json.dump(episode_rewards_log, f, indent=2)
+
+    print(f"Saved reward log → {rewards_path}")
 
     # SAVE MODEL
     checkpoint_dir = algo.save(os.path.abspath(cfg["paths"]["save_model_path"]))

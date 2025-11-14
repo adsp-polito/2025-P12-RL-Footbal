@@ -258,8 +258,10 @@ class BasePlayer(ABC):
 
         # Check if the desired direction is within the player's field of view
         # If not, the shot is invalid and returns zeroed output
+        out_of_fov = False
         if not self.is_direction_visible(desired_direction) and enable_fov:
-            return 0.0, np.array([0.0, 0.0]), 0.0
+            out_of_fov = True
+
         
         # Normalize the desired direction to a unit vector
         norm = np.linalg.norm(desired_direction)
@@ -297,6 +299,10 @@ class BasePlayer(ABC):
 
         # Final shot quality combines skill and positional advantage
         shot_quality = x_factor * y_factor * self.shooting
+
+        # Apply penalty if shot is outside FOV
+        if out_of_fov:
+            shot_quality *= 0.4      # Severe penalty for out-of-FOV shots
 
         return shot_quality, shot_direction, shot_power
     

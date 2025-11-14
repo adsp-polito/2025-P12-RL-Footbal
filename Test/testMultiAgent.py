@@ -4,7 +4,6 @@ from football_tactical_ai.env.scenarios.multiAgent.multiAgentEnv import Football
 from football_tactical_ai.helpers.visuals import render_episode_multiAgent
 from football_tactical_ai.env.objects.pitch import Pitch
 
-
 def test_multiagent_render(save_path="test/videoTest/testMultiAgent.mp4"):
     """
     Run a single episode in FootballMultiEnv with random actions

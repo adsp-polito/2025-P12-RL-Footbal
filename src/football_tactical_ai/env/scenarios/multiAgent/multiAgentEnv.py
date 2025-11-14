@@ -680,24 +680,13 @@ class FootballMultiEnv(MultiAgentEnv):
         """
 
         direction = context.get("shot_direction")
-        power = context.get("shot_power", 0.0)
+        power = context.get("shot_power")
 
-        # Basic validation: must have valid direction and non-zero power
-        if direction is None or power <= 0:
-            context["invalid_shot_attempt"] = True
-            context["shot_attempted"] = False
-            context.pop("shot_direction", None)
-            context.pop("shot_power", None)
-            context.pop("invalid_shot_direction", None)
-            context.pop("shot_quality", None)
-            context.pop("shot_alignment", None)
-            context.pop("shot_positional_quality", None)
-            self.shot_owner = None
-            self.shot_just_started = False
-            return
-
-        # Shooter must currently own the ball
-        if self.ball.get_owner() != agent_id:
+        # Basic validation 
+        # - Must have valid direction
+        # - Must have non-zero power
+        # - Shooter must currently own the ball
+        if direction is None or power <= 0 or self.ball.get_owner() != agent_id:
             context["invalid_shot_attempt"] = True
             context["shot_attempted"] = False
             context.pop("shot_direction", None)
