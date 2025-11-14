@@ -148,27 +148,6 @@ def train_SingleAgent(scenario="move"):
     model.save(cfg["paths"]["save_model_path"])
     print(f"Model saved → {cfg['paths']['save_model_path']}")
 
-    # PLOT
-    plt.close('all')
-    plt.figure(figsize=(10, 4))
-    plt.plot(
-        [x["episode"] for x in episode_rewards_log],
-        [x["reward"] for x in episode_rewards_log],
-        marker='o', linestyle='-'
-    )
-    plt.title(f"{scenario.capitalize()} - Cumulative Reward", fontsize=16)
-    plt.xlabel("Episodes", fontsize=14)
-    plt.ylabel("Cumulative Reward", fontsize=14)
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(cfg["paths"]["plot_path"])
-    plt.show()
-    print(f"Saved reward plot → {cfg['paths']['plot_path']}")
-
-
-
-
-
 
 
 

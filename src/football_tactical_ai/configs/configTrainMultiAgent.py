@@ -41,10 +41,10 @@ multiagent_params = {
 
     # Paths for saving models, renders, and plots
     "paths": {
-        "rewards_dir": "training/plots/multiAgent",              # Directory for plots
-        "save_model_path": "training/models/multiAgentModel",               # Checkpoint directory
-        "save_render_dir": "training/renders/multiAgent",                   # Folder for rendered videos
-        "plot_path": "training/plots/multiAgent/multiAgentRewards.png",   # Reward curve output
+        "rewards_dir": "src/football_tactical_ai/training/plots/multiAgent",              # Directory for plots
+        "save_model_path": "src/football_tactical_ai/training/models/multiAgentModel",               # Checkpoint directory
+        "save_render_dir": "src/football_tactical_ai/training/renders/multiAgent",                   # Folder for rendered videos
+        "plot_path": "src/football_tactical_ai/training/plots/multiAgent/multiAgentRewards.png",   # Reward curve output
     },
 
     # Environment-specific settings for multi-agent scenario

@@ -65,27 +65,42 @@ class BaseOffensiveScenario(gym.Env):
 
     def reset(self, *, seed: int | None = None):
         """
-        Reset the environment to its initial state.
+        Reset the environment to its initial state, with controlled randomization
+        to avoid overfitting while keeping scenarios realistic.
         """
         # Set random seed for reproducibility
         super().reset(seed=seed)
 
-        # _t is a step counter, reset to 0
-        self._t = 0
+        self._t = 0  # reset step counter
 
-        # Reset ball state
-        self.ball.position[:] = normalize(60,40)  # centre of the pitch
-        self.ball.velocity[:] = 0.0
+        # RANDOMIZED POSITIONS (IN METERS)
+        # Attacker: 20m before → 20m after midfield (40–80m)
+        att_x_m = np.random.uniform(40, 80)
+        att_y_m = np.random.uniform(20, 60)
 
-        # Reset ball ownership
+        # Defender: full defensive half (60–120m)
+        def_x_m = np.random.uniform(60, 120)
+        def_y_m = np.random.uniform(20, 60)
+
+        # RESET BALL & PLAYERS
+        # Reset attacker & defender positions (normalized)
+        self.attacker.reset_position(normalize(att_x_m, att_y_m))
+        self.defender.reset_position(normalize(def_x_m, def_y_m))
+
+        # Ball belongs to attacker
         self.ball.set_owner(self.attacker)
 
-        # Reset attacker and defender positions
-        self.attacker.reset_position(normalize(60, 40))
-        self.defender.reset_position(normalize(110, 40))
+        # Ball placed at attacker’s feet:
+        # small forward offset in normalized space (same as in dribbling logic)
+        offset = 0.01
+        direction = np.array([1.0, 0.0])  # default facing right
+        ball_pos = normalize(att_x_m, att_y_m) + direction * offset
 
-        obs = self._get_obs()
-        return obs, {}
+        self.ball.position[:] = ball_pos
+        self.ball.velocity[:] = 0.0
+
+        return self._get_obs(), {}
+
 
     def step(self, action):
 
@@ -268,7 +283,7 @@ class BaseOffensiveScenario(gym.Env):
 
         min_reward = -0.05
         max_reward = 0.05
-        focus_sharpness = 2.5  
+        focus_sharpness = 1.5  
 
         grid = np.zeros((pitch.num_cells_x, pitch.num_cells_y))
 
@@ -303,6 +318,7 @@ class BaseOffensiveScenario(gym.Env):
                 y_penalty = -0.03 * abs(y_norm - 0.5) * 2
 
                 grid[i, j] = x_reward + y_penalty
+
 
         self.reward_grid = grid
 
