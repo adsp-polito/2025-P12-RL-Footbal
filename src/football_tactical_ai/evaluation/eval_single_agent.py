@@ -26,6 +26,7 @@ def fixed_env(env_class, pitch, attacker_m, defender_m, fps, max_steps):
 
     # TRAJECTORY STORAGE
     env.attacker_traj = []
+    env.ball_traj = []
 
 
     # RESET WRAPPER
@@ -36,6 +37,7 @@ def fixed_env(env_class, pitch, attacker_m, defender_m, fps, max_steps):
 
         # Reset trajectory buffer
         env.attacker_traj = []
+        env.ball_traj = []
 
         att_norm = normalize(attacker_m[0], attacker_m[1])
         def_norm = normalize(defender_m[0], defender_m[1])
@@ -61,7 +63,11 @@ def fixed_env(env_class, pitch, attacker_m, defender_m, fps, max_steps):
 
         # Store attacker (x, y) every step
         ax, ay = env.attacker.get_position()
-        env.attacker_traj.append((ax, ay))
+        env.attacker_traj.append((float(ax), float(ay)))
+
+        # Store ball (x, y) every step
+        bx, by = env.ball.get_position()
+        env.ball_traj.append((float(bx), float(by)))
 
         return obs, reward, done, truncated, info
 
@@ -106,13 +112,19 @@ def evaluate_single(scenario="move"):
     print(f"   Total test cases: {len(cfg['test_cases'])}")
     print("----------------------------------")
 
-    # Final summary container
-    summary = {}
+    # Final containers
+    summary_eval = {}     # ONLY evaluation statistics
+    summary_traj = {}     # ONLY trajectories
+
 
     # Test each case in config
     for idx, case in enumerate(cfg["test_cases"]):
 
         print(f"\nTest case {idx+1}/{len(cfg['test_cases'])}: {case['name']}")
+
+        # Init containers
+        summary_traj[case["name"]] = {}
+        summary_eval[case["name"]] = {}
 
         attacker_m = case["attacker_start"]
         defender_m = case["defender_start"]
@@ -126,14 +138,16 @@ def evaluate_single(scenario="move"):
         rewards = []
         extra_metrics = [] if scenario == "shot" else None
 
+
+        # RUN THROUGH EPISODES
         for run in tqdm(range(N), desc="  Evaluation runs", unit="run"):
 
             env = fixed_env(env_class, pitch, attacker_m, defender_m, fps, max_steps)
 
-            # Only FIRST run produces video
+            # Only FIRST run saves a video
             save_path = os.path.join(save_video_dir, f"{scenario}_eval_{idx+1}.mp4") if run == 0 else None
 
-            # Evaluate
+            # Evaluate scenario
             r = evaluate_and_render(
                 model=model,
                 env=env,
@@ -149,27 +163,25 @@ def evaluate_single(scenario="move"):
                 show_fov     = cfg["render"]["show_fov"],
             )
 
-            # SAVE ATTACKER TRAJECTORY
+
+            # SAVE TRAJECTORIES
             run_key = f"run_{run+1}"
-            if "trajectories" not in summary:
-                summary["trajectories"] = {}
+            summary_traj[case["name"]][run_key] = {
+                "attacker": env.attacker_traj.copy(),
+                "ball":     env.ball_traj.copy(),
+            }
 
-            if case["name"] not in summary["trajectories"]:
-                summary["trajectories"][case["name"]] = {}
 
-            # Save list of pairs
-            summary["trajectories"][case["name"]][run_key] = env.attacker_traj.copy()
 
-            # If only reward is returned
+            # SAVE REWARD VALUE
             if isinstance(r, (float, int)):
                 rewards.append(r)
-
             else:
-                # new format if evaluate_and_render returns {"reward": ..., ...}
                 rewards.append(r["reward"])
 
-            # COLLECT SHOT METRICS
-            if scenario == "shot":
+
+            # SHOT-SPECIFIC METRICS
+            if scenario == "shot" or scenario == "view":
                 extra_metrics.append({
                     "valid_shot": env.last_valid_shot,
                     "shot_distance": env.last_shot_distance,
@@ -181,8 +193,8 @@ def evaluate_single(scenario="move"):
 
 
 
-        # Store test result
-        summary[case["name"]] = {
+        # STORE EVALUATION SUMMARY FOR THIS CASE
+        summary_eval[case["name"]] = {
             "mean": float(np.mean(rewards)),
             "std":  float(np.std(rewards)),
             "min":  float(np.min(rewards)),
@@ -190,41 +202,42 @@ def evaluate_single(scenario="move"):
             "runs": rewards,
         }
 
-        # Add extra metrics only for SHOT
-        if scenario == "shot":
-            summary[case['name']]["shot_metrics"] = extra_metrics
+        if scenario == "shot" or scenario == "view":
+            summary_eval[case["name"]]["shot_metrics"] = extra_metrics
 
 
+        # PRINT SUMMARY
         print(f"\n → Mean reward: {np.mean(rewards):.3f}")
         print(f" → Std reward:  {np.std(rewards):.3f}")
         print(f" → Min reward:  {np.min(rewards):.3f}")
         print(f" → Max reward:  {np.max(rewards):.3f}")
+        print(f" → N={N} runs")
 
-        if N > 1:
-            print(f" → N={N} runs")
+        # SAVE TRAJECTORIES SEPARATELY
         traj_json_path = os.path.join(save_logs_dir, f"{scenario}_trajectories_{case['name']}.json")
-
         with open(traj_json_path, "w") as f:
-            json.dump(summary["trajectories"][case["name"]], f, indent=2)
+            json.dump(summary_traj[case["name"]], f, indent=2)
 
         print(f" → Trajectories saved to {traj_json_path}")
 
-    # Save JSON logs
+
+    # SAVE GLOBAL AGGREGATED EVALUATION
     log_path = os.path.join(save_logs_dir, f"{scenario}_evaluation.json")
     with open(log_path, "w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(summary_eval, f, indent=2)
 
     print("\n================ FINAL SUMMARY ================")
     print(f" Scenario: {scenario.upper()}")
     print(f" Results saved to: {log_path}")
     print("==============================================\n")
 
-    return summary
+    return summary_eval
+
 
 
 
 # RUN DIRECTLY
 if __name__ == "__main__":
-    #evaluate_single("move")
+    evaluate_single("move")
     evaluate_single("shot")
     #evaluate_single("view")

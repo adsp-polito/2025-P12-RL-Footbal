@@ -284,13 +284,13 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             dist_norm = np.clip(dist_norm, 0.0, 1.0)
 
             # Exponential shaping
-            sharpness = 5
+            sharpness = 4
             dist_shaped = dist_norm ** sharpness
 
             # Map to [-1, +1]
             dist_scaled = 2 * dist_shaped - 1
 
-            reward += dist_scaled # in [-1, +1]      
+            reward += 2.0 * dist_scaled # in [-2, +2]      
 
         # LOGGING: LAST TIME TO SHOT
         if self.is_shooting and self.last_shot_distance is not None and self.last_shot_power is not None:
