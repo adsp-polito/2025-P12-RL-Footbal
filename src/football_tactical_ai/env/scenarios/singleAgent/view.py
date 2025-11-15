@@ -67,6 +67,14 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.shot_position = None           # Normalized coordinates where shot started
         self.shot_just_started = False      # Flag to track if a shot just started (for one-time bonuses)
 
+        # LOGGING METRICS FOR EVALUATION ONLY
+        self.last_valid_shot = None
+        self.last_shot_distance = None
+        self.last_time_to_shot = None
+        self.last_shot_angle = None
+        self.last_shot_power = None
+        self.last_reward_components = None
+
 
     def reset(self, seed=None, options=None):
         """
@@ -88,139 +96,270 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
         self.attacker.last_action_direction = np.array([1.0, 0.0])  # Reset last action direction
 
+        # Reset logging metrics
+        self.last_valid_shot = None
+        self.last_shot_distance = None
+        self.last_time_to_shot = None
+        self.last_shot_angle = None
+        self.last_shot_power = None
+        self.last_reward_components = None
+
         # Return initial observation and info dictionary as required by Gym API
         return self._get_obs(), {}
     
+
+
     def step(self, action):
         """
-        Execute one step in the environment.
+        Execute one simulation step in the environment.
+
+        The attacker may move or attempt a shot, but both actions are subject
+        to visual constraints. A shot can only start if the desired direction
+        lies within the attacker's field of view (FOV). Movement is also
+        conditioned by visibility: if the intended direction is not visible,
+        the attacker will not move.
 
         Args:
-            action (np.ndarray): Action vector containing:
-                - movement_x_y: 2D vector for player movement in [-1, 1]
-                - shot_flag: continuous float in [0, 1] indicating if a shot is being attempted
-                - shot_power: continuous float in [0, 1] for shot power
-                - shot_direction: 2D vector in [-1, 1] for shot direction
+            action (np.ndarray): Continuous action vector containing:
+                - action[0:2]: movement direction in [-1, 1]
+                - action[2]:    shot flag (continuous, thresholded at 0.5)
+                - action[3]:    desired shot power in [0, 1]
+                - action[4:6]:  desired shot direction in [-1, 1]
+
         Returns:
-            obs (np.ndarray): Current observation of the environment.
-            reward (float): Reward for the current step.
-            terminated (bool): True if the episode has ended due to a goal or possession loss.
-            truncated (bool): True if the episode has ended due to reaching max steps.
-            info (dict): Additional information about the environment state.
+            observation (np.ndarray)
+            reward (float)
+            terminated (bool)
+            truncated (bool)
+            info (dict)
         """
 
-        # Goal scoring logic for final reward to incentivize scoring
-        goal_scored = False
+        # Unpack action components
+        movement = action[:2]
+        shot_flag = (action[2] > 0.5)
+        desired_power = float(action[3])
+        desired_dir = action[4:6]
 
-        # Initialize shot quality to None for reward computation
-        # This will be set if a shot is successfully initiated
-        shot_quality = None
+        # Default shot quality (used only when a shot is validly started)
+        shot_quality = 0.0
 
-        # Unpack and format action components
-        movement_action = action[0:2]
-        shot_flag = 1 if action[2] > 0.5 else 0
-        shot_power = float(action[3])
-        shot_direction = action[4:6]
-
-        # Attempt a shot if valid (not already shooting and attacker has the ball)
-        if not self.is_shooting and shot_flag and self.ball.owner is self.attacker:
-            shot_quality, actual_direction, actual_power = self.attacker.shoot(
-                desired_direction=shot_direction,
-                desired_power=shot_power,
-                enable_fov=True  # Enable FOV check for shooting
+        # Attempt to start a shot only if attacker has the ball and no shot is active
+        if shot_flag and not self.is_shooting and self.ball.owner is self.attacker:
+            shot_quality, actual_dir, actual_power = self.attacker.shoot(
+                desired_direction=desired_dir,
+                desired_power=desired_power,
+                enable_fov=True            # Visual constraint specific to this scenario
             )
 
-            # Only initiate the shot if it's valid (within field of view)
+            # A shot starts only if actual_power > 0 (direction inside FOV)
             if actual_power > 0.0:
                 self.is_shooting = True
-                self.shot_direction = actual_direction
+                self.shot_direction = actual_dir
                 self.shot_power = actual_power
-                self.shot_position = self.ball.position
+                self.shot_position = self.ball.position.copy()
                 self.shot_just_started = True
                 self.ball.set_owner(None)
 
-                # Convert real velocity to normalized velocity and set on the ball
-                pitch_width = self.pitch.x_max - self.pitch.x_min
-                pitch_height = self.pitch.y_max - self.pitch.y_min
-                velocity_real = actual_direction * actual_power
-                velocity_norm = np.array([
-                    velocity_real[0] / pitch_width,
-                    velocity_real[1] / pitch_height
-                ])
+                # LOG METRICS
+                self.last_valid_shot = True
+                self.last_shot_power = float(actual_power)
+
+                # Compute shot angle relative to the goal
+                att_x, att_y = self.attacker.get_position()
+                vec = np.array([self.goal_x - att_x, self.goal_y - att_y])
+                vec /= np.linalg.norm(vec)
+                self.last_shot_angle = float(np.arccos(np.clip(np.dot(actual_dir, vec), -1, 1)))
+
+                # Compute shot distance
+                pitch_w = self.pitch.x_max - self.pitch.x_min
+                pitch_h = self.pitch.y_max - self.pitch.y_min
+                bx = self.shot_position[0] * pitch_w + self.pitch.x_min
+                by = self.shot_position[1] * pitch_h + self.pitch.y_min
+                self.last_shot_distance = float(np.linalg.norm([self.goal_x - bx, self.goal_y - by]))
+
+                # Convert to normalized ball velocity
+                velocity_real = actual_dir * actual_power
+                velocity_norm = np.array([velocity_real[0] / pitch_w,
+                                        velocity_real[1] / pitch_h])
                 self.ball.set_velocity(velocity_norm)
 
-        # Save attempted movement direction for reward logic
-        self.attempted_movement_direction = movement_action.copy()
+        # Movement direction is stored for FOV reward logic
+        self.attempted_movement_direction = movement.copy()
 
-        # Move attacker if direction is visible
-        if self.attacker.is_direction_visible(movement_action):
-            
-            # Attacker movement
-            self._apply_attacker_action(action)
-
-            # Update ball position only if attacker still owns it
+        # Apply movement only if the direction is inside the attacker's FOV
+        if np.linalg.norm(movement) > 0 and self.attacker.is_direction_visible(movement):
+            self._apply_attacker_action(action, enable_fov=True)
             if self.ball.owner is self.attacker:
-                self._update_ball_position(movement_action)
+                self._update_ball_position(movement)
 
-        # Update ball movement
+        # Update ball physics: either free or in shooting trajectory
         if self.is_shooting or self.ball.owner is None:
-            # Ball moves autonomously only after shot
             self.ball.update(self.time_per_step)
 
-        # Defender always moves towards the ball
+        # Defender AI moves toward the ball
         self._apply_defender_ai()
 
-        # Compute reward (all logic handled internally)
-        reward, terminated = self.compute_reward(shot_flag=shot_flag, shot_quality=shot_quality)
+        # Compute reward for the current state transition
+        reward = self.compute_reward(shot_flag=shot_flag, shot_quality=shot_quality)
 
-        # Check if shot finished (only if currently shooting)
-        if self.is_shooting:
-
-            # Get current ball position in normalized coordinates
-            ball_x, ball_y = self.ball.position
-
-            # Convert ball position to meters and compute velocity norm
-            pitch_width = self.pitch.x_max - self.pitch.x_min
-            pitch_height = self.pitch.y_max - self.pitch.y_min
-            ball_x_m = ball_x * pitch_width + self.pitch.x_min
-            ball_y_m = ball_y * pitch_height + self.pitch.y_min
-            ball_velocity_norm = np.linalg.norm(self.ball.velocity)
-
-            # Check if ball is completely out of bounds
-            ball_completely_out = self._is_ball_completely_out(ball_x_m, ball_y_m)
-
-            # Check if ball in goal
-            goal_scored = self._is_goal(ball_x_m, ball_y_m)
-
-            # Check if possession lost
-            possession_lost = self._check_possession_loss()
-
-            # Check if ball stopped moving (velocity is near zero)
-            ball_stopped = ball_velocity_norm < 0.01
-
-            # If any terminal condition met, end shot
-            if goal_scored or possession_lost or ball_completely_out or ball_stopped:
-                self.is_shooting = False
-                self.shot_direction = None
-                self.shot_power = 0.0
-                self.shot_position = None
-
-        # Increment step counter
+        # Termination check performed after applying all state updates
         self._t += 1
-
-        # Build return tuple
-        obs = self._get_obs()
-        if not terminated:
-            terminated = self._check_termination()
-        
+        terminated = self._check_termination()
         truncated = self._t >= self.max_steps
 
-        # Penalization if episode finished and goal not scored
-        if terminated and not goal_scored:
-            reward -= 5.0
+        return self._get_obs(), reward, terminated, truncated, {}
 
-        return obs, reward, terminated, truncated, {}
 
+    
+    def compute_reward(self, shot_flag=None, shot_quality=0.0):
+        """
+        Compute the scalar reward for the current timestep.
+
+        The reward integrates positional incentives, visual constraints,
+        penalties for invalid actions, and bonuses for well-formed shots.
+        Termination events such as goals, out-of-bounds, and possession loss
+        are handled elsewhere through the environment's termination function.
+
+        Args:
+            shot_flag (bool): Whether the agent attempted to shoot in this step.
+            shot_quality (float): Shooting alignment/quality from PlayerAttacker.shoot().
+
+        Returns:
+            reward (float): Total reward for this timestep.
+        """
+
+        reward = 0.0
+
+        # Small constant penalty for encouraging fast decision-making
+        reward -= 0.01
+
+        # Attacker real position in meters
+        att_x, att_y = self.attacker.get_position()
+        x_m = att_x * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
+        y_m = att_y * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
+
+        # Ball real position in meters
+        ball_x, ball_y = self.ball.position
+        bx_m = ball_x * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
+        by_m = ball_y * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
+
+        # Positional reward based on spatial reward grid
+        pos_reward = self._get_position_reward(x_m, y_m)
+        reward += pos_reward
+
+        # Goal bonus (reward only; termination handled elsewhere)
+        if self._is_goal(bx_m, by_m):
+            reward += 7.5
+
+        # Penalty for losing possession to the defender
+        if self._check_possession_loss():
+            reward -= 2.5
+
+        # Penalty if ball exits the valid field boundaries
+        if self._is_ball_completely_out(bx_m, by_m):
+            reward -= 2.5
+
+        # Shot quality bonus (only active when a valid shot was initiated)
+        if shot_quality is not None:
+            reward += 0.5 * shot_quality
+
+        # Penalty for attempted shots without possession
+        if shot_flag and self.ball.owner is not self.attacker:
+            reward -= 0.35
+
+        # Penalty for attempted shots that were invalid (e.g., outside FOV)
+        elif shot_flag and not self.is_shooting:
+            reward -= 0.25
+
+        # Shot start bonuses and alignment shaping
+        if self.is_shooting and self.shot_just_started:
+            self.shot_just_started = False
+
+            # Small encouragement to initiate shots
+            self.last_shot_start_bonus = 0.25
+            reward += self.last_shot_start_bonus
+
+            # Alignment reward (non-linear: strong penalty for bad shots, strong bonus for good shots)
+            goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m])
+            norm = np.linalg.norm(goal_dir)
+            if norm > 1e-6:
+                goal_dir /= norm
+            else:
+                goal_dir = np.array([1.0, 0.0])
+
+            shot_dir = self.shot_direction if self.shot_direction is not None else goal_dir
+            alignment = float(np.clip(np.dot(shot_dir, goal_dir), -1, 1))
+
+            # Non-linear shaping: emphasise good alignment, heavily punish bad alignment
+            sharpness = 2.5  # 2–3 recommended
+            alignment_shaped = np.sign(alignment) * (abs(alignment) ** sharpness)
+
+            reward += alignment_shaped
+
+
+            # Penalty for strongly misaligned shots
+            if alignment < 0.2:
+                reward -= 0.4
+
+            # DISTANCE TO GOAL REWARD (non-linear shaping: strong bias near the goal)
+            dist = np.linalg.norm([self.goal_x - x_m, self.goal_y - y_m])
+            max_dist = np.linalg.norm([
+                self.pitch.x_max - self.pitch.x_min,
+                0.5 * (self.pitch.y_max - self.pitch.y_min),
+            ])
+
+            # Normalized distance ∈ [0,1], 1 = near goal
+            dist_norm = 1 - dist / max_dist
+            dist_norm = np.clip(dist_norm, 0.0, 1.0)
+
+            # Exponential shaping: boost high values, compress low/medium ones
+            sharpness = 4.0   # tune: 2.0 = mild, 3.0 = strong, 4.0 = very strong
+            dist_shaped = dist_norm ** sharpness
+
+            # Map to [-1, +1]
+            dist_scaled = 2 * dist_shaped - 1
+
+            reward += dist_scaled
+
+        # Reward or penalty depending on whether movement direction was visible
+        if hasattr(self, "attempted_movement_direction"):
+            direction = self.attempted_movement_direction
+            if np.linalg.norm(direction) > 0:
+                if self.attacker.is_direction_visible(direction):
+                    reward += 0.25     # movement inside FOV is encouraged
+                else:
+                    reward -= 0.1      # movement outside FOV is discouraged
+
+
+        # LOGGING: time-to-shot (distance / shot power)
+        if self.is_shooting and self.last_shot_distance is not None and self.last_shot_power is not None:
+            if self.last_shot_power > 0:
+                self.last_time_to_shot = self.last_shot_distance / self.last_shot_power
+            else:
+                self.last_time_to_shot = None
+        else:
+            self.last_time_to_shot = None
+
+        # FINAL EPISODE BONUS: reward if the episode ended after taking at least one shot
+        # We detect if a real shot happened by checking the shot start bonus
+        if self._check_termination():
+            if self.last_shot_start_bonus > 0:
+                # Episode ends with at least one shot attempted → small positive reinforcement
+                reward += 1.5
+            else:
+                # Episode ends without ever shooting → slight discouragement
+                reward -= 0.5
+
+        self.last_reward_components = {
+            "position": float(pos_reward),
+            "shot_start_bonus": float(self.last_shot_start_bonus) if self.is_shooting else 0.0,
+            "goal": 7.5 if self._is_goal(bx_m, by_m) else 0.0,
+            "possession_lost": -2.5 if self._check_possession_loss() else 0.0,
+        }
+
+        return reward
+
+    
     def _update_ball_position(self, action=None):
         """
         Update the ball's position and velocity based on the current game state.
@@ -240,8 +379,8 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
                                         Used only when dribbling to position the ball ahead of the player.
         """
         if self.is_shooting:
-            pitch_width = self.pitch.X_MAX - self.pitch.X_MIN
-            pitch_height = self.pitch.Y_MAX - self.pitch.Y_MIN
+            pitch_width = self.pitch.x_max - self.pitch.x_min
+            pitch_height = self.pitch.y_max - self.pitch.y_min
 
             # Set ball velocity only once at the start of the shot
             if self.shot_just_started:
@@ -293,122 +432,6 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         else:
             # Ball is free: update position and velocity using physics with friction
             self.ball.update(self.time_per_step)
-
-    
-    def compute_reward(self, shot_flag=None, shot_quality=None):
-        reward = 0.0
-        terminated = False
-
-        # 1) TIME PENALTY
-        reward -= 0.01
-
-        # 2) POSITIONAL REWARD
-        att_x, att_y = self.attacker.get_position()
-        x_m = att_x * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
-        y_m = att_y * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
-
-        pos_reward = self._get_position_reward(x_m, y_m)
-        reward += pos_reward 
-
-        # 3) GOAL
-        if self._is_goal(x_m, y_m):
-            reward += 7.5
-            terminated = True
-            return reward, terminated
-
-        # 4) POSSESSION LOST
-        if self._check_possession_loss():
-            reward -= 2.5
-            terminated = True
-            return reward, terminated
-
-        # 5) SHOT QUALITY
-        if shot_quality is not None:
-            reward += 0.5 * shot_quality   # in [0, 0.5]
-
-        # 6) INVALID SHOT ATTEMPTS
-        if shot_flag and self.ball.owner != self.attacker:
-            reward -= 0.35
-        
-        # misaligned / out-of-FOV shot attempt
-        elif shot_flag and not self.is_shooting:
-            reward -= 0.25   
-
-        # BALL POSITION (meters)
-        ball_x, ball_y = self.ball.position
-        ball_x_m = ball_x * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
-        ball_y_m = ball_y * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
-
-        # 7) START OF SHOT
-        if self.is_shooting and self.shot_just_started:
-
-            self.shot_just_started = False
-
-            # small start bonus
-            reward += 0.15
-
-            # position quality for shot
-            shot_pos_reward = self._get_position_reward(ball_x_m, ball_y_m)
-            reward += 0.5 * shot_pos_reward
-
-            # alignment with goal
-            goal_direction = np.array([1.0, 0.5]) - np.array([ball_x, ball_y])
-            norm = np.linalg.norm(goal_direction)
-            if norm > 1e-6:
-                goal_direction /= norm
-            else:
-                goal_direction = np.array([1.0, 0.0])
-
-            shot_dir = self.shot_direction if self.shot_direction is not None else goal_direction
-            alignment = np.clip(np.dot(shot_dir, goal_direction), -1, 1)
-            alignment = (alignment + 1) / 2.0
-            angle_reward = (alignment ** 3)
-            angle_reward = 2 * angle_reward - 1   # [-1, 1]
-            angle_reward *= 0.5                   # [-0.5, +0.5]
-
-            reward += angle_reward
-
-        # 8) SHOT END
-        if self.is_shooting:
-            ball_velocity_norm = np.linalg.norm(self.ball.velocity)
-            ball_out = self._is_ball_completely_out(ball_x_m, ball_y_m)
-            goal_scored = self._is_goal(ball_x_m, ball_y_m)
-            possession_lost = self._check_possession_loss()
-            ball_stopped = ball_velocity_norm < 0.01
-
-            if goal_scored:
-                reward += 7.5
-                terminated = True
-
-            elif ball_out:
-                reward -= 2.5
-                terminated = True
-
-            elif possession_lost:
-                reward -= 2.5
-                terminated = True
-
-            elif ball_stopped:
-                reward -= 0.5
-
-            # Reset shot state
-            self.is_shooting = False
-            self.shot_direction = None
-            self.shot_power = 0.0
-            self.shot_position = None
-
-        # 9) FOV REWARD
-        if hasattr(self, "attempted_movement_direction"):
-            direction = self.attempted_movement_direction
-            if np.linalg.norm(direction) > 0:
-
-                if self.attacker.is_direction_visible(direction):
-                    reward += 0.25
-                else:
-                    reward -= 0.1
-
-        return reward, terminated
-
     
     def _get_obs(self):
         """
@@ -435,7 +458,6 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         ], dtype=np.float32)
 
         return obs
-
 
     def close(self):
             """

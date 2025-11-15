@@ -195,6 +195,7 @@ class BaseOffensiveScenario(gym.Env):
             ball_x_m > self.pitch.width + margin_m or
             ball_y_m < 0 - margin_m or
             ball_y_m > self.pitch.height + margin_m):
+            
             return True
 
         return False
@@ -347,8 +348,6 @@ class BaseOffensiveScenario(gym.Env):
                 grid[i, j] = val
 
         self.reward_grid = grid
-
-
 
 
     def _get_position_reward(self, x, y):

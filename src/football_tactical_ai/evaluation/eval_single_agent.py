@@ -24,24 +24,51 @@ def fixed_env(env_class, pitch, attacker_m, defender_m, fps, max_steps):
 
     env = env_class(pitch=pitch, max_steps=max_steps, fps=fps)
 
-    def fixed_reset(self, *, seed=None, options=None):
-        super(type(self), self).reset(seed=seed)
+    # TRAJECTORY STORAGE
+    env.attacker_traj = []
+
+
+    # RESET WRAPPER
+    original_reset = env.reset
+
+    def fixed_reset(seed=None, options=None):
+        obs, info = original_reset(seed=seed, options=options)
+
+        # Reset trajectory buffer
+        env.attacker_traj = []
 
         att_norm = normalize(attacker_m[0], attacker_m[1])
         def_norm = normalize(defender_m[0], defender_m[1])
 
         # attacker + ball
-        self.attacker.reset_position(att_norm)
-        self.ball.set_position(att_norm)
-        self.ball.set_owner(self.attacker)
+        env.attacker.reset_position(att_norm)
+        env.ball.set_position(att_norm)
+        env.ball.set_owner(env.attacker)
 
         # defender
-        self.defender.reset_position(def_norm)
+        env.defender.reset_position(def_norm)
 
-        return self._get_obs(), {}
+        return env._get_obs(), {}
 
-    env.reset = fixed_reset.__get__(env, type(env))
+    env.reset = fixed_reset
+
+
+    # STEP WRAPPER
+    original_step = env.step
+
+    def tracked_step(action):
+        obs, reward, done, truncated, info = original_step(action)
+
+        # Store attacker (x, y) every step
+        ax, ay = env.attacker.get_position()
+        env.attacker_traj.append((ax, ay))
+
+        return obs, reward, done, truncated, info
+
+    env.step = tracked_step
+
     return env
+
 
 
 
@@ -97,6 +124,7 @@ def evaluate_single(scenario="move"):
         N = 20
 
         rewards = []
+        extra_metrics = [] if scenario == "shot" else None
 
         for run in tqdm(range(N), desc="  Evaluation runs", unit="run"):
 
@@ -121,7 +149,37 @@ def evaluate_single(scenario="move"):
                 show_fov     = cfg["render"]["show_fov"],
             )
 
-            rewards.append(r)
+            # SAVE ATTACKER TRAJECTORY
+            run_key = f"run_{run+1}"
+            if "trajectories" not in summary:
+                summary["trajectories"] = {}
+
+            if case["name"] not in summary["trajectories"]:
+                summary["trajectories"][case["name"]] = {}
+
+            # Save list of pairs
+            summary["trajectories"][case["name"]][run_key] = env.attacker_traj.copy()
+
+            # If only reward is returned
+            if isinstance(r, (float, int)):
+                rewards.append(r)
+
+            else:
+                # new format if evaluate_and_render returns {"reward": ..., ...}
+                rewards.append(r["reward"])
+
+            # COLLECT SHOT METRICS
+            if scenario == "shot":
+                extra_metrics.append({
+                    "valid_shot": env.last_valid_shot,
+                    "shot_distance": env.last_shot_distance,
+                    "time_to_shot": env.last_time_to_shot,
+                    "shot_angle": env.last_shot_angle,
+                    "shot_power": env.last_shot_power,
+                    "reward_components": env.last_reward_components,
+                })
+
+
 
         # Store test result
         summary[case["name"]] = {
@@ -132,6 +190,11 @@ def evaluate_single(scenario="move"):
             "runs": rewards,
         }
 
+        # Add extra metrics only for SHOT
+        if scenario == "shot":
+            summary[case['name']]["shot_metrics"] = extra_metrics
+
+
         print(f"\n → Mean reward: {np.mean(rewards):.3f}")
         print(f" → Std reward:  {np.std(rewards):.3f}")
         print(f" → Min reward:  {np.min(rewards):.3f}")
@@ -139,6 +202,12 @@ def evaluate_single(scenario="move"):
 
         if N > 1:
             print(f" → N={N} runs")
+        traj_json_path = os.path.join(save_logs_dir, f"{scenario}_trajectories_{case['name']}.json")
+
+        with open(traj_json_path, "w") as f:
+            json.dump(summary["trajectories"][case["name"]], f, indent=2)
+
+        print(f" → Trajectories saved to {traj_json_path}")
 
     # Save JSON logs
     log_path = os.path.join(save_logs_dir, f"{scenario}_evaluation.json")
@@ -156,6 +225,6 @@ def evaluate_single(scenario="move"):
 
 # RUN DIRECTLY
 if __name__ == "__main__":
-    evaluate_single("move")
-    #evaluate_single("shot")
+    #evaluate_single("move")
+    evaluate_single("shot")
     #evaluate_single("view")
