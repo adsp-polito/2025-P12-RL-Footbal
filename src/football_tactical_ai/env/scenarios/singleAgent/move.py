@@ -76,7 +76,7 @@ class OffensiveScenarioMoveSingleAgent(BaseOffensiveScenario):
             return reward, terminated
 
         # Check if possession was lost
-        if self._check_possession_loss():
+        if self.possession_lost_this_step:
             reward -= 2.5
             terminated = True
             return reward, terminated

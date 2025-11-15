@@ -62,6 +62,10 @@ class BaseOffensiveScenario(gym.Env):
         # Action: dx, dy in [-1, 1]
         self.action_space = gym.spaces.Box(-1.0, 1.0, shape=(2,), dtype=np.float32)
 
+        # Possession loss tracking
+        self.possession_lost_this_step = False
+
+
 
     def reset(self, *, seed: int | None = None):
         """
@@ -149,6 +153,9 @@ class BaseOffensiveScenario(gym.Env):
         This is a placeholder for more complex AI logic.
         """
 
+        # Store old owner to detect possession changes
+        old_owner = self.ball.owner
+
         # Get ball and defender positions
         ball_x, ball_y = self.ball.position
         def_x, def_y = self.defender.get_position()
@@ -174,6 +181,29 @@ class BaseOffensiveScenario(gym.Env):
             y_range=field_height_m,
             enable_fov=False  # Disable FOV for defender AI
         )
+
+        # CHECK TACKLE EVENT
+        if old_owner is self.attacker:
+
+            # Calculate distance between defender and ball in metres
+            def_x, def_y = self.defender.get_position()
+            def_x_m = def_x * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
+            def_y_m = def_y * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
+
+            ball_x = self.ball.position[0] * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
+            ball_y = self.ball.position[1] * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
+
+            distance = np.sqrt((def_x_m - ball_x)**2 + (def_y_m - ball_y)**2)
+
+            # Probabilistic tackle
+            if distance < 0.5 and np.random.rand() < self.defender.tackling:
+                self.ball.set_owner(self.defender)
+                self.possession_lost_this_step = True
+            else:
+                self.possession_lost_this_step = False
+        else:
+            self.possession_lost_this_step = False
+
 
     def _is_ball_completely_out(self, ball_x_m, ball_y_m):
         """
@@ -210,28 +240,10 @@ class BaseOffensiveScenario(gym.Env):
 
     def _check_possession_loss(self):
         """
-        Check if the defender has stolen the ball from the attacker.
-        The defender steals the ball if they are within a certain distance threshold
-        and their tackling ability is sufficient.
-        If the ball is stolen, update the ball owner accordingly.
+        Returns True if possession was lost in THIS step only.
         """
-        # Get real positions in meters
-        def_x, def_y = self.defender.get_position()
-        def_x = def_x * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
-        def_y = def_y * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
-        ball_x = self.ball.position[0] * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
-        ball_y = self.ball.position[1] * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
+        return self.possession_lost_this_step
 
-        threshold = 0.5  # meters
-        distance = np.sqrt((def_x - ball_x) ** 2 + (def_y - ball_y) ** 2)
-
-        if distance < threshold:
-            if np.random.rand() < self.defender.tackling:
-                # Update ball owner to defender (possession lost)
-                self.ball.set_owner(self.defender)
-                return True
-
-        return False
 
 
     def _update_ball_position(self, action=None):
@@ -398,7 +410,7 @@ class BaseOffensiveScenario(gym.Env):
 
         goal = self._is_goal(ball_x_m, ball_y_m)
         out_of_bounds = self._is_ball_completely_out(ball_x_m, ball_y_m)
-        lost_possession = self._check_possession_loss()
+        lost_possession = (self.ball.owner is self.defender)
 
         return goal or out_of_bounds or lost_possession
 

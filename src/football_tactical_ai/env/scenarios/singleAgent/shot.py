@@ -211,7 +211,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
 
         # BASE POSITIONAL REWARD (scaled down)
         pos_reward = self._get_position_reward(x_m, y_m)
-        reward += 0.25 * pos_reward
+        reward += 0.5 * pos_reward
 
         # READINESS REWARD → encourages moving toward the goal before shooting
         vec_to_goal = np.array([self.goal_x - x_m, self.goal_y - y_m])
@@ -223,17 +223,17 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
 
         reward += 0.05 * readiness # in [-0.05, +0.05]
 
+        # BONUS FOR GOAL
+        if self._is_goal(bx_m, by_m):
+            reward += 7.5
+
         # PENALTY FOR POSSESSION LOSS
-        if self._check_possession_loss():
+        if self.possession_lost_this_step:
             reward -= 2.5
 
         # PENALTY FOR OUT OF BOUNDS
         if self._is_ball_completely_out(bx_m, by_m):
             reward -= 2.5
-
-        # BONUS FOR GOAL
-        if self._is_goal(bx_m, by_m):
-            reward += 7.5
 
         # INVALID SHOT ATTEMPT
         if shot_flag and self.ball.owner is not self.attacker:
@@ -266,11 +266,11 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             sharpness = 4
             alignment_shaped = np.sign(alignment) * (abs(alignment) ** sharpness)
 
-            reward += alignment_shaped
+            reward += alignment_shaped  # in [-1, +1]
 
             # penalty for very poor alignment
             if alignment < 0.5:
-                reward -= 0.5
+                reward -= 1.0
 
             # DISTANCE TO GOAL REWARD
             dist = np.linalg.norm([self.goal_x - x_m, self.goal_y - y_m])
@@ -284,13 +284,13 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             dist_norm = np.clip(dist_norm, 0.0, 1.0)
 
             # Exponential shaping
-            sharpness = 4
+            sharpness = 5
             dist_shaped = dist_norm ** sharpness
 
             # Map to [-1, +1]
             dist_scaled = 2 * dist_shaped - 1
 
-            reward += 0.5 * dist_scaled # in [-0.5, +0.5]      
+            reward += dist_scaled # in [-1, +1]      
 
         # LOGGING: LAST TIME TO SHOT
         if self.is_shooting and self.last_shot_distance is not None and self.last_shot_power is not None:
@@ -305,10 +305,10 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         if self._t == self.max_steps - 1 or self._check_termination():
             if self.last_shot_start_bonus > 0:
                 # Episode ends with at least one shot attempted
-                reward += 2.5
+                reward += 5.0
             else:
                 # Episode ends without ever shooting
-                reward -= 7.5
+                reward -= 7.0
 
         # LOGGING: LAST REWARD COMPONENTS
         self.last_reward_components = {
@@ -418,7 +418,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         if self._is_ball_completely_out(bx, by):
             return True
 
-        if self._check_possession_loss():
+        if self.ball.owner is self.defender:
             return True
 
         # EXTRA: ball stopped → end of shot

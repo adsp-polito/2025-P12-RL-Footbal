@@ -200,7 +200,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self._apply_defender_ai()
 
         # Compute reward for the current state transition
-        reward = self.compute_reward(shot_flag=shot_flag, shot_quality=shot_quality)
+        reward = self.compute_reward(shot_flag=shot_flag, shot_quality=shot_quality, movement=movement)
 
         # Termination check performed after applying all state updates
         self._t += 1
@@ -211,7 +211,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
 
     
-    def compute_reward(self, shot_flag=None, shot_quality=0.0):
+    def compute_reward(self, shot_flag=None, shot_quality=0.0, movement=np.array([0.0, 0.0])):
         """
         Compute the scalar reward for the current timestep.
 
@@ -245,27 +245,33 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
         # Positional reward based on spatial reward grid
         pos_reward = self._get_position_reward(x_m, y_m)
-        reward += pos_reward
+        reward += 0.5 * pos_reward
 
-        # Goal bonus (reward only; termination handled elsewhere)
+        # READINESS REWARD → encourages moving toward the goal before shooting
+        vec_to_goal = np.array([self.goal_x - x_m, self.goal_y - y_m])
+        vec_to_goal /= (np.linalg.norm(vec_to_goal) + 1e-6)
+
+        movement_norm = movement / (np.linalg.norm(movement) + 1e-6)
+
+        readiness = np.dot(movement_norm, vec_to_goal)   # [-1,+1]
+
+        reward += 0.05 * readiness # in [-0.05, +0.05]
+
+        # BONUS FOR GOAL
         if self._is_goal(bx_m, by_m):
             reward += 7.5
 
-        # Penalty for losing possession to the defender
-        if self._check_possession_loss():
+        # PENALTY FOR POSSESSION LOSS
+        if self.possession_lost_this_step:
             reward -= 2.5
 
-        # Penalty if ball exits the valid field boundaries
+        # PENALTY FOR OUT OF BOUNDS
         if self._is_ball_completely_out(bx_m, by_m):
             reward -= 2.5
 
-        # Shot quality bonus (only active when a valid shot was initiated)
-        if shot_quality is not None:
-            reward += 0.5 * shot_quality
-
-        # Penalty for attempted shots without possession
+        # INVALID SHOT ATTEMPT
         if shot_flag and self.ball.owner is not self.attacker:
-            reward -= 0.35
+            reward -= 0.25
 
         # Penalty for attempted shots that were invalid (e.g., outside FOV)
         elif shot_flag and not self.is_shooting:
@@ -275,11 +281,15 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         if self.is_shooting and self.shot_just_started:
             self.shot_just_started = False
 
-            # Small encouragement to initiate shots
-            self.last_shot_start_bonus = 0.25
-            reward += self.last_shot_start_bonus
+            # Shot quality bonus (only active when a valid shot was initiated)
+            reward += shot_quality  # in [0, +1]
 
-            # Alignment reward (non-linear: strong penalty for bad shots, strong bonus for good shots)
+            # Small encouragement to initiate shots
+            self.last_shot_start_bonus = 0.3
+            reward += self.last_shot_start_bonus
+            
+            # SHOT ALIGNMENT
+            # Alignment reward
             goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m])
             norm = np.linalg.norm(goal_dir)
             if norm > 1e-6:
@@ -290,18 +300,17 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             shot_dir = self.shot_direction if self.shot_direction is not None else goal_dir
             alignment = float(np.clip(np.dot(shot_dir, goal_dir), -1, 1))
 
-            # Non-linear shaping: emphasise good alignment, heavily punish bad alignment
-            sharpness = 2.5  # 2–3 recommended
+            # Non-linear shaping
+            sharpness = 4
             alignment_shaped = np.sign(alignment) * (abs(alignment) ** sharpness)
 
-            reward += alignment_shaped
+            reward += alignment_shaped  # in [-1, +1]
 
+            # penalty for very poor alignment
+            if alignment < 0.5:
+                reward -= 1.0
 
-            # Penalty for strongly misaligned shots
-            if alignment < 0.2:
-                reward -= 0.4
-
-            # DISTANCE TO GOAL REWARD (non-linear shaping: strong bias near the goal)
+            # DISTANCE TO GOAL REWARD
             dist = np.linalg.norm([self.goal_x - x_m, self.goal_y - y_m])
             max_dist = np.linalg.norm([
                 self.pitch.x_max - self.pitch.x_min,
@@ -312,24 +321,23 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             dist_norm = 1 - dist / max_dist
             dist_norm = np.clip(dist_norm, 0.0, 1.0)
 
-            # Exponential shaping: boost high values, compress low/medium ones
-            sharpness = 4.0   # tune: 2.0 = mild, 3.0 = strong, 4.0 = very strong
+            # Exponential shaping
+            sharpness = 5
             dist_shaped = dist_norm ** sharpness
 
             # Map to [-1, +1]
             dist_scaled = 2 * dist_shaped - 1
 
-            reward += dist_scaled
+            reward += dist_scaled # in [-1, +1]      
 
         # Reward or penalty depending on whether movement direction was visible
         if hasattr(self, "attempted_movement_direction"):
             direction = self.attempted_movement_direction
             if np.linalg.norm(direction) > 0:
                 if self.attacker.is_direction_visible(direction):
-                    reward += 0.25     # movement inside FOV is encouraged
+                    reward += 2.5     # movement inside FOV is encouraged
                 else:
-                    reward -= 0.1      # movement outside FOV is discouraged
-
+                    reward -= 3.0      # movement outside FOV is discouraged
 
         # LOGGING: time-to-shot (distance / shot power)
         if self.is_shooting and self.last_shot_distance is not None and self.last_shot_power is not None:
@@ -341,14 +349,13 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             self.last_time_to_shot = None
 
         # FINAL EPISODE BONUS: reward if the episode ended after taking at least one shot
-        # We detect if a real shot happened by checking the shot start bonus
-        if self._check_termination():
+        if self._t == self.max_steps - 1 or self._check_termination():
             if self.last_shot_start_bonus > 0:
-                # Episode ends with at least one shot attempted → small positive reinforcement
-                reward += 1.5
+                # Episode ends with at least one shot attempted
+                reward += 5.0
             else:
-                # Episode ends without ever shooting → slight discouragement
-                reward -= 0.5
+                # Episode ends without ever shooting
+                reward -= 7.0
 
         self.last_reward_components = {
             "position": float(pos_reward),
@@ -432,6 +439,35 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         else:
             # Ball is free: update position and velocity using physics with friction
             self.ball.update(self.time_per_step)
+
+    def _check_termination(self):
+        """
+        Override: termination logic for the View scenario
+        Includes also: ball stopped while shooting
+        """
+
+        # Convert ball pos to meters
+        ball_x, ball_y = self.ball.position
+        pw = self.pitch.x_max - self.pitch.x_min
+        ph = self.pitch.y_max - self.pitch.y_min
+        bx = ball_x * pw + self.pitch.x_min
+        by = ball_y * ph + self.pitch.y_min
+
+        # Base termination events
+        if self._is_goal(bx, by):
+            return True
+
+        if self._is_ball_completely_out(bx, by):
+            return True
+
+        if self.ball.owner is self.defender:
+            return True
+
+        # EXTRA: ball stopped → end of shot
+        if self.is_shooting and np.linalg.norm(self.ball.velocity) < 0.01:
+            return True
+
+        return False
     
     def _get_obs(self):
         """
