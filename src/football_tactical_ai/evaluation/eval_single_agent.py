@@ -94,7 +94,7 @@ def evaluate_single(scenario="move"):
         print(f" Defender start (m): {defender_m}")
 
         # Number of evaluation runs
-        N = 10
+        N = 20
 
         rewards = []
 
@@ -138,7 +138,7 @@ def evaluate_single(scenario="move"):
         print(f" → Max reward:  {np.max(rewards):.3f}")
 
         if N > 1:
-            print(f" → N={N} runs   (video saved only for run #1)")
+            print(f" → N={N} runs")
 
     # Save JSON logs
     log_path = os.path.join(save_logs_dir, f"{scenario}_evaluation.json")
@@ -157,3 +157,5 @@ def evaluate_single(scenario="move"):
 # RUN DIRECTLY
 if __name__ == "__main__":
     evaluate_single("move")
+    #evaluate_single("shot")
+    #evaluate_single("view")

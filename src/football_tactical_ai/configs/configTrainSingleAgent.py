@@ -15,8 +15,8 @@ SCENARIOS: dict[str, dict] = {
         # Episode timing
         "seconds_per_episode": 10,
         "fps": 24,
-        "episodes": 10000,
-        "eval_every": 1000,
+        "episodes": 15000,
+        "eval_every": 1500,
 
         # Rendering settings
         "render": {
@@ -38,14 +38,14 @@ SCENARIOS: dict[str, dict] = {
 
         # PPO hyperparameters
         "ppo": {
-            "learning_rate": 1e-3,
+            "learning_rate": 1e-4,
             "gamma": 0.99,
             "gae_lambda": 0.95,
 
-            "ent_coef": 0.05,
+            "ent_coef": 0.02,
             "clip_range": 0.2,
 
-            "batch_size": 120,
+            "batch_size": 240,
             "n_epochs": 4,
 
             "seed": 42,

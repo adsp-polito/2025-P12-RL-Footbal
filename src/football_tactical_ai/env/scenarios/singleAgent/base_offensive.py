@@ -272,20 +272,29 @@ class BaseOffensiveScenario(gym.Env):
 
     def _build_reward_grid(self):
         """
-        Exact same spatial logic as multi-agent attacker grid.
-        - Negative reward in own half
-        - Smooth rise to 0 around midfield
-        - Positive in attacking third
-        - Penalty for deviating vertically
+        Reward grid for the attacker, safe from NaN values.
+        Promotes forward movement and centrality:
+        - x progression = exponential shaping
+        - y alignment = from -20% to +20% bonus
         """
 
         pitch = self.pitch
 
-        min_reward = -0.05
+        min_reward = -0.1
         max_reward = 0.05
-        focus_sharpness = 1.5  
+        focus_sharpness = 1.5
 
         grid = np.zeros((pitch.num_cells_x, pitch.num_cells_y))
+
+        # Precompute ranges (safe)
+        range_x = pitch.x_max - pitch.x_min
+        range_y = pitch.y_max - pitch.y_min
+
+        # Avoid division by zero (safe)
+        if range_x == 0:
+            range_x = 1.0
+        if range_y == 0:
+            range_y = 1.0
 
         for i in range(pitch.num_cells_x):
             for j in range(pitch.num_cells_y):
@@ -296,31 +305,49 @@ class BaseOffensiveScenario(gym.Env):
 
                 # Out-of-play → hard penalty
                 if cell_x < 0 or cell_x > pitch.width or cell_y < 0 or cell_y > pitch.height:
-                    grid[i, j] = -0.05
+                    grid[i, j] = min_reward
                     continue
 
                 # NORMALIZED COORDINATES
-                x_norm = (cell_x - pitch.x_min) / (pitch.x_max - pitch.x_min)
-                y_norm = (cell_y - pitch.y_min) / (pitch.y_max - pitch.y_min)
+                x_norm = (cell_x - pitch.x_min) / range_x
+                y_norm = (cell_y - pitch.y_min) / range_y
 
-                # IDENTICAL SHAPE TO MULTI-AGENT:
+                # Clamp all normalization
+                x_norm = np.clip(x_norm, 0.0, 1.0)
+                y_norm = np.clip(y_norm, 0.0, 1.0)
+
                 # Exponential progression reward
-                dx = (pitch.width - 8) - cell_x    # multi-agent attacker targets last ~8m
-                dx = abs(dx) / pitch.width
-                dist = dx  # in multi-agent X-target dominates for attackers
+                dx = (pitch.width - 8) - cell_x
+                dx = abs(dx) / max(pitch.width, 1.0)
+                dist = dx
 
                 score = np.exp(-focus_sharpness * dist)
+                if not np.isfinite(score):
+                    score = 0.0
 
-                # Map score into [-0.03, +0.07]
+                # Scale to [min_reward, max_reward]
                 x_reward = min_reward + (max_reward - min_reward) * score
 
-                # Vertical alignment penalty (multi-agent style)
-                y_penalty = -0.03 * abs(y_norm - 0.5) * 2
+                # Vertical centrality refinement
+                range_factor = 0.2 * abs(min_reward)   # ±20%
 
-                grid[i, j] = x_reward + y_penalty
+                dev = abs(y_norm - 0.5) / 0.5          # 0=center, 1=side
+                dev = np.clip(dev, 0.0, 1.0)
 
+                y_alignment = range_factor * (1 - 2 * dev)
+
+                if not np.isfinite(y_alignment):
+                    y_alignment = 0.0
+
+                val = x_reward + y_alignment
+
+                if not np.isfinite(val):
+                    val = min_reward
+
+                grid[i, j] = val
 
         self.reward_grid = grid
+
 
 
 

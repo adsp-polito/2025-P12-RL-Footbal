@@ -19,7 +19,7 @@ MOVE = {
     "model_path": "src/football_tactical_ai/training/models/singleAgentMoveModel.zip",
 
     "save_video_dir": "src/football_tactical_ai/evaluation/results/videos/move",
-    "save_logs_dir":  "src/football_tactical_ai/evaluation/results/logs/move",
+    "save_logs_dir":  "src/football_tactical_ai/evaluation/results/logs",
 
 
     "render": {
@@ -40,19 +40,24 @@ MOVE = {
         },
         {
             "name": "left",
-            "attacker_start": (50, 20),
-            "defender_start": (95, 20),
+            "attacker_start": (70, 20),
+            "defender_start": (100, 40),
         },
         {
             "name": "right",
-            "attacker_start": (50, 60),
-            "defender_start": (95, 60),
+            "attacker_start": (70, 60),
+            "defender_start": (100, 40),
         },
         {
             "name": "deep_start",
             "attacker_start": (40, 40),
-            "defender_start": (90, 40),
+            "defender_start": (100, 40),
         },
+        {
+            "name": "close_defender",
+            "attacker_start": (80, 40),
+            "defender_start": (100, 40),
+        }
     ],
 }
 
@@ -62,7 +67,7 @@ SHOT = {
     "model_path": "src/football_tactical_ai/training/models/singleAgentShotModel.zip",
 
     "save_video_dir": "src/football_tactical_ai/evaluation/results/videos/shot",
-    "save_logs_dir":  "src/football_tactical_ai/evaluation/results/logs/shot",
+    "save_logs_dir":  "src/football_tactical_ai/evaluation/results/logs",
 
     "render": {
         "show_grid": False,
@@ -103,7 +108,7 @@ VIEW = {
     "model_path": "src/football_tactical_ai/training/models/singleAgentViewModel.zip",
 
     "save_video_dir": "src/football_tactical_ai/evaluation/results/videos/view",
-    "save_logs_dir":  "src/football_tactical_ai/evaluation/results/logs/view",
+    "save_logs_dir":  "src/football_tactical_ai/evaluation/results/logs",
 
     "render": {
         "show_grid": False,
