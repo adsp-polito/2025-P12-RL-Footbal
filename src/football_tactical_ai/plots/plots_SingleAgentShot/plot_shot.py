@@ -73,7 +73,7 @@ def plot_shot_trajectories(json_path, save_dir, title):
 
     pitch = Pitch()
 
-    fig, ax = pitch.draw_half_pitch(
+    fig, ax = pitch.draw_pitch(
         ax=None,
         field_color="green",
         stripes=False,
@@ -169,7 +169,7 @@ def plot_all_testcases_single_pitch(folder, save_path):
     set_plot_style()
     pitch = Pitch()
 
-    fig, ax = pitch.draw_half_pitch(
+    fig, ax = pitch.draw_pitch(
         ax=None,
         field_color="green",
         stripes=False,
@@ -305,13 +305,25 @@ plot_training_rewards(
 plot_folder = "src/football_tactical_ai/evaluation/results/logs/shot"
 
 for fname in os.listdir(plot_folder):
-    if fname.startswith("shot_trajectories_") and fname.endswith(".json"):
-        clean = fname.replace("shot_trajectories_", "").replace(".json", "")
-        plot_shot_trajectories(
-            json_path=os.path.join(plot_folder, fname),
-            save_dir=SAVE_ROOT,
-            title=f"Shot Scenario - {clean} Test Case"
-        )
+
+    # Process only JSON files
+    if not fname.endswith(".json"):
+        continue
+
+    # Process only shot trajectory files
+    if not fname.startswith("shot_trajectories_"):
+        continue
+
+    json_path = os.path.join(plot_folder, fname)
+
+    # Extract clean test-case name (e.g., "left", "right", "edge_box")
+    clean_name = fname.replace(".json", "").split("shot_trajectories_")[-1]
+
+    plot_shot_trajectories(
+        json_path=json_path,
+        save_dir=SAVE_ROOT,
+        title=f"Shot Scenario – {clean_name.upper()} Test Case"
+    )
 
 # 3) All testcases combined
 plot_all_testcases_single_pitch(
