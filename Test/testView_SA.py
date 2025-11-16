@@ -76,7 +76,7 @@ anim = render_episode_singleAgent(
     reward_grid=env.reward_grid,
     save_path="test/videoTest/testView_SA.mp4",  # Output video file path
     rewards_per_frame=rewards,
-    show_info=False,
+    show_info=True,
     show_fov=True
 )
 

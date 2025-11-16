@@ -290,7 +290,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             # Map to [-1, +1]
             dist_scaled = 2 * dist_shaped - 1
 
-            reward += 2.0 * dist_scaled # in [-2, +2]      
+            reward += dist_scaled # in [-1, +1]      
 
         # LOGGING: LAST TIME TO SHOT
         if self.is_shooting and self.last_shot_distance is not None and self.last_shot_power is not None:

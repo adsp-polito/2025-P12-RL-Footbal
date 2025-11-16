@@ -45,6 +45,10 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         # This sets up the environment with the necessary metadata and configurations
         super().__init__(pitch=pitch, max_steps=max_steps, fps=fps)
 
+        # Goal center (meters)
+        self.goal_x = self.pitch.x_max  
+        self.goal_y = (self.pitch.y_min + self.pitch.y_max) / 2
+
         # Action space: (movement_x_y, shot_flag, shot_power, shot_direction)
         self.action_space = spaces.Box(
             low=np.array([-1.0, -1.0, 0.0, 0.0, -1.0, -1.0], dtype=np.float32),  # x,y movement, shot_flag, shot_power, shot_dir x,y
@@ -75,6 +79,15 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.last_shot_power = None
         self.last_reward_components = None
 
+        # FOV logging metrics
+        self.fov_valid_movements = 0
+        self.fov_invalid_movements = 0
+        self.invalid_shot_fov = 0
+
+        self.total_shots = 0
+        self.valid_shots = 0
+        self.valid_shot_ratio = 0.0
+
 
     def reset(self, seed=None, options=None):
         """
@@ -103,6 +116,15 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.last_shot_angle = None
         self.last_shot_power = None
         self.last_reward_components = None
+        self.last_shot_start_bonus = 0.0
+
+        # Reset FOV metrics
+        self.fov_valid_movements = 0
+        self.fov_invalid_movements = 0
+        self.invalid_shot_fov = 0
+        self.total_shots = 0
+        self.valid_shots = 0
+        self.valid_shot_ratio = 0.0
 
         # Return initial observation and info dictionary as required by Gym API
         return self._get_obs(), {}
@@ -143,6 +165,8 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         # Default shot quality (used only when a shot is validly started)
         shot_quality = 0.0
 
+
+
         # Attempt to start a shot only if attacker has the ball and no shot is active
         if shot_flag and not self.is_shooting and self.ball.owner is self.attacker:
             shot_quality, actual_dir, actual_power = self.attacker.shoot(
@@ -150,6 +174,9 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
                 desired_power=desired_power,
                 enable_fov=True            # Visual constraint specific to this scenario
             )
+
+            # LOGGING: count total shot attempts
+            self.total_shots += 1
 
             # A shot starts only if actual_power > 0 (direction inside FOV)
             if actual_power > 0.0:
@@ -163,6 +190,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
                 # LOG METRICS
                 self.last_valid_shot = True
                 self.last_shot_power = float(actual_power)
+                self.valid_shots += 1
 
                 # Compute shot angle relative to the goal
                 att_x, att_y = self.attacker.get_position()
@@ -182,15 +210,27 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
                 velocity_norm = np.array([velocity_real[0] / pitch_w,
                                         velocity_real[1] / pitch_h])
                 self.ball.set_velocity(velocity_norm)
+            else:
+                # Shot was invalid due to FOV
+                self.last_valid_shot = False
+                self.invalid_shot_fov += 1
+        
+        # Update ratio of valid shots
+        self.valid_shot_ratio = self.valid_shots / max(self.total_shots, 1) if self.total_shots > 0 else 0.0
 
         # Movement direction is stored for FOV reward logic
         self.attempted_movement_direction = movement.copy()
 
-        # Apply movement only if the direction is inside the attacker's FOV
-        if np.linalg.norm(movement) > 0 and self.attacker.is_direction_visible(movement):
-            self._apply_attacker_action(action, enable_fov=True)
-            if self.ball.owner is self.attacker:
-                self._update_ball_position(movement)
+        # Apply movement only if direction is visible
+        if np.linalg.norm(movement) > 0:
+            if self.attacker.is_direction_visible(movement):    # FOV CHECK
+                self.fov_valid_movements += 1
+                self._apply_attacker_action(action, enable_fov=True)
+                if self.ball.owner is self.attacker:
+                    self._update_ball_position(movement)
+            else:
+                self.fov_invalid_movements += 1
+
 
         # Update ball physics: either free or in shooting trajectory
         if self.is_shooting or self.ball.owner is None:
@@ -285,7 +325,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             reward += shot_quality  # in [0, +1]
 
             # Small encouragement to initiate shots
-            self.last_shot_start_bonus = 0.3
+            self.last_shot_start_bonus = 0.5
             reward += self.last_shot_start_bonus
             
             # SHOT ALIGNMENT
@@ -331,13 +371,14 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             reward += dist_scaled # in [-1, +1]      
 
         # Reward or penalty depending on whether movement direction was visible
+        # For each direction, so dense reward signal (low magnitude to avoid overpowering main rewards)
         if hasattr(self, "attempted_movement_direction"):
             direction = self.attempted_movement_direction
             if np.linalg.norm(direction) > 0:
                 if self.attacker.is_direction_visible(direction):
-                    reward += 2.5     # movement inside FOV is encouraged
+                    reward += 0.05     # movement inside FOV is encouraged
                 else:
-                    reward -= 3.0      # movement outside FOV is discouraged
+                    reward -= 0.05      # movement outside FOV is discouraged
 
         # LOGGING: time-to-shot (distance / shot power)
         if self.is_shooting and self.last_shot_distance is not None and self.last_shot_power is not None:
@@ -352,10 +393,10 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         if self._t == self.max_steps - 1 or self._check_termination():
             if self.last_shot_start_bonus > 0:
                 # Episode ends with at least one shot attempted
-                reward += 5.0
+                reward += 6.0
             else:
                 # Episode ends without ever shooting
-                reward -= 7.0
+                reward -= 7.5
 
         self.last_reward_components = {
             "position": float(pos_reward),

@@ -52,11 +52,6 @@ MOVE = {
             "name": "deep_start",
             "attacker_start": (40, 40),
             "defender_start": (100, 40),
-        },
-        {
-            "name": "close_defender",
-            "attacker_start": (80, 40),
-            "defender_start": (100, 40),
         }
     ],
 }
@@ -80,7 +75,7 @@ SHOT = {
 
     "test_cases": [
         {
-            "name": "edge_box",
+            "name": "edgeBox",
             "attacker_start": (88, 40),
             "defender_start": (100, 40),
         },
@@ -95,7 +90,7 @@ SHOT = {
             "defender_start": (98, 50),
         },
         {
-            "name": "central_far",
+            "name": "central",
             "attacker_start": (70, 40),
             "defender_start": (100, 40),
         },

@@ -30,10 +30,9 @@ SCENARIOS: dict[str, dict] = {
 
         # Paths
         "paths": {
-            "rewards_dir": "src/football_tactical_ai/training/plots/singleAgentMove",
+            "rewards_dir": "src/football_tactical_ai/training/rewards/singleAgentMove",
             "save_model_path": "src/football_tactical_ai/training/models/singleAgentMoveModel",
             "save_render_dir": "src/football_tactical_ai/training/renders/singleAgentMove",
-            "plot_path": "src/football_tactical_ai/training/plots/singleAgentMove/SingleAgentMoveRewards.png",
         },
 
         # PPO hyperparameters
@@ -42,7 +41,7 @@ SCENARIOS: dict[str, dict] = {
             "gamma": 0.99,
             "gae_lambda": 0.95,
 
-            "ent_coef": 0.02,
+            "ent_coef": 0.01,
             "clip_range": 0.2,
 
             "batch_size": 240,
@@ -79,26 +78,25 @@ SCENARIOS: dict[str, dict] = {
         },
 
         "paths": {
-            "rewards_dir": "src/football_tactical_ai/training/plots/singleAgentShot",
+            "rewards_dir": "src/football_tactical_ai/training/rewards/singleAgentShot",
             "save_model_path": "src/football_tactical_ai/training/models/singleAgentShotModel",
             "save_render_dir": "src/football_tactical_ai/training/renders/singleAgentShot",
-            "plot_path": "src/football_tactical_ai/training/plots/singleAgentShot/SingleAgentShotRewards.png",
         },
 
         # PPO hyperparameters
         "ppo": {
-            "learning_rate": 1e-4,
+            "learning_rate": 7.5e-5,
             "gamma": 0.99,
             "gae_lambda": 0.95,
 
             "ent_coef": 0.02,    
             "clip_range": 0.2,
 
-            "batch_size": 240,   # 240 is a clean divisor of the rollout buffer (240 steps), 
+            "batch_size": 120,   # 120 is a clean divisor of the rollout buffer (240 steps), 
                                  # ensuring SB3 can form full mini-batches without truncation 
                                  # and avoiding stability warnings
 
-            "n_epochs": 4,
+            "n_epochs": 5,
 
             "seed": 42,
             "verbose": 0,
@@ -115,8 +113,8 @@ SCENARIOS: dict[str, dict] = {
 
         "seconds_per_episode": 10,
         "fps": 24,
-        "episodes": 10000,
-        "eval_every": 1000,
+        "episodes": 15000,
+        "eval_every": 1500,
 
         "render": {
             "show_grid": False,
@@ -128,10 +126,9 @@ SCENARIOS: dict[str, dict] = {
         },
 
         "paths": {
-            "rewards_dir": "src/football_tactical_ai/training/plots/singleAgentView",
+            "rewards_dir": "src/football_tactical_ai/training/rewards/singleAgentView",
             "save_model_path": "src/football_tactical_ai/training/models/singleAgentViewModel",
             "save_render_dir": "src/football_tactical_ai/training/renders/singleAgentView",
-            "plot_path": "src/football_tactical_ai/training/plots/singleAgentView/SingleAgentViewRewards.png",
         },
 
         # PPO hyperparameters
@@ -140,11 +137,11 @@ SCENARIOS: dict[str, dict] = {
             "gamma": 0.99,
             "gae_lambda": 0.95,
 
-            "ent_coef": 0.02,         # strong exploration
+            "ent_coef": 0.03,         # strong exploration
             "clip_range": 0.2,
 
-            "batch_size": 240,
-            "n_epochs": 4,
+            "batch_size": 60,
+            "n_epochs": 6,
 
             "seed": 42,
             "verbose": 0,

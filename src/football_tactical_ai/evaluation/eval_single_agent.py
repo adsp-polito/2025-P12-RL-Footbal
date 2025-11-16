@@ -181,7 +181,7 @@ def evaluate_single(scenario="move"):
 
 
             # SHOT-SPECIFIC METRICS
-            if scenario == "shot" or scenario == "view":
+            if scenario == "shot":
                 extra_metrics.append({
                     "valid_shot": env.last_valid_shot,
                     "shot_distance": env.last_shot_distance,
@@ -190,6 +190,23 @@ def evaluate_single(scenario="move"):
                     "shot_power": env.last_shot_power,
                     "reward_components": env.last_reward_components,
                 })
+
+            # VIEW-SPECIFIC METRICS
+            if scenario == "view":
+                extra_metrics.append({
+                    "valid_shot": env.last_valid_shot,
+                    "shot_distance": env.last_shot_distance,
+                    "time_to_shot": env.last_time_to_shot,
+                    "shot_angle": env.last_shot_angle,
+                    "shot_power": env.last_shot_power,
+                    "reward_components": env.last_reward_components,
+                    "fov_valid_movements": env.fov_valid_movements,
+                    "fov_invalid_movements": env.fov_invalid_movements,
+                    "fov_valid_ratio": env.fov_valid_movements / max(env.fov_invalid_movements + env.fov_valid_movements, 1),
+                    "invalid_shot_fov": env.invalid_shot_fov,
+                    "valid_shot_ratio": env.valid_shot_ratio,
+                })
+
 
 
 
@@ -202,8 +219,10 @@ def evaluate_single(scenario="move"):
             "runs": rewards,
         }
 
-        if scenario == "shot" or scenario == "view":
+        if scenario == "shot":
             summary_eval[case["name"]]["shot_metrics"] = extra_metrics
+        elif scenario == "view":
+            summary_eval[case["name"]]["view_metrics"] = extra_metrics
 
 
         # PRINT SUMMARY
