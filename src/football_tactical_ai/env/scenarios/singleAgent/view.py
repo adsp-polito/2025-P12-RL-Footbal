@@ -70,6 +70,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.shot_power = 0.0               # Float representing shot speed in m/s
         self.shot_position = None           # Normalized coordinates where shot started
         self.shot_just_started = False      # Flag to track if a shot just started (for one-time bonuses)
+        self.shot_in_fov = False            # Flag indicating if the shot was initiated within FOV
 
         # LOGGING METRICS FOR EVALUATION ONLY
         self.last_valid_shot = None
@@ -83,7 +84,6 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.fov_valid_movements = 0
         self.fov_invalid_movements = 0
         self.invalid_shot_fov = 0
-
         self.total_shots = 0
         self.valid_shots = 0
         self.valid_shot_ratio = 0.0
@@ -106,6 +106,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.shot_power = 0.0
         self.shot_position = None
         self.shot_just_started = False  # Reset for new episode
+        self.shot_in_fov = False
 
         self.attacker.last_action_direction = np.array([1.0, 0.0])  # Reset last action direction
 
@@ -165,8 +166,6 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         # Default shot quality (used only when a shot is validly started)
         shot_quality = 0.0
 
-
-
         # Attempt to start a shot only if attacker has the ball and no shot is active
         if shot_flag and not self.is_shooting and self.ball.owner is self.attacker:
             shot_quality, actual_dir, actual_power = self.attacker.shoot(
@@ -178,8 +177,12 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             # LOGGING: count total shot attempts
             self.total_shots += 1
 
-            # A shot starts only if actual_power > 0 (direction inside FOV)
-            if actual_power > 0.0:
+            # Check FOV alignment 
+            # It is used desired_dir to evaluate the intent of the agent
+            self.shot_in_fov = self.attacker.is_direction_visible(desired_direction=desired_dir)
+
+            # A shot starts only if it is within the FOV
+            if self.shot_in_fov:
                 self.is_shooting = True
                 self.shot_direction = actual_dir
                 self.shot_power = actual_power
@@ -212,6 +215,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
                 self.ball.set_velocity(velocity_norm)
             else:
                 # Shot was invalid due to FOV
+                # Count how many invalid shots were due to FOV
                 self.last_valid_shot = False
                 self.invalid_shot_fov += 1
         
@@ -285,7 +289,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
         # Positional reward based on spatial reward grid
         pos_reward = self._get_position_reward(x_m, y_m)
-        reward += 0.5 * pos_reward
+        reward += 0.6 * pos_reward
 
         # READINESS REWARD → encourages moving toward the goal before shooting
         vec_to_goal = np.array([self.goal_x - x_m, self.goal_y - y_m])
@@ -295,7 +299,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
         readiness = np.dot(movement_norm, vec_to_goal)   # [-1,+1]
 
-        reward += 0.05 * readiness # in [-0.05, +0.05]
+        reward += 0.03 * readiness # in [-0.03, +0.03]
 
         # BONUS FOR GOAL
         if self._is_goal(bx_m, by_m):
@@ -311,11 +315,14 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
         # INVALID SHOT ATTEMPT
         if shot_flag and self.ball.owner is not self.attacker:
-            reward -= 0.25
+            reward -= 0.05
 
         # Penalty for attempted shots that were invalid (e.g., outside FOV)
-        elif shot_flag and not self.is_shooting:
-            reward -= 0.25
+        elif shot_flag and not self.shot_in_fov:
+            reward -= 0.05
+
+        elif shot_flag and self.shot_in_fov:
+            reward += 0.75  # small bonus for shooting
 
         # Shot start bonuses and alignment shaping
         if self.is_shooting and self.shot_just_started:
@@ -341,14 +348,10 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             alignment = float(np.clip(np.dot(shot_dir, goal_dir), -1, 1))
 
             # Non-linear shaping
-            sharpness = 4
+            sharpness = 3
             alignment_shaped = np.sign(alignment) * (abs(alignment) ** sharpness)
 
-            reward += alignment_shaped  # in [-1, +1]
-
-            # penalty for very poor alignment
-            if alignment < 0.5:
-                reward -= 1.0
+            reward += 0.5 * alignment_shaped  # in [-0.5, +0.5]
 
             # DISTANCE TO GOAL REWARD
             dist = np.linalg.norm([self.goal_x - x_m, self.goal_y - y_m])
@@ -362,23 +365,23 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             dist_norm = np.clip(dist_norm, 0.0, 1.0)
 
             # Exponential shaping
-            sharpness = 5
+            sharpness = 3
             dist_shaped = dist_norm ** sharpness
 
             # Map to [-1, +1]
             dist_scaled = 2 * dist_shaped - 1
 
-            reward += dist_scaled # in [-1, +1]      
+            reward += 0.5 * dist_scaled # in [-0.5, +0.5]      
 
         # Reward or penalty depending on whether movement direction was visible
         # For each direction, so dense reward signal (low magnitude to avoid overpowering main rewards)
         if hasattr(self, "attempted_movement_direction"):
             direction = self.attempted_movement_direction
             if np.linalg.norm(direction) > 0:
-                if self.attacker.is_direction_visible(direction):
-                    reward += 0.05     # movement inside FOV is encouraged
-                else:
-                    reward -= 0.05      # movement outside FOV is discouraged
+                if self.attacker.is_direction_visible(direction) and self.ball.owner is self.attacker:
+                    reward += 0.05      # movement inside FOV is encouraged
+                #else:
+                    #reward -= 0.002      # movement outside FOV is discouraged
 
         # LOGGING: time-to-shot (distance / shot power)
         if self.is_shooting and self.last_shot_distance is not None and self.last_shot_power is not None:
@@ -393,10 +396,10 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         if self._t == self.max_steps - 1 or self._check_termination():
             if self.last_shot_start_bonus > 0:
                 # Episode ends with at least one shot attempted
-                reward += 6.0
+                reward += 3.0
             else:
                 # Episode ends without ever shooting
-                reward -= 7.5
+                reward -= 3.0
 
         self.last_reward_components = {
             "position": float(pos_reward),

@@ -37,15 +37,17 @@ SCENARIOS: dict[str, dict] = {
 
         # PPO hyperparameters
         "ppo": {
-            "learning_rate": 1e-4,
+            "learning_rate": 5e-4,
             "gamma": 0.99,
             "gae_lambda": 0.95,
 
-            "ent_coef": 0.01,
+            "ent_coef": 0.01,       # Less exploration, dense rewards
             "clip_range": 0.2,
 
-            "batch_size": 240,
-            "n_epochs": 4,
+            "batch_size": 480,      # 480 is a clean divisor of the rollout buffer (240 steps),
+                                    # ensuring SB3 can form full mini-batches without truncation
+                                    # and avoiding stability warnings
+            "n_epochs": 4,          # moderate epochs, rapid learning
 
             "seed": 42,
             "verbose": 0,
@@ -85,14 +87,14 @@ SCENARIOS: dict[str, dict] = {
 
         # PPO hyperparameters
         "ppo": {
-            "learning_rate": 7.5e-5,
+            "learning_rate": 3e-4,
             "gamma": 0.99,
             "gae_lambda": 0.95,
 
             "ent_coef": 0.02,    
             "clip_range": 0.2,
 
-            "batch_size": 120,   # 120 is a clean divisor of the rollout buffer (240 steps), 
+            "batch_size": 720,   # 720 is a clean divisor of the rollout buffer (240 steps), 
                                  # ensuring SB3 can form full mini-batches without truncation 
                                  # and avoiding stability warnings
 
@@ -133,14 +135,16 @@ SCENARIOS: dict[str, dict] = {
 
         # PPO hyperparameters
         "ppo": {
-            "learning_rate": 5e-5,    # low LR = stability for perceptual tasks
-            "gamma": 0.99,
-            "gae_lambda": 0.95,
+            "learning_rate": 2e-4,    # low LR = stability for perceptual tasks
+            "gamma": 0.995,
+            "gae_lambda": 0.97,
 
-            "ent_coef": 0.03,         # strong exploration
+            "ent_coef": 0.07,         # strong exploration
             "clip_range": 0.2,
 
-            "batch_size": 60,
+            "batch_size": 960,      # 960 is a clean divisor of the rollout buffer (240 steps),
+                                    # ensuring SB3 can form full mini-batches without truncation
+                                    # and avoiding stability warnings
             "n_epochs": 6,
 
             "seed": 42,

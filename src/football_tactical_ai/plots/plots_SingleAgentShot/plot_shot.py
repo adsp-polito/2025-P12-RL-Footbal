@@ -322,7 +322,7 @@ for fname in os.listdir(plot_folder):
     plot_shot_trajectories(
         json_path=json_path,
         save_dir=SAVE_ROOT,
-        title=f"Shot Scenario – {clean_name.upper()} Test Case"
+        title=f"Shot Scenario - {clean_name.upper()} Test Case"
     )
 
 # 3) All testcases combined

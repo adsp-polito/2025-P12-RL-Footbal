@@ -144,7 +144,7 @@ class BaseOffensiveScenario(gym.Env):
             time_per_step=self.time_per_step,
             x_range=field_width_m,
             y_range=field_height_m,
-            enable_fov=enable_fov  # Enable FOV for attacker AI
+            enable_fov=enable_fov  # Enable FOV for attacker 
         )
 
     def _apply_defender_ai(self) -> None:

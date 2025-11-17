@@ -136,7 +136,7 @@ def evaluate_single(scenario="move"):
         N = 20
 
         rewards = []
-        extra_metrics = [] if scenario == "shot" else None
+        extra_metrics = [] if scenario == "shot" or scenario == "view" else None
 
 
         # RUN THROUGH EPISODES
@@ -257,6 +257,6 @@ def evaluate_single(scenario="move"):
 
 # RUN DIRECTLY
 if __name__ == "__main__":
-    evaluate_single("move")
-    evaluate_single("shot")
-    #evaluate_single("view")
+    #evaluate_single("move")
+    #evaluate_single("shot")
+    evaluate_single("view")

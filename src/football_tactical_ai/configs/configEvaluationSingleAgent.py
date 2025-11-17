@@ -116,24 +116,24 @@ VIEW = {
 
     "test_cases": [
         {
-            "name": "center",
-            "attacker_start": (60, 40),
+            "name": "edgeBox",
+            "attacker_start": (88, 40),
             "defender_start": (100, 40),
         },
         {
             "name": "left",
-            "attacker_start": (55, 20),
-            "defender_start": (95, 30),
+            "attacker_start": (80, 25),
+            "defender_start": (98, 30),
         },
         {
             "name": "right",
-            "attacker_start": (55, 60),
-            "defender_start": (95, 50),
+            "attacker_start": (80, 55),
+            "defender_start": (98, 50),
         },
         {
-            "name": "diagonal",
-            "attacker_start": (50, 30),
-            "defender_start": (90, 50),
+            "name": "central",
+            "attacker_start": (70, 40),
+            "defender_start": (100, 40),
         },
     ],
 }
