@@ -256,41 +256,6 @@ def plot_all_testcases_single_pitch(folder, save_path):
 
 
 
-
-# 4) SHOT DISTANCE vs TIME TO SHOT
-def plot_shot_scatter(eval_json_path, save_path):
-    set_plot_style()
-
-    with open(eval_json_path) as f:
-        data = json.load(f)
-
-    time_s, dist_s = [], []
-
-    for v in data.values():
-        if "shot_metrics" not in v:
-            continue
-        for m in v["shot_metrics"]:
-            if m["valid_shot"]:
-                time_s.append(m["time_to_shot"])
-                dist_s.append(m["shot_distance"])
-
-    fig, ax = plt.subplots()
-    ax.scatter(time_s, dist_s, alpha=0.7, color="#009E73")
-
-    ax.set_title("Shot Distance vs Time to Shot", fontsize=15, fontweight="bold")
-    ax.set_xlabel("Time to Shot (seconds)")
-    ax.set_ylabel("Shot Distance (m)")
-
-    plt.tight_layout()
-    plt.savefig(save_path, dpi=500, bbox_inches="tight")
-    plt.close(fig)
-
-    print(f"[SAVED] {save_path}")
-
-
-
-
-
 # EXECUTION
 SAVE_ROOT = "src/football_tactical_ai/plots/plots_SingleAgentShot"
 os.makedirs(SAVE_ROOT, exist_ok=True)
@@ -329,10 +294,4 @@ for fname in os.listdir(plot_folder):
 plot_all_testcases_single_pitch(
     folder=plot_folder,
     save_path=f"{SAVE_ROOT}/SingleAgentShot_AllTestcases.png"
-)
-
-# 4) Distance vs time
-plot_shot_scatter(
-    eval_json_path="src/football_tactical_ai/evaluation/results/logs/shot/shot_evaluation.json",
-    save_path=f"{SAVE_ROOT}/Shot_Distance_vs_Time.png"
 )

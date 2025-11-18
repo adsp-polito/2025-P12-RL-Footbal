@@ -75,7 +75,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         # LOGGING METRICS FOR EVALUATION ONLY
         self.valid_shot = None
         self.shot_distance = None
-        self.shot_time = None
+        self.shot_step = None
         self.shot_angle = None
         self.shot_power = None
         self.reward_components = None
@@ -113,7 +113,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         # Reset logging metrics
         self.valid_shot = None
         self.shot_distance = None
-        self.shot_time = None
+        self.shot_step = None
         self.shot_angle = None
         self.shot_power = None
         self.reward_components = None
@@ -411,9 +411,9 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
             # LOGGING: TIME OF SHOT IN SECONDS
             if self.is_shooting:
-                self.shot_time = self._t / self.fps
+                self.shot_step = self._t
             else:
-                self.shot_time = None
+                self.shot_step = None
 
         # FINAL EPISODE BONUS / PENALTY
         terminated_now = self._check_termination()

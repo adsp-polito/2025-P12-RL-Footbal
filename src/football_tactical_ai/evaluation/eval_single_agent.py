@@ -184,7 +184,7 @@ def evaluate_single(scenario="move"):
                 extra_metrics.append({
                     "valid_shot": env.valid_shot,
                     "shot_distance": env.shot_distance,
-                    "shot_time": env.shot_time,
+                    "shot_step": env.shot_step,
                     "shot_angle": env.shot_angle,
                     "shot_power": env.shot_power,
                     "reward_components": env.reward_components,
@@ -195,7 +195,7 @@ def evaluate_single(scenario="move"):
                 extra_metrics.append({
                     "valid_shot": env.valid_shot,
                     "shot_distance": env.shot_distance,
-                    "shot_time": env.shot_time,
+                    "shot_step": env.shot_step,
                     "shot_angle": env.shot_angle,
                     "shot_power": env.shot_power,
                     "reward_components": env.reward_components,
