@@ -9,7 +9,6 @@
 ![RLlib](https://img.shields.io/badge/RLlib-Supported-orange)
 ![StableBaselines3](https://img.shields.io/badge/SB3-PPO-blue)
 ![Thesis](https://img.shields.io/badge/Academic-Thesis_Project-6f42c1)
-![PoliTo](https://img.shields.io/badge/Politecnico_di_Torino-DSE-blue)
 ![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-lightgrey)
 ![Football](https://img.shields.io/badge/Domain-Football_Analytics-brightgreen)
 ![RL](https://img.shields.io/badge/AI-Reinforcement_Learning-yellow)
@@ -55,9 +54,7 @@ These components are implemented in a modular fashion to support systematic expe
 
 ---
 
-## Installation & Quick Start
-
-Follow these steps to set up the environment and run your simulation
+## Installation
 
 ### 1. Clone the repository
 Clone the project and move into its directory:
@@ -74,16 +71,23 @@ Install the project using the `pyproject.toml` configuration:
 pip install -e .
 ```
 
-### 3. Test that installation works
+## Quick Start
+
+### 1. Test that installation works
 Run a simple single-agent test episode (movement scenario):
 
 ```
 python src/football_tactical_ai/env/test/testMove_SA.py
 ```
 
-You should see a rendered animation of the agent moving on the pitch.
+You should see a rendered animation of the agent moving on the pitch under:
 
-### 4. Train a model (example: Move scenario)
+```
+test/videotest/testMove_SA.mp4
+```
+
+
+### 2. Train a model (example: Move scenario)
 Launch the PPO training script:
 
 ```
@@ -96,7 +100,7 @@ Training outputs (videos, logs, models) will appear under:
 src/football_tactical_ai/env/training/
 ```
 
-### 5. Evaluate the trained agent
+### 3. Evaluate the trained agent
 After training, you can generate visualisations and metrics:
 
 ```
