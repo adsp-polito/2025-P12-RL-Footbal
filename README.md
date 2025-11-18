@@ -10,12 +10,9 @@
 ![StableBaselines3](https://img.shields.io/badge/SB3-PPO-blue)
 ![Thesis](https://img.shields.io/badge/Academic-Thesis_Project-6f42c1)
 ![PoliTo](https://img.shields.io/badge/Politecnico_di_Torino-DSE-blue)
-![Last Commit](https://img.shields.io/github/last-commit/Manuele23/Football-Tactical-AI)
-![Repo Size](https://img.shields.io/github/repo-size/Manuele23/Football-Tactical-AI)
 ![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-lightgrey)
 ![Football](https://img.shields.io/badge/Domain-Football_Analytics-brightgreen)
 ![RL](https://img.shields.io/badge/AI-Reinforcement_Learning-yellow)
-![Domain](https://img.shields.io/badge/Domain-Football_Analytics-brightgreen)
 
 
 > **Master’s Thesis Project — Politecnico di Torino**  
