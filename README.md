@@ -120,22 +120,22 @@ Below is a compact version of the repository structure, summarising the main mod
 ```
 FOOTBALL-Tactical-AI/
 │
+├── src/football_tactical_ai/
+│    ├── configs/                  # Config files (training, eval, pitch)
+│    ├── env/
+│    │   ├── objects/              # Ball, Pitch
+│    │   └── scenarios/            # Single & multi-agent environments
+│    ├── evaluation/           # Eval scripts + logs & videos
+│    ├── helpers/              # Utility functions
+│    ├── players/              # Player classes (ATT, DEF, GK)
+│    ├── plots/                # Plot scripts for evaluation results
+│    └── training/             # Training pipelines, renders, rewards
+│
 ├── pyproject.toml
 ├── README.md
-│
-└── src/football_tactical_ai/
-    ├── configs/                  # Config files (training, eval, pitch)
-    ├── env/
-    │   ├── objects/              # Ball, Pitch
-    │   ├── scenarios/            # Single & multi-agent environments
-    │   ├── evaluation/           # Eval scripts + logs & videos
-    │   ├── helpers/              # Utility functions
-    │   ├── players/              # Player classes (ATT, DEF, GK)
-    │   ├── plots/                # Plot scripts for results
-    │   └── training/             # Training pipelines, renders, rewards
-    │
-    ├── statsbomb360/             # StatsBomb analysis tools & role data
-    └── test/                     # Test scripts & demos
+├── statsbomb360/             # StatsBomb analysis tools & role data
+└── test/                     # Test scripts & demos
+
 ```
 
 ---
