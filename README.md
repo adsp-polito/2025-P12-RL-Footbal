@@ -145,7 +145,7 @@ FOOTBALL-Tactical-AI/
 This work is part of my Master’s Thesis in *Data Science and Engineering* at the **Politecnico di Torino**, supervised by  
 **Prof. Silvia Chiusano** and **MSc. Andrea Avignone**. The goal is to explore Reinforcement Learning techniques applied to football analytics and tactical modeling.
 
-## License
+## License
 
 This project is released under the **MIT License**, which allows unrestricted use, modification, and distribution of the code, provided that proper attribution to the original author is maintained.
 
