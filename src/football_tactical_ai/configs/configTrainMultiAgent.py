@@ -1,10 +1,12 @@
 """
-Multi-agent training settings.
+Multi-agent training settings for football tactical AI
+
 This configuration file defines how the multi-agent football environment
-is set up and how RLlib should train PPO agents in this scenario.
+is set up and how RLlib should train PPO agents in this scenario
 """
 
-from .configMultiAgentEnv import get_config  # Import helper to build environment configuration
+# Import helper to build environment configuration
+from .configMultiAgentEnv import get_config  
 
 # Dictionary to store different training scenarios
 SCENARIOS: dict[str, dict] = {}
@@ -27,32 +29,32 @@ multiagent_params = {
     "episodes": 3000,
 
     # Frequency of evaluation in episodes
-    "eval_every": 150,
+    "eval_every": 300,
 
-    # Rendering configuration (used in evaluation/visualization)
+    # Rendering configuration for training and evaluation
     "render": {
-        "show_grid": False,     # If True, draw spatial reward grid
-        "show_heatmap": False,  # If True, render reward heatmap
-        "show_rewards": False,  # If True, overlay numeric reward values
-        "full_pitch": True,     # If True, render full pitch instead of half
-        "show_fov": False,      # If True, display players' field of view
-        "show_names": True,     # If True, show agent IDs above players
+        "show_grid": False,     
+        "show_heatmap": False,  
+        "show_rewards": False,  
+        "full_pitch": True,     
+        "show_fov": False,      
+        "show_names": True,     
     },
 
     # Paths for saving models, renders, and plots
     "paths": {
-        "rewards_dir": "src/football_tactical_ai/training/plots/multiAgent",              # Directory for plots
-        "save_model_path": "src/football_tactical_ai/training/models/multiAgentModel",               # Checkpoint directory
-        "save_render_dir": "src/football_tactical_ai/training/renders/multiAgent",                   # Folder for rendered videos
-        "plot_path": "src/football_tactical_ai/training/plots/multiAgent/multiAgentRewards.png",   # Reward curve output
+        "rewards_dir": "src/football_tactical_ai/training/plots/multiAgent",              
+        "save_model_path": "src/football_tactical_ai/training/models/multiAgentModel",               
+        "save_render_dir": "src/football_tactical_ai/training/renders/multiAgent",                   
+        "plot_path": "src/football_tactical_ai/training/plots/multiAgent/multiAgentRewards.png",   
     },
 
     # Environment-specific settings for multi-agent scenario
+    # NOTE: increase defenders/GK here to test larger scenarios (e.g. 2v2, 3v3, 3v2+GK)
     "env_settings": {
         "n_attackers": 3,            # Number of attackers (Team A)
         "n_defenders": 0,            # Number of defenders (Team B)
         "include_goalkeeper": True,  # Whether to include a goalkeeper
-        # NOTE: increase defenders/GK here to test larger scenarios (e.g. 2v2, 3v3, 3v2+GK)
     },
 
     # RLlib PPO configuration parameters
@@ -60,53 +62,32 @@ multiagent_params = {
         "framework": "torch",  # Use PyTorch backend for PPO
 
         # Learning Rate Schedule
-        # The LR starts higher to encourage fast learning in early stages,
-        # then decays progressively to stabilize the policy
         "lr": [
-            [0,         2e-4],     # Initial exploration phase
-            [180_000,   1e-4],     # Gradual decay
+            [0,         2e-4],     
+            [180_000,   1e-4],     
             [360_000,   5e-5],
             [480_000, 2e-5],
             [720_000, 1e-5],
         ],
 
-        #"lr": 2e-4,  # Fixed learning rate
-        #"lr_schedule" : [
-        #    [0,         2e-4],     # Initial exploration phase
-        #    [180_000,   1e-4],     # Gradual decay
-        #    [360_000,   5e-5],
-        #    [480_000, 2e-5],
-        #    [720_000, 1e-5],    
-        #],
-
-
         # Core RL Parameters
-        "gamma": 0.95,          # Discount factor for future rewards → shorter horizon
-        "lambda": 0.97,         # GAE smoothing factor → balances bias vs. variance
+        "gamma": 0.95,          # Discount factor for future rewards
+        "lambda": 0.97,         # GAE parameter for advantage estimation
 
-        # Exploration and Stability
+        # Exploration coefficient schedule
         "entropy_coeff": [
-            [0,        0.1],    # Encourage exploration early on
-            [180_000,  0.075],     # Decay over time to focus on exploitation
+            [0,        0.1],    
+            [180_000,  0.075],     
             [360_000,  0.05],      
             [480_000,  0.025],
             [720_000,  0.001],
         ],
-
-        #"entropy_coeff": 0.01,  # Fixed entropy coefficient
-        #"entropy_coeff_schedule": [
-        #    [0,        0.1],    # Encourage exploration early on
-        #    [180_000,  0.075],     # Decay over time to focus on exploitation
-        #    [360_000,  0.05],      
-        #    [480_000,  0.025],
-        #    [720_000,  0.01],
-        #],
         
 
         "clip_param": 0.2,           # PPO clipping parameter for stable updates
-        "vf_clip_param": 20.0,       # Clipping for value function updates → avoids large jumps
-        "vf_loss_coeff": 1.5,        # Weight of value function loss → higher stabilizes training
-        "grad_clip": 1.0,            # Clipping for gradients → prevents exploding gradients
+        "vf_clip_param": 20.0,       # Value function clipping to stabilize training
+        "vf_loss_coeff": 1.5,        # Weight of value function loss in total loss
+        "grad_clip": 1.0,            # Gradient clipping to prevent exploding gradients
                 
 
         # Training Dynamics
@@ -117,7 +98,7 @@ multiagent_params = {
 
         # Parallelism
         # Each worker simulates multiple environments in parallel (if in local ==> 3 is ok)
-        "num_workers": 0, 
+        "num_workers": 3, 
         "num_envs_per_worker": 1,
 
         # Use GPUs if available (set to 0 if none available)
@@ -133,7 +114,7 @@ multiagent_params = {
 
 }
 
-# Build the full environment configuration (ensures consistency)
+# Build the full environment configuration
 multiagent_params["env_config"] = get_config(
     fps=multiagent_params["fps"],
     seconds=multiagent_params["seconds_per_episode"],

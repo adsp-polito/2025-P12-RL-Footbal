@@ -8,7 +8,6 @@ from football_tactical_ai.env.objects.pitch import Pitch
 
 
 # GLOBAL PLOTTING STYLE
-
 def set_plot_style():
     """Set a consistent plotting style for all figures"""
     mpl.rcParams['figure.figsize'] = (10, 5)
@@ -27,7 +26,7 @@ def set_plot_style():
 
 
 # 1) TRAINING REWARD CURVE
-def plot_training_rewards(json_path, window=300, save_name="reward_curve.png"):
+def plot_training_rewards(json_path, window=200, save_name="reward_curve.png"):
     """
     Generate and save a smoothed reward curve from the training log
     The JSON file must contain entries of the form:
@@ -159,7 +158,6 @@ def plot_attacker_trajectories(
     ax.set_title(title, fontsize=16, fontweight="bold")
     ax.legend(frameon=True, loc="upper right")
        
-
     # Save figure
     case_name = os.path.splitext(os.path.basename(json_path))[0]
     out_path = os.path.join(save_dir, f"{case_name}.png")
@@ -320,7 +318,7 @@ os.makedirs(SAVE_ROOT, exist_ok=True)
 # 1) Reward curve
 plot_training_rewards(
     json_path="src/football_tactical_ai/training/rewards/singleAgentMove/rewards.json",
-    window=300,
+    window=200,
     save_name=f"{SAVE_ROOT}/SingleAgentMove_RewardCurve.png"
 )
 

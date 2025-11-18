@@ -27,7 +27,7 @@ def set_plot_style():
 
 
 # 1) TRAINING REWARD CURVE
-def plot_training_rewards(json_path, window=300, save_name="Shot_RewardCurve.png"):
+def plot_training_rewards(json_path, window=200, save_name="Shot_RewardCurve.png"):
     set_plot_style()
 
     with open(json_path, "r") as f:

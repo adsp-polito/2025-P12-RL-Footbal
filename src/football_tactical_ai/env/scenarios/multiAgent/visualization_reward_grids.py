@@ -6,7 +6,7 @@ from football_tactical_ai.env.scenarios.multiAgent.rewardGrids import (
 
 def plot_grids(selected_roles):
     """
-    Plot reward grids for up to 2 roles, each shown for Team A and Team B.
+    Plot reward grids for up to 2 roles, each shown for Team A and Team B
     Args:
         selected_roles (list[str]): roles to visualize, e.g. ["LW"] or ["LCB", "GK"]
     """

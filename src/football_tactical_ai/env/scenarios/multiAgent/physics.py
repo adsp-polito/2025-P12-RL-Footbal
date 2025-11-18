@@ -15,14 +15,12 @@ def update_ball_state(ball: Ball,
                       pass_context: Dict[str, bool] = None,
                       collision: bool = False):
     """
-    Update the ball's position based on possession and action.
-    Handles dribbling, passing, shooting, free movement and post collisions.
+    Update the ball's position based on possession and action
+    Handles dribbling, passing, shooting, free movement and post collisions
     """
-
 
     dribble_offset = 0.01  # distance in front of the owner when dribbling
     owner_id = ball.get_owner()
-
 
     # 1. Shot: ball is released with velocity proportional to shot power
     if (shot_context and 
@@ -111,9 +109,9 @@ def update_ball_state(ball: Ball,
 def _handle_post_collision(ball: Ball, pitch: Pitch, restitution: float = 0.8, prob_goal: float = 0.5) -> bool:
     """
     Simplified ball-post collision:
-    - On collision, ball can either bounce back or enter as a post-goal
-    - Bounce back: random angle towards the field
-    - Post-goal: redirected inside the net
+        - On collision, ball can either bounce back or enter as a post-goal
+        - Bounce back: random angle towards the field
+        - Post-goal: redirected inside the net
     """
 
     bx, by = denormalize(*ball.get_position())

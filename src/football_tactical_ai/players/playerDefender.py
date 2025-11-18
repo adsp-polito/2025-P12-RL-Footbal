@@ -7,7 +7,7 @@ from typing import Any
 class PlayerDefender(BasePlayer):
     
     def __init__(self,
-                 tackling: float = 0.5,
+                 tackling: float = 0.15,
                  shooting: float = 0.5,
                  precision: float = 0.5,
                  speed: float = 0.5,
@@ -18,19 +18,19 @@ class PlayerDefender(BasePlayer):
                  team: str = "B",
                  **kwargs: Any):  
         """
-        Initialize a defending player with technical and physical attributes.
+        Initialize a defending player with technical and physical attributes
         Args:
             tackling (float): Tackling skill [0, 1]
             shooting (float): Ability to kick the ball [0, 1]
             precision (float): Precision of kicks [0, 1]
             speed (float): Current speed factor [0, 1]
-            fov_angle (float): Field of view angle as a fraction of max angle [0, 1].
-            fov_range (float): Field of view range as a fraction of max range [0, 1].
-            role (str): Player role, default is "DEF".
-            agent_id (str): Unique identifier for the defender.
-            team (str): Team identifier, default is "B".
+            fov_angle (float): Field of view angle as a fraction of max angle [0, 1]
+            fov_range (float): Field of view range as a fraction of max range [0, 1]
+            role (str): Player role, default is "DEF"
+            agent_id (str): Unique identifier for the defender
+            team (str): Team identifier, default is "B"
             
-        Physical maxima are inherited from BasePlayer, but can be overridden.
+        Physical maxima are inherited from BasePlayer, but can be overridden
         """
         super().__init__(agent_id=agent_id, team=team, role=role, **kwargs)
 

@@ -1,7 +1,7 @@
 import numpy as np
 from gymnasium import spaces
 from football_tactical_ai.env.scenarios.singleAgent.base_offensive import BaseOffensiveScenario
-from football_tactical_ai.helpers.helperFunctions import normalize
+from football_tactical_ai.helpers.helperFunctions import normalize, denormalize
 
 class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
     """
@@ -191,109 +191,123 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
 
         return self._get_obs(), reward, terminated, truncated, {}
         
-
     
     def compute_reward(self, shot_flag=None, shot_quality=0.0, movement=None):
+        """
+        Compute the reward for the current step.
+        Args:
+            shot_flag (bool): Whether a shot was attempted this step.
+            shot_quality (float): Quality of the shot attempted (if any).
+            movement (np.ndarray): 2D movement vector of the attacker.
+        Returns:
+            reward (float): Computed reward for the current step.
+        """
 
         reward = 0.0
 
-        # Small constant penalty for encouraging fast decision-making
+        # Small constant time-penalty for encouraging fast decision-making
         reward -= 0.01
 
-        # REAL POSITIONS IN METERS
+        # REAL POSITIONS IN METERS (attacker + ball)
         att_x, att_y = self.attacker.get_position()
-        x_m = att_x * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
-        y_m = att_y * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
+        x_m, y_m = denormalize(att_x, att_y)
+
 
         ball_x, ball_y = self.ball.position
-        bx_m = ball_x * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
-        by_m = ball_y * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
+        bx_m, by_m = denormalize(ball_x, ball_y)
 
         # BASE POSITIONAL REWARD (scaled down)
+        # Encourages attacker to get closer to shooting area without dominating reward
         pos_reward = self._get_position_reward(x_m, y_m)
         reward += 0.5 * pos_reward
 
-        # READINESS REWARD → encourages moving toward the goal before shooting
+        # READINESS REWARD
+        # Encourages moving TOWARD a better shooting position before shooting
+        # ONLY applied when attacker has possession
         vec_to_goal = np.array([self.goal_x - x_m, self.goal_y - y_m])
         vec_to_goal /= (np.linalg.norm(vec_to_goal) + 1e-6)
 
         movement_norm = movement / (np.linalg.norm(movement) + 1e-6)
+        readiness = float(np.dot(movement_norm, vec_to_goal))   # ∈ [-1, +1]
 
-        readiness = np.dot(movement_norm, vec_to_goal)   # [-1,+1]
-
-        reward += 0.05 * readiness # in [-0.05, +0.05]
+        if self.ball.owner is self.attacker:
+            reward += 0.05 * readiness
 
         # BONUS FOR GOAL
         if self._is_goal(bx_m, by_m):
-            reward += 7.5
+            reward += 15.0          # large reward for scoring
 
-        # PENALTY FOR POSSESSION LOSS
-        if self.possession_lost_this_step:
-            reward -= 2.5
+        # PENALTY FOR POSSESSION LOSS
+        if self.possession_lost:
+            reward -= 3.0
 
-        # PENALTY FOR OUT OF BOUNDS
+        # PENALTY FOR OUT OF BOUNDS (ball exits field)
         if self._is_ball_completely_out(bx_m, by_m):
-            reward -= 2.5
+            reward -= 3.0
 
-        # INVALID SHOT ATTEMPT
+        # INVALID SHOT ATTEMPT (trying to shoot without the ball)
         if shot_flag and self.ball.owner is not self.attacker:
             reward -= 0.25
 
-        # START OF SHOT
+        # START OF SHOT
+        # This block runs ONLY on the first frame of the shot
+        # shot_just_started is reset in _update_ball_position().
         if self.is_shooting and self.shot_just_started:
-            self.shot_just_started = False
 
-            # SHOT QUALITY REWARD
-            reward += shot_quality
+            # SHOT QUALITY REWARD
+            reward += shot_quality   # stronger shaping, always positive
 
-            # reward for initiating the shot
+            # Reward for initiating the shot (motivate shooting)
             self.last_shot_start_bonus = 0.3
             reward += self.last_shot_start_bonus
 
-            # SHOT ALIGNMENT
-            # Alignment reward
+            # SOFT ALIGNMENT REWARD
+            # Encourages well-oriented shots without punishing exploration.
+            # ∈ [-1, +1]
             goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m])
-            norm = np.linalg.norm(goal_dir)
-            if norm > 1e-6:
-                goal_dir /= norm
+            gn = np.linalg.norm(goal_dir)
+            if gn > 1e-6:
+                goal_dir /= gn
             else:
                 goal_dir = np.array([1.0, 0.0])
 
-            shot_dir = self.shot_direction if self.shot_direction is not None else goal_dir
+            shot_dir = (
+                self.shot_direction
+                if self.shot_direction is not None
+                else goal_dir
+            )
+
             alignment = float(np.clip(np.dot(shot_dir, goal_dir), -1, 1))
 
-            # Non-linear shaping
-            sharpness = 4
-            alignment_shaped = np.sign(alignment) * (abs(alignment) ** sharpness)
+            # SOFT alignment reward: does not discourage shooting
+            # Strong bonus if >0.7, small penalty only if really terrible
+            if alignment > 0.7:
+                reward += 0.4
+            elif alignment > 0.4:
+                reward += 0.1
+            elif alignment < 0.1:
+                reward -= 0.2  # soft penalty
 
-            reward += alignment_shaped  # in [-1, +1]
-
-            # penalty for very poor alignment
-            if alignment < 0.5:
-                reward -= 1.0
-
-            # DISTANCE TO GOAL REWARD
+            # DISTANCE TO GOAL REWARD (soft)
+            # Encourages optimal shot distance without penalizing too early
             dist = np.linalg.norm([self.goal_x - x_m, self.goal_y - y_m])
             max_dist = np.linalg.norm([
                 self.pitch.x_max - self.pitch.x_min,
                 0.5 * (self.pitch.y_max - self.pitch.y_min),
             ])
 
-            # Normalized distance ∈ [0,1], 1 = near goal
-            dist_norm = 1 - dist / max_dist
+            dist_norm = 1 - dist / max_dist      # ∈ [0,1]
             dist_norm = np.clip(dist_norm, 0.0, 1.0)
 
-            # Exponential shaping
-            sharpness = 4
-            dist_shaped = dist_norm ** sharpness
+            # Very soft shaping to avoid dominating the reward
+            reward += 0.3 * dist_norm   # ∈ [0, 0.3]
 
-            # Map to [-1, +1]
-            dist_scaled = 2 * dist_shaped - 1
-
-            reward += dist_scaled # in [-1, +1]      
-
-        # LOGGING: LAST TIME TO SHOT
-        if self.is_shooting and self.last_shot_distance is not None and self.last_shot_power is not None:
+        # LOGGING: LAST TIME TO SHOT
+        if (
+            self.is_shooting
+            and self.last_shot_distance is not None
+            and self.last_shot_power is not None
+        ):
             if self.last_shot_power > 0:
                 self.last_time_to_shot = self.last_shot_distance / self.last_shot_power
             else:
@@ -301,24 +315,25 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         else:
             self.last_time_to_shot = None
 
-        # FINAL EPISODE BONUS: reward if the episode ended after taking at least one shot
-        if self._t == self.max_steps - 1 or self._check_termination():
+        # FINAL EPISODE BONUS / PENALTY
+        # Rewards taking at least one shot and penalizes episodes with no shots.
+        terminated_now = self._check_termination()
+        if self._t == self.max_steps - 1 or terminated_now:
             if self.last_shot_start_bonus > 0:
-                # Episode ends with at least one shot attempted
-                reward += 5.0
+                reward += 5.0       # Episode ends: at least one shot taken
             else:
-                # Episode ends without ever shooting
-                reward -= 7.0
+                reward -= 5.0       # Episode ends: no shots taken
 
         # LOGGING: LAST REWARD COMPONENTS
         self.last_reward_components = {
             "position": float(pos_reward),
             "shot_start_bonus": float(self.last_shot_start_bonus),
-            "goal": 7.5 if self._is_goal(bx_m, by_m) else 0.0,
-            "possession_lost": -2.5 if self._check_possession_loss() else 0.0,
+            "goal": 15.0 if self._is_goal(bx_m, by_m) else 0.0,
+            "possession_lost": -3.0 if self._check_possession_loss() else 0.0,
         }
 
         return reward
+
 
 
     def _update_ball_position(self, action=None):
@@ -435,9 +450,9 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         possession status, shooting flag, and shot progress.
         """
         # Normalize positions to [0, 1]
-        att_x, att_y = normalize(*self.attacker.get_position())
-        def_x, def_y = normalize(*self.defender.get_position())
-        ball_x, ball_y = normalize(*self.ball.position)
+        att_x, att_y = self.attacker.get_position()
+        def_x, def_y = self.defender.get_position()
+        ball_x, ball_y = self.ball.get_position()
 
         # Possession status: 1 if attacker has possession, 0 otherwise
         possession = 1.0 if self.ball.owner is self.attacker else 0.0

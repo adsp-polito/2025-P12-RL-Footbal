@@ -28,7 +28,6 @@ def fixed_env(env_class, pitch, attacker_m, defender_m, fps, max_steps):
     env.attacker_traj = []
     env.ball_traj = []
 
-
     # RESET WRAPPER
     original_reset = env.reset
 
@@ -252,11 +251,8 @@ def evaluate_single(scenario="move"):
 
     return summary_eval
 
-
-
-
 # RUN DIRECTLY
 if __name__ == "__main__":
-    #evaluate_single("move")
+    evaluate_single("move")
     #evaluate_single("shot")
-    evaluate_single("view")
+    #evaluate_single("view")

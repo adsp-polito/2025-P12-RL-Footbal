@@ -5,8 +5,8 @@ from matplotlib.patches import Circle, Arc, Rectangle
 import numpy as np
 
 
-# GRID INFORMATION (USED FOR RL)
-# The pitch is overlaid with a 1x1m (or 5x5m) cell grid for RL training, visual debugging, and reward shaping.
+# GRID INFORMATION
+# The pitch is overlaid with a 1x1m (or 5x5m) cell grid for RL training and reward shaping
 
 # ==> Full pitch grid:
 #       - Area: 130m (x) × 90m (y) = full pitch with 5m margin on all sides
@@ -23,38 +23,36 @@ import numpy as np
 #           - Total cells: 14 × 18 = 252
 
 # Z-ORDER LAYERS EXPLANATION
-# Z-order defines the drawing priority (higher values appear on top).
+# Z-order defines the drawing priority: higher values appear on top
 # The following convention is used to control rendering layers:
 
-# zorder = 0 ==> Field background stripes (base layer)
+#   - zorder = 0 ==> Field background stripes (base layer)
 
-# zorder = 1 ==> Debug grid lines (optional, for RL debugging)
+#   - zorder = 1 ==> Debug grid lines (optional, for RL debugging)
 
-# zorder = 2 ==> Static pitch elements:
+#   - zorder = 2 ==> Static pitch elements:
 #                   - Field boundaries
 #                   - Penalty areas and goal areas
 #                   - Center line and circle
 #                   - Penalty arcs and corner arcs
 #                   - Text labels for cell indices (debugging)
-#                These are usually drawn without explicitly setting zorder, as matplotlib defaults place them
+#                These are usually drawn without explicitly setting zorder, 
+#                as matplotlib defaults place them
 
-# zorder = 3 ==> Dynamic elements (always drawn on top):
-#              - Attacking player
-#              - Defenders
-#              - Ball
-
-# Most matplotlib drawing functions (e.g., ax.plot, ax.add_patch) default to zorder=2.
-
+#   - zorder = 3 ==> Dynamic elements (always drawn on top):
+#                   - Attacking player
+#                   - Defenders
+#                   - Ball
 
 class Pitch:
     """
-    Represents a football pitch with defined dimensions, margins, and grid discretization.
-    Provides methods to draw the full pitch, half pitch, and various pitch elements.
-    Also includes methods for rendering heatmaps, rewards, and grid overlays.
+    Represents a football pitch with defined dimensions, margins, and grid discretization
+    Provides methods to draw the full pitch, half pitch, and various pitch elements
+    Also includes methods for rendering heatmaps, rewards, and grid overlays
     """
 
     def __init__(self, *, margin: float | None = None, cell_size: float | None = None):
-        # Base dimensions (immutable defaults)
+        # Base dimensions from settings
         self.width  = PS.FIELD_WIDTH
         self.height = PS.FIELD_HEIGHT
 
@@ -75,7 +73,7 @@ class Pitch:
         # Visual stripes
         self.stripe_width = PS.STRIPE_WIDTH
 
-        # Area dimensions (constants from settings)
+        # Area dimensions (from settings)
         self.penalty_depth        = PS.PENALTY_DEPTH
         self.penalty_height       = PS.PENALTY_HEIGHT
         self.goal_area_depth      = PS.GOAL_AREA_DEPTH
@@ -86,23 +84,28 @@ class Pitch:
         self.goal_width           = PS.GOAL_WIDTH
         self.goal_depth           = PS.GOAL_DEPTH
 
-    def draw_pitch(self, ax=None, field_color='green', stripes=False,
-               show_grid=False, show_heatmap=False, show_rewards=False,
-               reward_grid=None):
+    def draw_pitch(self, 
+                   ax=None, 
+                   field_color='green', 
+                   stripes=False,
+                   show_grid=False, 
+                   show_heatmap=False, 
+                   show_rewards=False,
+                   reward_grid=None):
         """
-        Draw the full football pitch with optional stripes, grid, heatmap, and rewards.
+        Draw the full football pitch with optional stripes, grid, heatmap, and rewards
 
         Parameters:
-            ax (matplotlib.axes.Axes, optional): Axis to draw the pitch on.
-            field_color (str): Background color ('green' for default).
-            stripes (bool): Whether to draw alternating mowing stripes.
-            show_grid (bool): Whether to show reward shaping grid lines.
-            show_heatmap (bool): Whether to fill cells with colors based on reward.
-            show_rewards (bool): Whether to write reward numbers in the center of each cell.
-            reward_grid (np.ndarray, optional): 2D array with reward values for heatmap.
+            ax (matplotlib.axes.Axes, optional): Axis to draw the pitch on
+            field_color (str): Background color ('green' for default)
+            stripes (bool): Whether to draw alternating mowing stripes
+            show_grid (bool): Whether to show reward shaping grid lines
+            show_heatmap (bool): Whether to fill cells with colors based on reward
+            show_rewards (bool): Whether to write reward numbers in the center of each cell
+            reward_grid (np.ndarray, optional): 2D array with reward values for heatmap
 
         Returns:
-            tuple: (figure, axis) with the completed drawing.
+            tuple: (figure, axis) with the completed drawing
         """
 
         # Create a new figure and axis if not provided
@@ -123,7 +126,6 @@ class Pitch:
 
         if show_grid:
             self._draw_grid(ax)
-
         
         # Set axis limits and aspect ratio
         ax.set_xlim(self.x_min, self.x_max)
@@ -134,24 +136,29 @@ class Pitch:
 
         return fig, ax
 
-    def draw_half_pitch(self, ax=None, field_color='green', stripes=False,
-                    show_grid=False, show_heatmap=False, show_rewards=False,
-                    reward_grid=None):
+    def draw_half_pitch(self, 
+                        ax=None, 
+                        field_color='green',
+                        stripes=False,
+                        show_grid=False, 
+                        show_heatmap=False, 
+                        show_rewards=False,
+                        reward_grid=None):
         """
-        Draw only the offensive half of the football pitch with optional stripes, grid, heatmap, and reward annotations.
+        Draw only the offensive half of the football pitch with optional stripes, 
+        grid, heatmap, and rewards
 
         Parameters:
-            ax (matplotlib.axes.Axes, optional): Axis to draw the pitch on.
-                If None, a new figure and axis will be created.
-            field_color (str): Background color of the pitch ('green' by default).
-            stripes (bool): Whether to add alternating mowing stripes for visual realism.
-            show_grid (bool): Whether to overlay the RL reward grid on the half-pitch.
-            show_heatmap (bool): Whether to fill cells with colors based on reward.
-            show_rewards (bool): Whether to annotate reward numbers inside the cells.
-            reward_grid (np.ndarray, optional): 2D array with reward values for heatmap.
+            ax (matplotlib.axes.Axes, optional): Axis to draw the pitch on
+            field_color (str): Background color ('green' for default)
+            stripes (bool): Whether to draw alternating mowing stripes
+            show_grid (bool): Whether to show reward shaping grid lines
+            show_heatmap (bool): Whether to fill cells with colors based on reward
+            show_rewards (bool): Whether to write reward numbers in the center of each cell
+            reward_grid (np.ndarray, optional): 2D array with reward values for heatmap
 
         Returns:
-            tuple: (figure, axis) containing the rendered matplotlib figure and axis.
+            tuple: (figure, axis) containing the rendered matplotlib figure and axis
         """
 
         # Create a new figure and axis if none provided by the user
@@ -159,7 +166,7 @@ class Pitch:
         if ax is None:
             fig, ax = plt.subplots(figsize=(6, 8))
 
-        # Draw pitch background and static elements (lines, goals, etc.)
+        # Draw pitch background and static elements for half pitch
         self._draw_background(ax, field_color, stripes)
         self._draw_half_pitch_elements(ax)
 
@@ -184,17 +191,13 @@ class Pitch:
 
 
 
+
     def _draw_background(self, ax, field_color, stripes):
         """
-        Draw the pitch background color and optional mowing stripes.
+        Draw the pitch background color and optional mowing stripes
 
-        This method sets the background color of the pitch and optionally 
-        adds alternating mowing stripes for enhanced visual realism.
-
-        Parameters:
-            ax (matplotlib.axes.Axes): Matplotlib axis to draw on.
-            field_color (str): Background color of the pitch ('green' for standard).
-            stripes (bool): Whether to add alternating mowing stripes to the pitch.
+        This method sets the background color of the pitch and 
+        optionally adds alternating mowing stripes
         """
 
         # Set the background color
@@ -213,13 +216,10 @@ class Pitch:
         Draw all static pitch elements: boundaries, center line and circle, 
         penalty areas, goals, and corner arcs.
 
-        This method is responsible for rendering all the fixed components of the 
-        football field, following standard pitch markings.
-        
-        Parameters:
-            ax (matplotlib.axes.Axes): Matplotlib axis to draw on.
+        This method is responsible for rendering all the 
+        fixed components of the football field
         """
-
+        
         # Draw the field boundaries (outer rectangle)
         lc = 'whitesmoke'
         ax.plot([0, 0], [0, self.height], color='white', linewidth=3)
@@ -231,7 +231,8 @@ class Pitch:
         ax.plot([self.width // 2, self.width // 2], [0, self.height], color=lc, linewidth=2, zorder=2)
 
         # Draw the center circle
-        ax.add_patch(Circle((self.width // 2, self.center_y), self.center_circle_radius, color=lc, fill=False, linewidth=2, zorder=2))
+        ax.add_patch(Circle((self.width // 2, self.center_y), self.center_circle_radius, color=lc, 
+                             fill=False, linewidth=2, zorder=2))
 
         # Draw the center spot
         ax.plot([self.width // 2], [self.center_y], marker='o', markersize=5, color=lc, zorder=2)
@@ -250,13 +251,10 @@ class Pitch:
 
     def _draw_half_pitch_elements(self, ax):
         """
-        Draw the static field elements for the offensive half only.
+        Draw the static field elements for the offensive half only
 
         This method draws all the standard pitch markings (boundaries, center line, goals, etc.)
-        but limits the axis to the offensive half of the field for focused visualization.
-
-        Parameters:
-            ax (matplotlib.axes.Axes): Matplotlib axis to draw on.
+        but limits the axis to the offensive half of the field
         """
 
         # Draw the full field static elements (center line, penalty areas, goals, etc.)
@@ -265,15 +263,9 @@ class Pitch:
         # Limit the view to the offensive half of the field
         ax.set_xlim(self.width / 2, self.x_max)
 
-
     def _draw_penalty_area(self, ax, side, lc):
         """
-        Draw the penalty area, goal area, penalty spot, and penalty arc for the given side.
-
-        Parameters:
-            ax (matplotlib.axes.Axes): Matplotlib axis to draw on.
-            side (str): 'left' or 'right' side of the field.
-            lc (str): Line color for the drawing elements.
+        Draw the penalty area, goal area, penalty spot, and penalty arc for the given side
         """
         # Determine direction and x-coordinates based on side
         direction = 1 if side == 'right' else -1
@@ -304,18 +296,14 @@ class Pitch:
         # Draw penalty arc
         arc_center_x = penalty_spot_x - 1.8 if side == 'right' else penalty_spot_x + 1.8
         arc_angle = 180 if side == 'right' else 0
-        arc = Arc((arc_center_x, self.center_y), 20, 20, angle=arc_angle, theta1=301, theta2=59, color=lc, linewidth=2, zorder=2)
+        arc = Arc((arc_center_x, self.center_y), 20, 20, angle=arc_angle, theta1=301, 
+                  theta2=59, color=lc, linewidth=2, zorder=2)
         ax.add_patch(arc)
 
 
     def _draw_goal(self, ax, side, lc):
         """
-        Draw the goal on the specified side.
-
-        Parameters:
-            ax (matplotlib.axes.Axes): Matplotlib axis to draw on.
-            side (str): 'left' or 'right' side of the field.
-            lc (str): Line color for the goal.
+        Draw the goal on the specified side
         """
         # Position and direction of the goal rectangle
         x_goal = self.width if side == 'right' else 0
@@ -335,22 +323,26 @@ class Pitch:
 
     def _draw_grid(self, ax, half=False):
         """
-        Draw the reward shaping grid.
+        Draw the reward shaping grid overlay on the pitch
         - Full pitch if half=False
         - Only offensive half if half=True
         """
 
+        # Determine grid drawing range based on half-pitch flag
         if half:
             i_start = self.num_cells_x // 2
             i_end = self.num_cells_x
             x_start = self.half_field_x
             x_end = self.x_max
+
+        # Full pitch
         else:
             i_start = 0
             i_end = self.num_cells_x
             x_start = self.x_min
             x_end = self.x_max
 
+        # Draw vertical and horizontal grid lines
         for i in range(i_start, i_end):
             for j in range(self.num_cells_y):
                 x0 = self.x_min + i * self.cell_size
@@ -375,7 +367,7 @@ class Pitch:
     def _draw_heatmap(self, ax, reward_grid, show_grid=False, half=False):
         """
         Draw a heatmap of rewards over the pitch using imshow, with the same
-        color normalization logic as the rectangle-based version.
+        color normalization logic as the rectangle-based version
         """
 
         # Get global min and max values for the reward grid
@@ -438,12 +430,7 @@ class Pitch:
 
     def _draw_rewards(self, ax, reward_grid, half=False):
         """
-        Draw numeric reward values inside each cell of the reward grid.
-
-        Parameters:
-            ax (matplotlib.axes.Axes): Matplotlib axis to draw on.
-            reward_grid (2D np.array): Grid of reward values.
-            half (bool): If True, draw only the offensive half of the pitch.
+        Draw numeric reward values inside each cell of the reward grid
         """
         for i in range(self.num_cells_x):
             for j in range(self.num_cells_y):
@@ -454,6 +441,7 @@ class Pitch:
                 if half and x0 < self.half_field_x:
                     continue
 
+                # Get reward value and draw text
                 reward = reward_grid[i, j]
                 ax.text(
                     x0 + self.cell_size / 2,

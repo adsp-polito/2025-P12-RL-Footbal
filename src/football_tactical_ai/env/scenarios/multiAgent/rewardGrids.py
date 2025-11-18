@@ -12,13 +12,8 @@ def build_attacker_grid(pitch: Pitch,
                         focus_sharpness: float = 2.5
                     ) -> np.ndarray:
     """
-    Build the spatial reward grid for attacking players (role-dependent)
-
-    PURPOSE:
-    - Encourage offensive play in the opponent's half (along X-axis)
-    - Provide role-specific hotspots
-    - Penalize deviation from vertical alignment (Y-axis balance)
-    - Mirror logic for opposite attacking directions
+    Build the role-dependent spatial reward grid for attacking players 
+    (LW, RW, CF, LCF, RCF, SS) or generic attackers (ATT)
 
     PARAMETERS:
         pitch (Pitch): pitch geometry with grid parameters
@@ -58,9 +53,6 @@ def build_attacker_grid(pitch: Pitch,
     else:
         raise ValueError(f"Unknown team: {team}")
 
-    # FIXED PARAMETERS FOR Y-AXIS PENALIZATION (center alignment)
-    y_center_penalty = 0.3  # fixed intensity for deviation from center
-
     # BUILD GRID VALUES
     for i in range(pitch.num_cells_x):
         for j in range(pitch.num_cells_y):
@@ -91,15 +83,33 @@ def build_attacker_grid(pitch: Pitch,
                 score = np.exp(-focus_sharpness * dist)
 
             else:
-                # GENERIC ATTACKER BEHAVIOR (fallback)
-                # Reward progress along X (towards attacking goal)
-                x_reward = x_norm
+                # GENERIC ATTACKER BEHAVIOR → ELLIPTICAL REWARD
 
-                # Penalize excessive deviation from central Y area
-                y_penalty = y_center_penalty * abs(y_norm - 0.5)
+                # Reference point to start (in meters)
+                # Attacking right
+                if team == "A":   
+                    gx = pitch.width - 11.0         # slightly before goal line (penalty spot is the reference)
+                    gy = pitch.center_y
+                
+                # Attacking left
+                else:             
+                    gx = pitch.x_min + 11.0         # slightly after goal line (penalty spot is the reference)
+                    gy = pitch.center_y
 
-                # Combine and rescale into [0, 1]
-                score = np.clip(x_reward - y_penalty, 0, 1)
+                # Ellipse radii (tunable)
+                # a = horizontal spread
+                # b = vertical tightness (smaller → stronger central bias)
+                a = 50.0
+                b = 50.0
+
+                # Elliptical distance to goal center
+                dx = cell_x - gx
+                dy = cell_y - gy
+
+                dist_ell = np.sqrt((dx*dx) / (a*a) + (dy*dy) / (b*b))
+
+                # Elliptical Gaussian score ∈ (0,1]
+                score = np.exp(-(dist_ell**2))
 
             # MAP SCORE INTO [min_reward, max_reward]
             grid[i, j] = min_reward + (max_reward - min_reward) * score
@@ -116,15 +126,8 @@ def build_defender_grid(pitch: Pitch,
                         focus_sharpness: float = 4.5
                     ) -> np.ndarray:
     """
-    Build the spatial reward grid for defensive players (LCB, RCB, CB)
-    without vertical alignment or depth penalties.
-
-    PURPOSE:
-    - Encourage defenders to remain close to their defensive role hotspot.
-    - Maintain tactical compactness near the penalty area.
-    - Mirror logic for both teams: A defends LEFT, B defends RIGHT.
-    - Simplified version: no explicit vertical or depth penalties,
-      only exponential decay around the ideal role zone.
+    Build the spatial reward grid for defensive players 
+    (LCB, RCB, CB) or generic defenders (DEF)
 
     PARAMETERS:
         pitch (Pitch): pitch geometry and discretization settings
@@ -214,14 +217,6 @@ def build_goalkeeper_grid(pitch: Pitch,
                         ) -> np.ndarray:
     """
     Build the spatial reward grid for goalkeepers (team-aware)
-
-    PURPOSE:
-    - Encourage the goalkeeper to remain within or near the goal area
-    - Assign full reward inside the 6-yard box (own goal area)
-    - Gradually decay the reward as distance from the goal area increases
-      allowing realistic, small lateral or forward movements
-    - Penalize positions that are too far from the goal or outside the field
-    - Reward values are clamped within [min_reward, max_reward]
 
     PARAMETERS:
         pitch (Pitch): pitch geometry and discretization settings

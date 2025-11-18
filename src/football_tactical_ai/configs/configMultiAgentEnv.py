@@ -1,10 +1,8 @@
 """
-multiAgentEnvConfig.py
-
-Default configuration for multi-agent football environment scenarios.
+Default configuration for Multi-Agent football environment scenarios
 
 This module provides a function to generate the configuration dictionary
-for any training or testing setup, with override options for key parameters.
+for any Multi-Agent setup, with override options for key parameters
 """
 
 def get_config(
@@ -15,15 +13,14 @@ def get_config(
     include_goalkeeper: bool = True,
 ) -> dict:
     """
-    Return a fully constructed configuration dictionary for the multi-agent football environment.
+    Return a fully constructed configuration dictionary for the multi-agent football environment
 
     Args:
-        fps (int): Simulation frame rate (frames per second).
-        seconds (int): Episode duration in seconds.
-        n_attackers (int): Number of attacking agents.
-        n_defenders (int): Number of defending agents.
-        include_goalkeeper (bool): Whether to include a goalkeeper.
-
+        fps (int): Simulation frame rate (frames per second)
+        seconds (int): Episode duration in seconds
+        n_attackers (int): Number of attacking agents
+        n_defenders (int): Number of defending agents
+        include_goalkeeper (bool): Whether to include a goalkeeper in the defending team
     Returns:
         dict: Complete environment configuration.
     """

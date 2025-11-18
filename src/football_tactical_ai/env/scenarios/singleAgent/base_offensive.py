@@ -1,16 +1,14 @@
 """
 base_offensive.py
 
-Shared logic for every SINGLE-AGENT offensive scenario (Move, Shot, View …).
-
-All positions are stored in NORMALISED coordinates [0, 1]
+Shared logic for every SINGLE-AGENT offensive scenario (Move, Shot, View)
 
 Child classes MUST override
     • compute_reward(self) -> float
 
 Child classes MAY override
     • _check_termination(self) -> bool
-    • after_step(self, action)          # per-frame custom logic (es. shot physics)
+    • after_step(self, action)         
 """
 import gymnasium as gym
 import numpy as np
@@ -24,18 +22,13 @@ from football_tactical_ai.helpers.helperFunctions import normalize
 
 class BaseOffensiveScenario(gym.Env):
     """
-    Base class for single-agent offensive scenarios in football tactical AI.
+    Base class for single-agent offensive scenarios in football tactical AI
     Provides common functionality for managing the ball, attacker, and defender,
-    as well as episode control and observation/action spaces.
+    as well as episode control and observation/action spaces
     """
 
-    def __init__(
-        self,
-        *,
-        pitch: Pitch,
-        max_steps: int = 240,
-        fps: int = 24
-    ) -> None:
+    def __init__(self, *, pitch: Pitch, max_steps: int = 360, fps: int = 24) -> None:
+
         super().__init__()
 
         # Core objects
@@ -56,15 +49,14 @@ class BaseOffensiveScenario(gym.Env):
         self.time_per_step = 1.0 / fps
         self._t = 0  # step counter
 
-        # Observation: attacker(2) + defender(2) + ball(2) + possession(1) = 7
+        # OBSERVATION SPACE: attacker(2) + defender(2) + ball(2) + possession(1) = 7
         self.observation_space = gym.spaces.Box(0.0, 1.0, shape=(7,), dtype=np.float32)
 
-        # Action: dx, dy in [-1, 1]
+        # ACTION SPACE: dx, dy in [-1, 1]
         self.action_space = gym.spaces.Box(-1.0, 1.0, shape=(2,), dtype=np.float32)
 
         # Possession loss tracking
-        self.possession_lost_this_step = False
-
+        self.possession_lost = False
 
 
     def reset(self, *, seed: int | None = None):
@@ -72,12 +64,13 @@ class BaseOffensiveScenario(gym.Env):
         Reset the environment to its initial state, with controlled randomization
         to avoid overfitting while keeping scenarios realistic.
         """
+        
         # Set random seed for reproducibility
         super().reset(seed=seed)
 
         self._t = 0  # reset step counter
 
-        # RANDOMIZED POSITIONS (IN METERS)
+        # RANDOMIZED POSITIONS (in metres)
         # Attacker: 20m before → 20m after midfield (40–80m)
         att_x_m = np.random.uniform(40, 80)
         att_y_m = np.random.uniform(20, 60)
@@ -131,10 +124,10 @@ class BaseOffensiveScenario(gym.Env):
 
     def _apply_attacker_action(self, action, enable_fov=True) -> None:
         """
-        Convert continuous action into attacker movement in normalised space.
+        Convert continuous action into attacker movement in normalised space
 
-        We pass field dimensions **in metres** because PlayerAttacker expects
-        them to scale max_speed → normalised delta (same as current code).
+        We pass field dimensions in metres because PlayerAttacker expects
+        them to scale max_speed → normalized delta
         """
         field_width_m  = self.pitch.x_max - self.pitch.x_min
         field_height_m = self.pitch.y_max - self.pitch.y_min
@@ -147,10 +140,11 @@ class BaseOffensiveScenario(gym.Env):
             enable_fov=enable_fov  # Enable FOV for attacker 
         )
 
+        self.last_action = action
+
     def _apply_defender_ai(self) -> None:
         """
-        Very naive chase logic: defender moves towards ball.
-        This is a placeholder for more complex AI logic.
+        Very naive chase logic: defender moves towards ball
         """
 
         # Store old owner to detect possession changes
@@ -198,12 +192,11 @@ class BaseOffensiveScenario(gym.Env):
             # Probabilistic tackle
             if distance < 0.5 and np.random.rand() < self.defender.tackling:
                 self.ball.set_owner(self.defender)
-                self.possession_lost_this_step = True
+                self.possession_lost = True
             else:
-                self.possession_lost_this_step = False
+                self.possession_lost = False
         else:
-            self.possession_lost_this_step = False
-
+            self.possession_lost = False
 
     def _is_ball_completely_out(self, ball_x_m, ball_y_m):
         """
@@ -242,7 +235,7 @@ class BaseOffensiveScenario(gym.Env):
         """
         Returns True if possession was lost in THIS step only.
         """
-        return self.possession_lost_this_step
+        return self.possession_lost
 
 
 
@@ -283,92 +276,74 @@ class BaseOffensiveScenario(gym.Env):
 
 
 
-    def _build_reward_grid(self):
+    def _build_reward_grid(self, min_reward=-0.03, max_reward=0.07):
         """
-        Reward grid for the attacker, safe from NaN values.
-        Promotes forward movement and centrality:
-        - x progression = exponential shaping
-        - y alignment = from -20% to +20% bonus
+        Elliptical Gaussian reward grid centered on the goal.
+
+        The reward is highest near the goal center and decreases smoothly
+        as elliptical distance increases. This creates a central 'hot zone'
+        and discourages lateral paths.
+
+        - Peak reward at goal center (x = pitch.width, y = pitch.center_y)
+        - Radially smooth, but vertically tighter (elliptical)
+        - Out-of-play cells get min_reward
         """
 
         pitch = self.pitch
 
-        min_reward = -0.1
-        max_reward = 0.05
-        focus_sharpness = 1.5
+        # Center of reward "hot zone"
+        cx = pitch.width - 11.0  # slightly before goal line (penalty spot is the reference)
+        cy = pitch.center_y
+
+        # Ellipse radii (in meters)
+        # a = horizontal spread, b = vertical tightness
+        a = 50.0      # how wide reward spreads horizontally
+        b = 35.0      # how narrow reward spreads vertically
+
+        # Best try a = 50, b = 50
 
         grid = np.zeros((pitch.num_cells_x, pitch.num_cells_y))
-
-        # Precompute ranges (safe)
-        range_x = pitch.x_max - pitch.x_min
-        range_y = pitch.y_max - pitch.y_min
-
-        # Avoid division by zero (safe)
-        if range_x == 0:
-            range_x = 1.0
-        if range_y == 0:
-            range_y = 1.0
 
         for i in range(pitch.num_cells_x):
             for j in range(pitch.num_cells_y):
 
-                # Compute center of cell in meters
+                # Cell center in meters
                 cell_x = pitch.x_min + (i + 0.5) * pitch.cell_size
                 cell_y = pitch.y_min + (j + 0.5) * pitch.cell_size
 
-                # Out-of-play → hard penalty
+                # OUT OF PLAY → hard penalty
                 if cell_x < 0 or cell_x > pitch.width or cell_y < 0 or cell_y > pitch.height:
                     grid[i, j] = min_reward
                     continue
 
-                # NORMALIZED COORDINATES
-                x_norm = (cell_x - pitch.x_min) / range_x
-                y_norm = (cell_y - pitch.y_min) / range_y
+                # Elliptical distance
+                dx = cell_x - cx
+                dy = cell_y - cy
 
-                # Clamp all normalization
-                x_norm = np.clip(x_norm, 0.0, 1.0)
-                y_norm = np.clip(y_norm, 0.0, 1.0)
+                dist_ell = np.sqrt((dx*dx) / (a*a) + (dy*dy) / (b*b))
 
-                # Exponential progression reward
-                dx = (pitch.width - 8) - cell_x
-                dx = abs(dx) / max(pitch.width, 1.0)
-                dist = dx
-
-                score = np.exp(-focus_sharpness * dist)
-                if not np.isfinite(score):
-                    score = 0.0
+                # Elliptical Gaussian
+                reward_raw = np.exp(-(dist_ell**2))
 
                 # Scale to [min_reward, max_reward]
-                x_reward = min_reward + (max_reward - min_reward) * score
+                reward_val = min_reward + (max_reward - min_reward) * reward_raw
 
-                # Vertical centrality refinement
-                range_factor = 0.2 * abs(min_reward)   # ±20%
+                if not np.isfinite(reward_val):
+                    reward_val = min_reward
 
-                dev = abs(y_norm - 0.5) / 0.5          # 0=center, 1=side
-                dev = np.clip(dev, 0.0, 1.0)
-
-                y_alignment = range_factor * (1 - 2 * dev)
-
-                if not np.isfinite(y_alignment):
-                    y_alignment = 0.0
-
-                val = x_reward + y_alignment
-
-                if not np.isfinite(val):
-                    val = min_reward
-
-                grid[i, j] = val
+                grid[i, j] = reward_val
 
         self.reward_grid = grid
 
 
-    def _get_position_reward(self, x, y):
+
+    def _get_position_reward(self, x, y, min_reward=-0.03, max_reward=0.07):
         """
         Returns the reward from the reward grid for the attacker's position.
         Builds the grid on first access.
         """
         if self.reward_grid is None:
-            self._build_reward_grid()
+            self._build_reward_grid(min_reward=min_reward, max_reward=max_reward)
 
         cell_x = int((x - self.pitch.x_min) / self.cell_size)
         cell_y = int((y - self.pitch.y_min) / self.cell_size)

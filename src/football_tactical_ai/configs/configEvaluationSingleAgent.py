@@ -1,23 +1,20 @@
 """
 Single-Agent Evaluation Configuration File
-------------------------------------------
 
-A single Python module defining all evaluation settings
-for MOVE, SHOT, and VIEW scenarios.
+This single Python module defines all evaluation settings
+for MOVE, SHOT, and VIEW single Agent scenarios
 """
 
 # COMMON SETTINGS
 COMMON = {
-    "seconds": 10,
+    "seconds": 15,
     "fps": 24,
-    # 10 seconds * 24 FPS
-    "max_steps": 10 * 24,
+    "max_steps": 15 * 24       # max_steps = seconds * FPS
 }
 
 # MOVE SCENARIO
 MOVE = {
     "model_path": "src/football_tactical_ai/training/models/singleAgentMoveModel.zip",
-
     "save_video_dir": "src/football_tactical_ai/evaluation/results/videos/move",
     "save_logs_dir":  "src/football_tactical_ai/evaluation/results/logs/move",
 
@@ -49,7 +46,7 @@ MOVE = {
             "defender_start": (100, 40),
         },
         {
-            "name": "deep_start",
+            "name": "deepStart",
             "attacker_start": (40, 40),
             "defender_start": (100, 40),
         }
@@ -60,7 +57,6 @@ MOVE = {
 # SHOT SCENARIO
 SHOT = {
     "model_path": "src/football_tactical_ai/training/models/singleAgentShotModel.zip",
-
     "save_video_dir": "src/football_tactical_ai/evaluation/results/videos/shot",
     "save_logs_dir":  "src/football_tactical_ai/evaluation/results/logs/shot",
 
@@ -110,7 +106,7 @@ VIEW = {
         "show_heatmap": False,
         "show_rewards": False,
         "full_pitch": True,
-        "show_fov": True,   # ONLY VIEW SHOWS FIELD OF VIEW
+        "show_fov": True,   # ONLY VIEW SHOWS FOV
         "show_info": True,
     },
 

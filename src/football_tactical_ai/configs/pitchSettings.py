@@ -1,6 +1,6 @@
 """
-Single source-of-truth for global dimensions.
-Edit these numbers and all other files will be updated accordingly.
+Single source-of-truth for global dimensions and settings of the pitch
+All other files will be updated accordingly to these numbers
 """
 
 # Field geometry (metres)

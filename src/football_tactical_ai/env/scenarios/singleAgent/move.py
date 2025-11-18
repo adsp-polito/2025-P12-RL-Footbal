@@ -1,6 +1,6 @@
 import numpy as np
 from football_tactical_ai.env.scenarios.singleAgent.base_offensive import BaseOffensiveScenario
-from football_tactical_ai.helpers.helperFunctions import normalize
+from football_tactical_ai.helpers.helperFunctions import normalize, denormalize
 
 
 # Coordinate System Design:
@@ -34,7 +34,7 @@ class OffensiveScenarioMoveSingleAgent(BaseOffensiveScenario):
     to handle the environment's dynamics, rewards, and observations.
     """
 
-    def __init__(self, pitch, max_steps=240, fps=24):
+    def __init__(self, pitch, max_steps=360, fps=24):
 
         # Initialize the parent class
         super().__init__(pitch=pitch, max_steps=max_steps, fps=fps)
@@ -61,27 +61,39 @@ class OffensiveScenarioMoveSingleAgent(BaseOffensiveScenario):
         reward = 0.0  # Initialize reward for this step
         terminated = False  # Initialize termination flag
 
+        # Time penalty to encourage faster play
+        reward -= 0.01
+
         # Convert attacker's position from normalized [0, 1] to meters
         att_x, att_y = self.attacker.get_position()
-        x_m = att_x * (self.pitch.x_max - self.pitch.x_min) + self.pitch.x_min
-        y_m = att_y * (self.pitch.y_max - self.pitch.y_min) + self.pitch.y_min
+        x_m, y_m = denormalize(att_x, att_y)
 
         # Get reward based on position from reward grid
         reward +=  self._get_position_reward(x_m, y_m)
 
-        # Check if a goal has been scored
-        if self._is_goal(x_m, y_m):
-            reward += 7.5
-            terminated = True
-            return reward, terminated
-
         # Check if possession was lost
-        if self.possession_lost_this_step:
+        if self.possession_lost:
             reward -= 2.5
             terminated = True
             return reward, terminated
+        
+        # Check if the ball is out of bounds
+        ball_x, ball_y = self.ball.position
+        ball_x_m, ball_y_m = denormalize(ball_x, ball_y)
 
+        if self._is_ball_completely_out(ball_x_m, ball_y_m):
+            reward -= 2.5
+            terminated = True  
+            return reward, terminated
+        
+        # Check if a goal has been scored
+        if self._is_goal(ball_x_m, ball_y_m):
+            reward += 7.5
+            terminated = True
+            return reward, terminated
+        
         return reward, terminated
+
 
     def _get_obs(self):
         """
@@ -104,3 +116,4 @@ class OffensiveScenarioMoveSingleAgent(BaseOffensiveScenario):
         # No specific resources to release in this environment
         # but this method is here for compatibility with gym's API
         pass
+

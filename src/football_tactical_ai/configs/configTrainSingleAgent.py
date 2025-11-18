@@ -1,11 +1,11 @@
 """
-Single-agent training settings fully aligned with Stable-Baselines3 PPO.
-Minimal, clean and stable hyperparameter sets for MOVE, SHOT and VIEW.
+Single-agent training settings fully aligned with Stable-Baselines3 PPO
+Hyperparameter setting for MOVE, SHOT and VIEW scenarios
 """
 
 SCENARIOS: dict[str, dict] = {
 
-    #  MOVE SCENARIO
+    # MOVE SCENARIO
     "move": {
         "env_class": (
             "football_tactical_ai.env.scenarios.singleAgent."
@@ -13,10 +13,10 @@ SCENARIOS: dict[str, dict] = {
         ),
 
         # Episode timing
-        "seconds_per_episode": 10,
+        "seconds_per_episode": 15,
         "fps": 24,
-        "episodes": 15000,
-        "eval_every": 1500,
+        "episodes": 10000,
+        "eval_every": 1000,
 
         # Rendering settings
         "render": {
@@ -44,7 +44,7 @@ SCENARIOS: dict[str, dict] = {
             "ent_coef": 0.01,       # Less exploration, dense rewards
             "clip_range": 0.2,
 
-            "batch_size": 480,      # 480 is a clean divisor of the rollout buffer (240 steps),
+            "batch_size": 360,      # 360 is a clean divisor of the rollout buffer (360 steps),
                                     # ensuring SB3 can form full mini-batches without truncation
                                     # and avoiding stability warnings
             "n_epochs": 4,          # moderate epochs, rapid learning
@@ -58,17 +58,17 @@ SCENARIOS: dict[str, dict] = {
 
 
 
-    #  SHOT SCENARIO
+    # SHOT SCENARIO
     "shot": {
         "env_class": (
             "football_tactical_ai.env.scenarios.singleAgent."
             "shot:OffensiveScenarioShotSingleAgent"
         ),
 
-        "seconds_per_episode": 10,
+        "seconds_per_episode": 15,
         "fps": 24,
-        "episodes": 15000,
-        "eval_every": 1500,
+        "episodes": 10000,
+        "eval_every": 1000,
 
         "render": {
             "show_grid": False,
@@ -106,17 +106,17 @@ SCENARIOS: dict[str, dict] = {
     },
 
 
-    #  VIEW SCENARIO
+    # VIEW SCENARIO
     "view": {
         "env_class": (
             "football_tactical_ai.env.scenarios.singleAgent."
             "view:OffensiveScenarioViewSingleAgent"
         ),
 
-        "seconds_per_episode": 10,
+        "seconds_per_episode": 15,
         "fps": 24,
-        "episodes": 15000,
-        "eval_every": 1500,
+        "episodes": 10000,
+        "eval_every": 1000,
 
         "render": {
             "show_grid": False,
@@ -142,7 +142,7 @@ SCENARIOS: dict[str, dict] = {
             "ent_coef": 0.07,         # strong exploration
             "clip_range": 0.2,
 
-            "batch_size": 960,      # 960 is a clean divisor of the rollout buffer (240 steps),
+            "batch_size": 1080,     # 1080 is a clean divisor of the rollout buffer (360 steps),
                                     # ensuring SB3 can form full mini-batches without truncation
                                     # and avoiding stability warnings
             "n_epochs": 6,
@@ -154,7 +154,7 @@ SCENARIOS: dict[str, dict] = {
 }
 
 
-#  Compute n_steps and max_steps for each scenario
+# Compute n_steps and max_steps for each scenario
 for cfg in SCENARIOS.values():
     cfg["ppo"]["n_steps"] = cfg["seconds_per_episode"] * cfg["fps"]
     cfg["max_steps"] = cfg["ppo"]["n_steps"]

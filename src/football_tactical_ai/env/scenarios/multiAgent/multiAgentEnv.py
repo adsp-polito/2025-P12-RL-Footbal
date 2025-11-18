@@ -19,21 +19,6 @@ from football_tactical_ai.env.scenarios.multiAgent.rewardGrids import (
 )
 from football_tactical_ai.env.scenarios.multiAgent.multiAgentReward import get_reward
 
-
-"""
-Action space for each player:
-
-- Attacker (ATT): [dx, dy, pass_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
-- Defender (DEF): [dx, dy, tackle_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
-- Goalkeeper (GK): [dx, dy, dive_flag, shoot_flag, power, dir_x, dir_y] → shape (7,)
-
-All values are normalized:
-- dx, dy ∈ [-1, 1] (movement direction)
-- power ∈ [0, 1]   (kick strength)
-- flag > 0.5 → action is triggered
-"""
-
-
 # This is a multi-agent environment for a football tactical AI scenario
 class FootballMultiEnv(MultiAgentEnv):
     """
@@ -50,11 +35,10 @@ class FootballMultiEnv(MultiAgentEnv):
 
     def __init__(self, config: Dict[str, Any] = None):
         """
-        Initialize the multi-agent football environment.
-        
+        Initialize the multi-agent football environment
         Args:
-            config (dict, optional): Custom configuration dictionary. 
-                                    If None, defaults will be loaded from get_config().
+            config (Dict[str, Any], optional): Configuration parameters for the environment
+                If None, default configuration is used
         """
 
         # Initialize parent class
@@ -131,7 +115,6 @@ class FootballMultiEnv(MultiAgentEnv):
             for did, role in zip(self.defender_ids, defender_roles)
         })
 
-
         # Goalkeeper
         if include_goalkeeper:
             players.update({
@@ -140,7 +123,6 @@ class FootballMultiEnv(MultiAgentEnv):
 
         self.players = players
 
-        # ======================================================================
         # ACTION SPACES
         #
         # Each player now uses a flat Box(7,) action space:
@@ -155,7 +137,7 @@ class FootballMultiEnv(MultiAgentEnv):
         # - Attackers interpret (flag1=pass, flag2=shoot)
         # - Defenders interpret (flag1=tackle, flag2=shoot)
         # - Goalkeeper interprets (flag1=dive, flag2=shoot)
-        # ======================================================================
+
         self.action_spaces = {}
         for agent_id in self.agents:
             self.action_spaces[agent_id] = spaces.Box(
@@ -166,7 +148,6 @@ class FootballMultiEnv(MultiAgentEnv):
             )
 
 
-        # ======================================================================
         # OBSERVATION SPACE
         #
         # Each agent observes a flat vector:
@@ -189,7 +170,7 @@ class FootballMultiEnv(MultiAgentEnv):
         #    [rel_x, rel_y, action_code, visible_flag, team_flag, has_ball_flag]
         #
         # Total dim = 4 + 6 + 2 + params_dim + (N-1)*6 ===> min: (4+6+2+9+(0*6))=21, max: (4+6+2+9+(5*6))=51
-        # ======================================================================
+
         def _compute_obs_dim(player):
             base_dim = 4 + 6 + 2 + (len(self.agents) - 1) * 6
             role = player.get_role()
@@ -211,7 +192,6 @@ class FootballMultiEnv(MultiAgentEnv):
             )
             for agent_id, player in self.players.items()
         }
-
 
         # Roles mapping
         self.roles = {aid: self.players[aid].get_role() for aid in self.agents}
@@ -236,7 +216,6 @@ class FootballMultiEnv(MultiAgentEnv):
             else:
                 raise ValueError(f"Unknown role {role} for agent {agent_id}")
 
-
         # Shot and pass context
         self.shot_owner = None
         self.shot_just_started = False      # useful for start_shot_bonus reward
@@ -251,7 +230,8 @@ class FootballMultiEnv(MultiAgentEnv):
             "active": False  # whether a pass is currently in flight
         }
 
-    # PettingZoo interface methods (required for multi-agent environments)
+    # PettingZoo interface methods 
+    # This is required for multi-agent environments
     def observation_space(self, agent_id):
         return self.observation_spaces[agent_id]
 
@@ -260,7 +240,7 @@ class FootballMultiEnv(MultiAgentEnv):
 
     def reset(self, seed=None, options=None):
         """
-        Reset the environment to its initial state.
+        Reset the environment to its initial state
         
         Args:
             seed (int, optional): Random seed for reproducibility.
@@ -331,12 +311,10 @@ class FootballMultiEnv(MultiAgentEnv):
             "active": False
         }
 
-
         # Initialize info dict (empty per agent)
         infos = {agent_id: {} for agent_id in self.agents}
 
         return observations, infos
-
 
     def step(self, actions: Dict[str, np.ndarray]):
         """
@@ -377,7 +355,7 @@ class FootballMultiEnv(MultiAgentEnv):
             # Update the action vector with processed movement
             modified_action = np.array([dx, dy, *action[2:]], dtype=np.float32)
 
-
+            # Execute the action and get context info
             context = player.execute_action(
                 action=modified_action,
                 time_step=self.time_step,
@@ -516,7 +494,7 @@ class FootballMultiEnv(MultiAgentEnv):
         # Always check goal conditions if we have a valid scorer_team
         if scorer_team is not None:
 
-            # Case 1: Normal goal (ball enters opponent's net)
+            # Case 1: Normal goal
             if self._is_goal(ball_x, ball_y, scorer_team):
                 goal_team = scorer_team
                 if self.shot_owner is not None:
@@ -557,7 +535,6 @@ class FootballMultiEnv(MultiAgentEnv):
             # Cleanup owners
             self.shot_owner = None
             self.pass_owner = None
-
 
         # Step 6: Build agent info and contextual updates
         for agent_id in self.agents:
@@ -651,9 +628,13 @@ class FootballMultiEnv(MultiAgentEnv):
 
         return observations, rewards, terminations, truncations, infos
     
+
+
+
+
     def _reset_pass_context(self):
         """
-        Reset all pass-related state, including pending passes.
+        Reset all pass-related state, including pending passes
         """
         self.pass_context = {"pass_from": None, "direction": None, "power": 0.0, "pass_to": None}
         self.pass_owner = None
@@ -662,12 +643,11 @@ class FootballMultiEnv(MultiAgentEnv):
 
     def _reset_shot_context(self):
         """
-        Reset all shot-related state, including pending shots.
+        Reset all shot-related state, including pending shots
         """
         self.shot_context = {"shot_by": None, "direction": None, "power": 0.0}
         self.shot_owner = None
         self.shot_just_started = False
-
 
     def _process_shot_attempt(self, agent_id: str, context: dict):
         """
@@ -903,8 +883,6 @@ class FootballMultiEnv(MultiAgentEnv):
         context["pass_direction"] = direction.tolist()
         context["pass_direction_raw"] = raw_dir.tolist()
 
-
-
     def _assign_ball_if_nearby(self, threshold: float = 0.017):  # ~2m in normalized units
 
         if self.ball.get_owner() is not None:
@@ -931,10 +909,7 @@ class FootballMultiEnv(MultiAgentEnv):
                     return agent_id
 
         return None
-
-
-
-
+    
     def _check_possession_loss(self, agent_id: str) -> bool:
         """
         Check if an attacker has lost possession specifically
@@ -956,8 +931,6 @@ class FootballMultiEnv(MultiAgentEnv):
             return role in {"DEF", "LCB", "RCB", "CB", "GK"}
 
         return False
-
-
 
     def _is_ball_completely_out(self, ball_x_m, ball_y_m):
         """
@@ -1026,7 +999,6 @@ class FootballMultiEnv(MultiAgentEnv):
 
         return False
 
-
     def _is_own_goal(self, x, y, scoring_team: str):
         """
         Check if the ball is an own goal for the given scoring_team.
@@ -1045,7 +1017,6 @@ class FootballMultiEnv(MultiAgentEnv):
             return x - r_ball > self.pitch.width and GOAL_MIN_Y <= y <= GOAL_MAX_Y
 
         return False
-
 
     def get_render_state(self):
         """
@@ -1142,7 +1113,6 @@ class FootballMultiEnv(MultiAgentEnv):
             ball_x, ball_y, ball_vx, ball_vy, ball_dir_x, ball_dir_y,
             goal_x, goal_y
         ]
-
 
         # Add own parameters (role-dependent)
         # These values are already normalized in [0, 1].

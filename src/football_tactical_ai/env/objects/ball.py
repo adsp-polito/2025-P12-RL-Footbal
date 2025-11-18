@@ -2,41 +2,41 @@ import numpy as np
 
 class Ball:
     """
-    Class representing a football (soccer ball) in a normalized 2D pitch coordinate system.
+    Class representing a ball in a normalized 2D pitch coordinate system
 
     Attributes:
-        position (np.ndarray): Current normalized position on the pitch, with x and y values in [0,1].
-        velocity (np.ndarray): Current velocity vector, normalized per second.
-        owner_id (int or None): ID of the player currently possessing the ball, or None if free.
+        position (np.ndarray): Current normalized position on the pitch, with x and y values in [0,1]
+        velocity (np.ndarray): Current velocity vector, normalized per second
+        owner_id (int or None): ID of the player currently possessing the ball, or None if free
     """
 
     def __init__(self, position=None):
         """
-        Initialize the ball object.
+        Initialize the ball object
 
         Args:
-            position (tuple, list, np.ndarray, optional): Initial normalized position [x, y].
-                Defaults to the center of the pitch at [0.5, 0.5] if not specified.
+            position (tuple, list, np.ndarray, optional): Initial normalized position [x, y]
+            Defaults to the center of the pitch at [0.5, 0.5] if not specified.
         """
         # Set initial position; default is pitch center
         if position is None:
             position = [0.5, 0.5]
         self.position = np.array(position, dtype=np.float32)
 
-        # Initialize velocity vector as zero (ball stationary)
+        # Initialize velocity vector as zero
         self.velocity = np.zeros(2, dtype=np.float32)
 
-        # Initialize owner as None (ball not possessed)
+        # Initialize owner as None
         self.owner = None
-        self.radius = 0.11  # Ball radius in meters (standard size 0.35 m)
+        self.radius = 0.11  # Ball radius in meters (standard size 5 ball: 11 cm radius)
 
     def reset(self, position=None):
         """
-        Reset ball state to a given position (or center) and clear velocity and possession.
+        Reset ball state to a given position (or center) and clear velocity and possession
 
         Args:
-            position (tuple, list, np.ndarray, optional): Position to reset to.
-                Defaults to center [0.5, 0.5] if not provided.
+            position (tuple, list, np.ndarray, optional): Position to reset to
+            Defaults to center [0.5, 0.5] if not provided
         """
         if position is None:
             position = [0.5, 0.5]
@@ -80,67 +80,43 @@ class Ball:
 
     def apply_friction(self, friction=0.0015):
         """
-        Apply friction to the ball's velocity.
-
-        Args:
-            friction (float): Friction coefficient to apply.
+        Apply friction to the ball's velocity, reducing its speed slightly
         """
         self.velocity *= (1 - friction)
 
     def set_position(self, pos):
         """
-        Set the ball's position manually.
-
-        Args:
-            pos (tuple, list, np.ndarray): New normalized position [x, y].
+        Set the ball's position manually
         """
         self.position = np.array(pos, dtype=np.float32)
 
     def get_position(self):
         """
-        Get the current normalized position of the ball.
-
-        Returns:
-            np.ndarray: Position vector [x, y].
+        Get the current normalized position of the ball
         """
         return self.position
 
     def set_velocity(self, vel):
         """
-        Set the ball's velocity vector manually.
-
-        Args:
-            vel (tuple, list, np.ndarray): Velocity vector in normalized units per second.
+        Set the ball's velocity vector manually
         """
         self.velocity = np.array(vel, dtype=np.float32)
 
     def get_velocity(self):
         """
-        Get the current velocity vector of the ball.
-
-        Returns:
-            np.ndarray: Velocity vector [vx, vy].
+        Get the current velocity vector of the ball
         """
         return self.velocity
 
-
     def get_owner(self):
         """
-        Get the ID of the player currently possessing the ball.
-
-        Returns:
-            str or None: Player ID if possessed, None if free.
+        Get the ID of the player currently possessing the ball
         """
         return self.owner
-    
 
     def update(self, time_step):
         """
-        Update the ball's position based on its velocity and apply friction to reduce speed.
-
-        Args:
-            time_step (float): Duration of the simulation step in seconds.
-            friction (float): Fractional decay of velocity per time step (default is 0.0015).
+        Update the ball's position based on its velocity and apply friction to reduce speed
         """
         # Move ball according to velocity scaled by time step
         self.position += self.velocity * time_step
@@ -148,7 +124,8 @@ class Ball:
         # Apply friction to the velocity
         self.apply_friction()
 
-        # Stop if velocity is very small (to avoid numerical instability)
+        # Stop if velocity is very small 
+        # This prevents endless sliding due to friction never reaching zero and avoid numerical instability
         if np.linalg.norm(self.velocity) < 1e-3:
             self.velocity.fill(0.0)
 
@@ -159,20 +136,14 @@ class Ball:
 
     def is_out_of_bounds(self):
         """
-        Check if the ball has left the normalized pitch area.
-
-        Returns:
-            bool: True if ball is out of bounds, False otherwise.
+        Check if the ball has left the normalized pitch area
         """
         x, y = self.position
         return not (0.0 <= x <= 1.0 and 0.0 <= y <= 1.0)
 
     def copy(self):
         """
-        Create a deep copy of this Ball instance, including position, velocity, and owner.
-
-        Returns:
-            Ball: A new Ball object with identical state.
+        Create a deep copy of this Ball instance, including position, velocity, and owner
         """
         new_ball = Ball()
         new_ball.position = self.position.copy()
