@@ -73,12 +73,12 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.shot_in_fov = False            # Flag indicating if the shot was initiated within FOV
 
         # LOGGING METRICS FOR EVALUATION ONLY
-        self.last_valid_shot = None
-        self.last_shot_distance = None
-        self.last_time_to_shot = None
-        self.last_shot_angle = None
-        self.last_shot_power = None
-        self.last_reward_components = None
+        self.valid_shot = None
+        self.shot_distance = None
+        self.shot_time = None
+        self.shot_angle = None
+        self.shot_power = None
+        self.reward_components = None
 
         # FOV logging metrics
         self.fov_valid_movements = 0
@@ -111,13 +111,13 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.attacker.last_action_direction = np.array([1.0, 0.0])  # Reset last action direction
 
         # Reset logging metrics
-        self.last_valid_shot = None
-        self.last_shot_distance = None
-        self.last_time_to_shot = None
-        self.last_shot_angle = None
-        self.last_shot_power = None
-        self.last_reward_components = None
-        self.last_shot_start_bonus = 0.0
+        self.valid_shot = None
+        self.shot_distance = None
+        self.shot_time = None
+        self.shot_angle = None
+        self.shot_power = None
+        self.reward_components = None
+        self.shot_start_bonus = 0.0
 
         # Reset FOV metrics
         self.fov_valid_movements = 0
@@ -191,22 +191,22 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
                 self.ball.set_owner(None)
 
                 # LOG METRICS
-                self.last_valid_shot = True
-                self.last_shot_power = float(actual_power)
+                self.valid_shot = True
+                self.shot_power = float(actual_power)
                 self.valid_shots += 1
 
                 # Compute shot angle relative to the goal
                 att_x, att_y = self.attacker.get_position()
                 vec = np.array([self.goal_x - att_x, self.goal_y - att_y])
                 vec /= np.linalg.norm(vec)
-                self.last_shot_angle = float(np.arccos(np.clip(np.dot(actual_dir, vec), -1, 1)))
+                self.shot_angle = float(np.arccos(np.clip(np.dot(actual_dir, vec), -1, 1)))
 
                 # Compute shot distance
                 pitch_w = self.pitch.x_max - self.pitch.x_min
                 pitch_h = self.pitch.y_max - self.pitch.y_min
                 bx = self.shot_position[0] * pitch_w + self.pitch.x_min
                 by = self.shot_position[1] * pitch_h + self.pitch.y_min
-                self.last_shot_distance = float(np.linalg.norm([self.goal_x - bx, self.goal_y - by]))
+                self.shot_distance = float(np.linalg.norm([self.goal_x - bx, self.goal_y - by]))
 
                 # Convert to normalized ball velocity
                 velocity_real = actual_dir * actual_power
@@ -216,7 +216,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             else:
                 # Shot was invalid due to FOV
                 # Count how many invalid shots were due to FOV
-                self.last_valid_shot = False
+                self.valid_shot = False
                 self.invalid_shot_fov += 1
         
         # Update ratio of valid shots
@@ -361,8 +361,8 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             reward += shot_quality          # in [0, 1], direct addition
 
             # Reward for initiating the shot
-            self.last_shot_start_bonus = 0.3
-            reward += self.last_shot_start_bonus
+            self.shot_start_bonus = 0.3
+            reward += self.shot_start_bonus
 
             # SOFT ALIGNMENT REWARD MODULATED BY FOV
             goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m])
@@ -409,23 +409,16 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
             # Very soft shaping to avoid dominating the reward
             reward += 0.3 * dist_norm   # ∈ [0, 0.3]
 
-        # LOGGING: LAST TIME TO SHOT
-        if (
-            self.is_shooting
-            and self.last_shot_distance is not None
-            and self.last_shot_power is not None
-        ):
-            if self.last_shot_power > 0:
-                self.last_time_to_shot = self.last_shot_distance / self.last_shot_power
+            # LOGGING: TIME OF SHOT IN SECONDS
+            if self.is_shooting:
+                self.shot_time = self._t / self.fps
             else:
-                self.last_time_to_shot = None
-        else:
-            self.last_time_to_shot = None
+                self.shot_time = None
 
         # FINAL EPISODE BONUS / PENALTY
         terminated_now = self._check_termination()
         if self._t == self.max_steps - 1 or terminated_now:
-            if self.last_shot_start_bonus > 0:
+            if self.shot_start_bonus > 0:
                 # Episode ends: at least one valid shot taken (under FOV constraints)
                 reward += 5.0
             else:
@@ -433,9 +426,9 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
                 reward -= 5.0
 
         # LOGGING: LAST REWARD COMPONENTS
-        self.last_reward_components = {
+        self.reward_components = {
             "position": float(pos_reward),
-            "shot_start_bonus": float(self.last_shot_start_bonus),
+            "shot_start_bonus": float(self.shot_start_bonus),
             "goal": 15.0 if self._is_goal(bx_m, by_m) else 0.0,
             "possession_lost": -3.0 if self.possession_lost else 0.0,
         }

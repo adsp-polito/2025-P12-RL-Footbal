@@ -182,23 +182,23 @@ def evaluate_single(scenario="move"):
             # SHOT-SPECIFIC METRICS
             if scenario == "shot":
                 extra_metrics.append({
-                    "valid_shot": env.last_valid_shot,
-                    "shot_distance": env.last_shot_distance,
-                    "time_to_shot": env.last_time_to_shot,
-                    "shot_angle": env.last_shot_angle,
-                    "shot_power": env.last_shot_power,
-                    "reward_components": env.last_reward_components,
+                    "valid_shot": env.valid_shot,
+                    "shot_distance": env.shot_distance,
+                    "shot_time": env.shot_time,
+                    "shot_angle": env.shot_angle,
+                    "shot_power": env.shot_power,
+                    "reward_components": env.reward_components,
                 })
 
             # VIEW-SPECIFIC METRICS
             if scenario == "view":
                 extra_metrics.append({
-                    "valid_shot": env.last_valid_shot,
-                    "shot_distance": env.last_shot_distance,
-                    "time_to_shot": env.last_time_to_shot,
-                    "shot_angle": env.last_shot_angle,
-                    "shot_power": env.last_shot_power,
-                    "reward_components": env.last_reward_components,
+                    "valid_shot": env.valid_shot,
+                    "shot_distance": env.shot_distance,
+                    "shot_time": env.shot_time,
+                    "shot_angle": env.shot_angle,
+                    "shot_power": env.shot_power,
+                    "reward_components": env.reward_components,
                     "fov_valid_movements": env.fov_valid_movements,
                     "fov_invalid_movements": env.fov_invalid_movements,
                     "fov_valid_ratio": env.fov_valid_movements / max(env.fov_invalid_movements + env.fov_valid_movements, 1),

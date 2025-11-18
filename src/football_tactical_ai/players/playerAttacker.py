@@ -3,14 +3,13 @@ from typing import Any
 from football_tactical_ai.env.objects.ball import Ball
 from football_tactical_ai.players.playerBase import BasePlayer
 
-
 class PlayerAttacker(BasePlayer):
     def __init__(self,
              shooting: float = 0.5,
              passing: float = 0.5,
              dribbling: float = 0.5,
              speed: float = 0.5,
-             precision: float = 1.0,
+             precision: float = 0.5,
              fov_angle: float = 0.5,
              fov_range: float = 0.5,
              role: str = "ATT",

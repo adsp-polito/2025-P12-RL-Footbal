@@ -67,12 +67,12 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         self.shot_pos_rew = None            # Positional reward at shot initiation (used for reward)
 
         # LOGGING METRICS FOR EVALUATION ONLY
-        self.last_valid_shot = None
-        self.last_shot_distance = None
-        self.last_time_to_shot = None
-        self.last_shot_angle = None
-        self.last_shot_power = None
-        self.last_reward_components = None
+        self.valid_shot = None
+        self.shot_distance = None
+        self.shot_time = None
+        self.shot_angle = None
+        self.shot_power = None
+        self.reward_components = None
 
 
 
@@ -92,13 +92,13 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         self.shot_pos_rew = None
 
         # Reset logging metrics
-        self.last_valid_shot = None
-        self.last_shot_distance = None
-        self.last_time_to_shot = None
-        self.last_shot_angle = None
-        self.last_shot_power = None
-        self.last_reward_components = None
-        self.last_shot_start_bonus = 0.0
+        self.valid_shot = None
+        self.shot_distance = None
+        self.shot_time = None
+        self.shot_angle = None
+        self.shot_power = None
+        self.reward_components = None
+        self.shot_start_bonus = 0.0
 
         return self._get_obs(), {}
         
@@ -148,14 +148,14 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             self.ball.set_owner(None)
 
             # LOG metrics
-            self.last_valid_shot = True
-            self.last_shot_power = actual_power
+            self.valid_shot = True
+            self.shot_power = actual_power
 
             # shot angle
             att_x, att_y = self.attacker.get_position()
             vec = np.array([self.goal_x - att_x, self.goal_y - att_y])
             vec /= np.linalg.norm(vec)
-            self.last_shot_angle = float(
+            self.shot_angle = float(
                 np.arccos(np.clip(np.dot(actual_dir, vec), -1, 1))
             )
 
@@ -164,7 +164,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             pitch_h = self.pitch.y_max - self.pitch.y_min
             bx = self.shot_position[0] * pitch_w + self.pitch.x_min
             by = self.shot_position[1] * pitch_h + self.pitch.y_min
-            self.last_shot_distance = float(np.linalg.norm([self.goal_x - bx, self.goal_y - by]))
+            s = float(np.linalg.norm([self.goal_x - bx, self.goal_y - by]))
             self.shot_pos_rew = self._get_position_reward(bx, by)
 
             # shot initial velocity
@@ -255,8 +255,8 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             reward += shot_quality
 
             # Bonus for initiating the shot
-            self.last_shot_start_bonus = 0.5
-            reward += self.last_shot_start_bonus
+            self.shot_start_bonus = 0.5
+            reward += self.shot_start_bonus
 
             # Normalized direction to goal (for angle shaping)
             goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m])
@@ -295,24 +295,18 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             dist_norm = 2 * dist_norm - 1    # [-1, 1]
             reward += dist_norm               
 
-        # LOGGING: TIME TO SHOT METRIC
-        if (
-            self.is_shooting
-            and self.last_shot_distance is not None
-            and self.last_shot_power is not None
-        ):
-            if self.last_shot_power > 0:
-                self.last_time_to_shot = self.last_shot_distance / self.last_shot_power
+            # LOGGING: TIME OF SHOT IN SECONDS
+            if self.is_shooting:
+                self.shot_time = self._t / self.fps
             else:
-                self.last_time_to_shot = None
-        else:
-            self.last_time_to_shot = None
+                self.shot_time = None
+
 
         # FINAL EPISODE BONUS / PENALTY
         terminated_now = self._check_termination()
         if self._t == self.max_steps - 1 or terminated_now:
 
-            if self.last_shot_start_bonus > 0:
+            if self.shot_start_bonus > 0:
 
                 # Bonus for having taken a shot (scaled positional shot reward)
                 reward += 2.0 + 6.0 * (self.shot_pos_rew * 10)
@@ -328,9 +322,9 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
                 reward -= 10      # episode ends with no shots
 
         # LOGGING
-        self.last_reward_components = {
+        self.reward_components = {
             "position": float(pos_reward),
-            "shot_start_bonus": float(self.last_shot_start_bonus),
+            "shot_start_bonus": float(self.shot_start_bonus),
             "goal": 15.0 if self._is_goal(bx_m, by_m) else 0.0,
             "possession_lost": -3.0 if self._check_possession_loss() else 0.0,
         }
