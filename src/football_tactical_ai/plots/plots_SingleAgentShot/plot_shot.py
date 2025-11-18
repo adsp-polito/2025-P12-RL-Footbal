@@ -24,8 +24,6 @@ def set_plot_style():
     mpl.rcParams['axes.spines.right'] = False
 
 
-
-
 # 1) TRAINING REWARD CURVE
 def plot_training_rewards(json_path, window=200, save_name="Shot_RewardCurve.png"):
     set_plot_style()

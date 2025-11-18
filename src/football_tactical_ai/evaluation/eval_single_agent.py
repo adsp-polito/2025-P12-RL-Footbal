@@ -253,6 +253,6 @@ def evaluate_single(scenario="move"):
 
 # RUN DIRECTLY
 if __name__ == "__main__":
-    evaluate_single("move")
-    #evaluate_single("shot")
+    #evaluate_single("move")
+    evaluate_single("shot")
     #evaluate_single("view")

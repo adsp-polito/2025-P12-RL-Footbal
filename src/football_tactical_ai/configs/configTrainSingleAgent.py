@@ -47,6 +47,7 @@ SCENARIOS: dict[str, dict] = {
             "batch_size": 360,      # 360 is a clean divisor of the rollout buffer (360 steps),
                                     # ensuring SB3 can form full mini-batches without truncation
                                     # and avoiding stability warnings
+
             "n_epochs": 4,          # moderate epochs, rapid learning
 
             "seed": 42,
@@ -87,19 +88,15 @@ SCENARIOS: dict[str, dict] = {
 
         # PPO hyperparameters
         "ppo": {
-            "learning_rate": 3e-4,
+            "learning_rate": 2e-4,
             "gamma": 0.99,
             "gae_lambda": 0.95,
 
-            "ent_coef": 0.02,    
+            "ent_coef": 0.03,    
             "clip_range": 0.2,
 
-            "batch_size": 720,   # 720 is a clean divisor of the rollout buffer (240 steps), 
-                                 # ensuring SB3 can form full mini-batches without truncation 
-                                 # and avoiding stability warnings
-
-            "n_epochs": 5,
-
+            "batch_size": 360,   
+            "n_epochs": 6,
             "seed": 42,
             "verbose": 0,
         },
@@ -135,17 +132,16 @@ SCENARIOS: dict[str, dict] = {
 
         # PPO hyperparameters
         "ppo": {
-            "learning_rate": 2e-4,    # low LR = stability for perceptual tasks
+            "learning_rate": 1e-4,    # low LR = stability for perceptual tasks
             "gamma": 0.995,
             "gae_lambda": 0.97,
 
             "ent_coef": 0.07,         # strong exploration
             "clip_range": 0.2,
 
-            "batch_size": 1080,     # 1080 is a clean divisor of the rollout buffer (360 steps),
-                                    # ensuring SB3 can form full mini-batches without truncation
-                                    # and avoiding stability warnings
-            "n_epochs": 6,
+            "batch_size": 360,     
+
+            "n_epochs": 8,
 
             "seed": 42,
             "verbose": 0,

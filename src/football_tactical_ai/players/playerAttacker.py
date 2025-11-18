@@ -10,7 +10,7 @@ class PlayerAttacker(BasePlayer):
              passing: float = 0.5,
              dribbling: float = 0.5,
              speed: float = 0.5,
-             precision: float = 0.5,
+             precision: float = 1.0,
              fov_angle: float = 0.5,
              fov_range: float = 0.5,
              role: str = "ATT",
