@@ -194,52 +194,81 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         return self._get_obs(), reward, terminated, truncated, {}
         
     
+
+        
     def compute_reward(self, shot_flag=None, shot_quality=0.0, movement=None):
         """
-        Compute the reward for the current step
+        Compute the reward for the current step.
+
         Args:
             shot_flag (bool): Whether a shot was attempted this step.
             shot_quality (float): Quality of the shot attempted (if any).
-            movement (np.ndarray): 2D movement vector of the attacker.
+            movement (np.ndarray): 2D movement vector of the attacker in NORMALISED coords.
+
         Returns:
             reward (float): Computed reward for the current step.
         """
 
         reward = 0.0
 
+        # ------------------------------------------------------------------
         # SMALL TIME PENALTY → encourages faster decision-making
+        # ------------------------------------------------------------------
         reward -= 0.01
 
+        # ------------------------------------------------------------------
         # REAL POSITIONS IN METERS (attacker + ball)
+        # ------------------------------------------------------------------
         att_x, att_y = self.attacker.get_position()
         x_m, y_m = denormalize(att_x, att_y)
 
         ball_x, ball_y = self.ball.position
+        bx_m, by_m = denormalize(ball_x, by_m) if False else denormalize(ball_x, ball_y)  # ensure denormalize used correctly
         bx_m, by_m = denormalize(ball_x, ball_y)
 
-        # POSITIONAL REWARD
-        # Encourages moving toward better shooting areas
+        # ------------------------------------------------------------------
+        # POSITIONAL REWARD → encourages moving toward better shooting areas
+        # ------------------------------------------------------------------
         min_r = -0.03
-        max_r =  0.07      
+        max_r =  0.07
         pos_reward = self._get_position_reward(x_m, y_m, min_reward=min_r, max_reward=max_r)
         reward += pos_reward
 
-        # READINESS REWARD → encourages moving toward goal direction
-        vec_to_goal = np.array([self.goal_x - x_m, self.goal_y - y_m])
+        # ------------------------------------------------------------------
+        # READINESS REWARD → encourages movement toward the goal direction
+        # (only when the attacker has the ball)
+        # ------------------------------------------------------------------
+        if movement is None:
+            movement = np.array([0.0, 0.0], dtype=float)
+        else:
+            movement = np.asarray(movement, dtype=float)
+
+        # direction from ATTACKER to GOAL (in meters)
+        vec_to_goal = np.array([self.goal_x - x_m, self.goal_y - y_m], dtype=float)
         vec_to_goal /= (np.linalg.norm(vec_to_goal) + 1e-6)
 
-        movement_norm = movement / (np.linalg.norm(movement) + 1e-6)
-        readiness = float(np.dot(movement_norm, vec_to_goal))  # [-1, +1]
+        # normalize movement in NORMALISED space (direction only)
+        if np.linalg.norm(movement) > 1e-6:
+            movement_norm = movement / np.linalg.norm(movement)
+        else:
+            movement_norm = np.array([0.0, 0.0], dtype=float)
 
-        # READINESS: always non-negative
+        readiness = float(np.dot(movement_norm, vec_to_goal))  # ∈ [-1, +1]
+
+        # READINESS is scaled by how "good" the position already is:
+        # worse positions → higher weight; better positions → lower weight.
         pos_norm = np.clip((pos_reward - min_r) / (max_r - min_r), 0.0, 1.0)
         readiness_weight = 1.0 - pos_norm
 
         if self.ball.owner is self.attacker:
-            reward += readiness_weight * 0.05 * readiness   # ∈ [0, 0.05]
+            # Max contribution is about +0.05 when perfectly aligned and in poor positions
+            reward += readiness_weight * 0.05 * readiness
 
-        # BONUS FOR GOAL
-        if self._is_goal(bx_m, by_m) and not self.ball.get_owner() is self.attacker:
+        # ------------------------------------------------------------------
+        # GOAL / POSSESSION / OUT-OF-BOUNDS EVENTS
+        # ------------------------------------------------------------------
+        # BONUS FOR GOAL (ball crossing the goal line)
+        if self._is_goal(bx_m, by_m) and self.ball.get_owner() is not self.attacker:
             reward += 10.0
 
         # PENALTY FOR POSSESSION LOSS
@@ -250,98 +279,121 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         if self._is_ball_completely_out(bx_m, by_m):
             reward -= 2.5
 
-        # Invalid shot attempt
+        # ------------------------------------------------------------------
+        # INVALID SHOT ATTEMPT
+        # ------------------------------------------------------------------
         if shot_flag and self.ball.owner is not self.attacker:
             reward -= 0.25
             self.shot_start_bonus = 0.0  # no shot bonus
 
-        # START OF SHOT
+        # ------------------------------------------------------------------
+        # START OF SHOT: ALL ANGLE-BASED REWARDS ARE RELATIVE TO THE GOAL
+        # ------------------------------------------------------------------
         if self.is_shooting and self.shot_just_started:
 
-            # SHOT QUALITY REWARD
+            # Reward based on pre-computed shot_quality (e.g. FOV / mechanics)
             reward += shot_quality
 
-            # Bonus for initiating the shot
+            # Bonus for initiating a shot at all
             self.shot_start_bonus = 0.3
             reward += self.shot_start_bonus
 
-            # Normalized direction to goal (for angle shaping)
-            goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m])
+            # Direction from BALL to GOAL CENTER (goal-relative reference)
+            goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m], dtype=float)
             gn = np.linalg.norm(goal_dir)
-            goal_dir = goal_dir / gn if gn > 1e-6 else np.array([1.0, 0.0])
+            if gn > 1e-6:
+                goal_dir = goal_dir / gn
+            else:
+                goal_dir = np.array([1.0, 0.0], dtype=float)  # fallback
 
-            # Direction of shot
+            # Direction of the shot (unit vector)
             shot_dir = (
                 self.shot_direction
                 if self.shot_direction is not None
-                else goal_dir
+                else goal_dir.copy()
             )
 
-            # ALIGNMENT REWARD → KEY COMPONENT
-            alignment = np.clip(np.dot(shot_dir, goal_dir), -1, 1)
+            if np.linalg.norm(shot_dir) > 1e-6:
+                shot_dir = shot_dir / np.linalg.norm(shot_dir)
+            else:
+                shot_dir = goal_dir.copy()
 
-            # main alignment reward
-            reward += 2.0 * alignment   # ∈ [-2, +2]
+            # ---------------- GAUSSIAN ANGLE REWARD (GOAL-RELATIVE) ----------------
+            # angle between shot direction and goal direction
+            cos_angle = np.clip(np.dot(shot_dir, goal_dir), -1.0, 1.0)
+            angle = np.arccos(cos_angle)  # [0, π]
 
-            # alignment soft penalties (non-cumulative -> elif)
-            if alignment < -0.25:
-                reward -= 2.0
-            elif alignment < 0.0:
-                reward -= 1.5
-            elif alignment < 0.25:
-                reward -= 1.0
+            # tighter tolerance (e.g. 30°) to push towards the goal center
+            sigma = np.radians(30.0)
+            angle_reward = float(np.exp(-(angle ** 2) / (2.0 * sigma ** 2)))  # (0, 1]
 
-            # DISTANCE-TO-GOAL SHAPING
-            dist = np.linalg.norm([self.goal_x - x_m, self.goal_y - y_m])
-            max_dist = np.linalg.norm([
+            # strong positive signal for goal-oriented shots
+            reward += 4.0 * angle_reward  # ∈ (0, +4]
+
+            # ------------- HARD PENALTY FOR VERY SIDEWAYS/BACKWARD SHOTS ----------
+            if angle > np.radians(45.0):
+                reward -= 2.5
+
+            # ----------------- DISTANCE-TO-GOAL SHAPING (GOAL-PROXIMITY) ----------
+            dist = float(np.linalg.norm([self.goal_x - x_m, self.goal_y - y_m]))
+            max_dist = float(np.linalg.norm([
                 self.pitch.x_max - self.pitch.x_min,
                 0.5 * (self.pitch.y_max - self.pitch.y_min),
-            ])
+            ]))
 
-            dist_norm = 1 - dist / max_dist
-            dist_norm = np.clip(dist_norm, 0.0, 1.0)
+            dist_norm = 1.0 - dist / (max_dist + 1e-6)
+            dist_norm = float(np.clip(dist_norm, 0.0, 1.0))
 
             # distance reshaped between -0.2 and +0.6
-            dist_reward = -0.2 + dist_norm * 0.8     # [-0.2, +0.6]
-            reward += dist_reward       
+            dist_reward = -0.2 + dist_norm * 0.8  # ∈ [-0.2, +0.6]
+            reward += dist_reward
 
-            # LOGGING: TIME OF SHOT IN SECONDS
-            if self.is_shooting:
-                self.shot_step = self._t
-            else:
-                self.shot_step = None
+            # LOGGING: TIME OF SHOT IN STEPS (for later conversion to seconds if needed)
+            self.shot_step = self._t
 
+        else:
+            # no shot in this step
+            self.shot_step = None
 
+        # ------------------------------------------------------------------
         # FINAL EPISODE BONUS / PENALTY
+        # ------------------------------------------------------------------
         terminated_now = self._check_termination()
         if self._t == self.max_steps - 1 or terminated_now:
 
-            if self.shot_start_bonus > 0:
+            if getattr(self, "shot_start_bonus", 0.0) > 0.0:
+                # Bonus for having taken (at least) one shot
+                # self.shot_pos_rew ∈ [-0.03, 0.07]
+                # scaled into roughly [1.5, 6.5]
+                reward += 3.0 + 5.0 * (self.shot_pos_rew * 10.0)
 
-                # Bonus for having taken a shot (scaled positional shot reward)
-                # remember: self.shot_pos_rew ∈ [-0.03, 0.07]
-                reward += 3.0 + 5.0 * (self.shot_pos_rew * 10)      # ∈ [-0.5, 6.5]
-
-                # FINAL SHOT ANGLE CONSOLIDATION REWARD
-                goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m])
+                # SMALL final consolidation based on final shot direction vs goal
+                # (goal-relative, but low weight to avoid double-counting)
+                goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m], dtype=float)
                 goal_dir /= (np.linalg.norm(goal_dir) + 1e-6)
 
-                final_alignment = float(np.dot(self.shot_direction, goal_dir))
-                final_alignment_clamped = max(final_alignment, 0.0)
-                reward += 2.0 * final_alignment_clamped   # ∈ [0, +2.0]
-
+                if self.shot_direction is not None and np.linalg.norm(self.shot_direction) > 1e-6:
+                    final_shot_dir = self.shot_direction / np.linalg.norm(self.shot_direction)
+                    final_alignment = float(np.clip(np.dot(final_shot_dir, goal_dir), -1.0, 1.0))
+                    final_alignment_clamped = max(final_alignment, 0.0)
+                    reward += 0.5 * final_alignment_clamped  # small consolidation term
             else:
-                reward -= 7.5      # episode ends with no shots
+                # Episode ends with no shots at all
+                reward -= 7.5
 
-        # LOGGING
+        # ------------------------------------------------------------------
+        # LOGGING (for diagnostics/debug)
+        # ------------------------------------------------------------------
         self.reward_components = {
             "position": float(pos_reward),
-            "shot_start_bonus": float(self.shot_start_bonus),
-            "goal": 15.0 if self._is_goal(bx_m, by_m) else 0.0,
-            "possession_lost": -3.0 if self._check_possession_loss() else 0.0,
+            "shot_start_bonus": float(getattr(self, "shot_start_bonus", 0.0)),
+            "goal": 10.0 if self._is_goal(bx_m, by_m) else 0.0,
+            "possession_lost": -2.5 if self.possession_lost else 0.0,
+            "time_penalty": -0.01,
         }
 
-        return reward
+        return float(reward)
+
 
 
 
