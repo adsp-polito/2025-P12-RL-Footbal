@@ -586,7 +586,23 @@ class FootballMultiEnv(MultiAgentEnv):
         for agent_id in self.agents:
             observations[agent_id] = self._get_observation(agent_id)
 
-        # Step 9: Termination / Truncation
+        # Step 9: Cleanup for next step
+        self.shot_just_started = False
+        self.pass_just_started = False
+
+        # Manage reset of shot/pass context after a collision
+        if collision or new_owner is not None or ball_out_by is not None or goal_team is not None:
+            self._reset_shot_context()
+            self._reset_pass_context()
+
+        # Step 10: Post-processing infos
+        for agent_id in self.agents:
+            player = self.players[agent_id]
+            has_ball = self.ball.get_owner() == agent_id
+
+            infos[agent_id]["has_ball"] = has_ball
+
+        # Step 11: Termination / Truncation
         terminated_event = (goal_team is not None) or (ball_out_by is not None)
         timeout_event = self.episode_step >= self.max_steps
 
@@ -609,22 +625,6 @@ class FootballMultiEnv(MultiAgentEnv):
         # Global termination / truncation (for RLib compliance)
         terminations["__all__"] = any(terminations.values())
         truncations["__all__"]  = any(truncations.values())
-
-        # Step 10: Cleanup for next step
-        self.shot_just_started = False
-        self.pass_just_started = False
-
-        # Manage reset of shot/pass context after a collision
-        if collision or new_owner is not None or ball_out_by is not None or goal_team is not None:
-            self._reset_shot_context()
-            self._reset_pass_context()
-
-        # Step 11: Post-processing infos
-        for agent_id in self.agents:
-            player = self.players[agent_id]
-            has_ball = self.ball.get_owner() == agent_id
-
-            infos[agent_id]["has_ball"] = has_ball
 
         return observations, rewards, terminations, truncations, infos
     

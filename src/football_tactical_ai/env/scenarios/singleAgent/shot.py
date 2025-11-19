@@ -283,7 +283,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
 
             # GAUSSIAN ANGLE REWARD
             # More reward as angle ==> 0°
-            sigma = np.radians(28.0)
+            sigma = np.radians(25.0)
             angle_reward = float(np.exp(-(angle ** 2) / (2.0 * sigma ** 2)))
             reward += 5.0 * angle_reward
 
@@ -343,7 +343,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
                     reward -= 1.5 * final_penalty
 
             else:
-                reward -= 7.5    # episode ended with no shot
+                reward -= 8.5    # episode ended with no shot
 
         # LOGGING (for analysis and debugging)
         self.reward_components = {
