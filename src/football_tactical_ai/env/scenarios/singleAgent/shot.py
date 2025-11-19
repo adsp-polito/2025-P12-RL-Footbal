@@ -199,191 +199,174 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
     def compute_reward(self, shot_flag=None, shot_quality=0.0, movement=None):
         """
         Compute the reward for the current step.
-
-        Args:
-            shot_flag (bool): Whether a shot was attempted this step.
-            shot_quality (float): Quality of the shot attempted (if any).
-            movement (np.ndarray): 2D movement vector of the attacker in NORMALISED coords.
-
-        Returns:
-            reward (float): Computed reward for the current step.
+        Balances movement (advancement), decision-making (when to shoot),
+        and shot quality (direction, angle, and landing position).
         """
 
         reward = 0.0
 
-        # ------------------------------------------------------------------
-        # SMALL TIME PENALTY → encourages faster decision-making
-        # ------------------------------------------------------------------
+        # ----------------------------------------------------------------------
+        # SMALL TIME PENALTY → encourages fast decision-making
+        # ----------------------------------------------------------------------
         reward -= 0.01
 
-        # ------------------------------------------------------------------
-        # REAL POSITIONS IN METERS (attacker + ball)
-        # ------------------------------------------------------------------
+        # ----------------------------------------------------------------------
+        # REAL POSITIONS IN METERS (attacker and ball)
+        # ----------------------------------------------------------------------
         att_x, att_y = self.attacker.get_position()
         x_m, y_m = denormalize(att_x, att_y)
 
         ball_x, ball_y = self.ball.position
-        bx_m, by_m = denormalize(ball_x, by_m) if False else denormalize(ball_x, ball_y)  # ensure denormalize used correctly
         bx_m, by_m = denormalize(ball_x, ball_y)
 
-        # ------------------------------------------------------------------
-        # POSITIONAL REWARD → encourages moving toward better shooting areas
-        # ------------------------------------------------------------------
-        min_r = -0.03
-        max_r =  0.07
-        pos_reward = self._get_position_reward(x_m, y_m, min_reward=min_r, max_reward=max_r)
+        # ----------------------------------------------------------------------
+        # POSITIONAL REWARD (pitch spatial grid)
+        # ----------------------------------------------------------------------
+        min_r, max_r = -0.03, 0.07
+        pos_reward = self._get_position_reward(x_m, y_m,
+                                            min_reward=min_r,
+                                            max_reward=max_r)
         reward += pos_reward
 
-        # ------------------------------------------------------------------
-        # READINESS REWARD → encourages movement toward the goal direction
-        # (only when the attacker has the ball)
-        # ------------------------------------------------------------------
+        # ----------------------------------------------------------------------
+        # READINESS → encourages moving toward the goal direction
+        # ----------------------------------------------------------------------
         if movement is None:
             movement = np.array([0.0, 0.0], dtype=float)
         else:
             movement = np.asarray(movement, dtype=float)
 
-        # direction from ATTACKER to GOAL (in meters)
         vec_to_goal = np.array([self.goal_x - x_m, self.goal_y - y_m], dtype=float)
         vec_to_goal /= (np.linalg.norm(vec_to_goal) + 1e-6)
 
-        # normalize movement in NORMALISED space (direction only)
         if np.linalg.norm(movement) > 1e-6:
             movement_norm = movement / np.linalg.norm(movement)
         else:
             movement_norm = np.array([0.0, 0.0], dtype=float)
 
-        readiness = float(np.dot(movement_norm, vec_to_goal))  # ∈ [-1, +1]
+        readiness = float(np.dot(movement_norm, vec_to_goal))  # ∈ [-1, 1]
 
-        # READINESS is scaled by how "good" the position already is:
-        # worse positions → higher weight; better positions → lower weight.
+        # Scale readiness more strongly when positional reward is low
         pos_norm = np.clip((pos_reward - min_r) / (max_r - min_r), 0.0, 1.0)
         readiness_weight = 1.0 - pos_norm
 
         if self.ball.owner is self.attacker:
-            # Max contribution is about +0.05 when perfectly aligned and in poor positions
             reward += readiness_weight * 0.05 * readiness
 
-        # ------------------------------------------------------------------
-        # GOAL / POSSESSION / OUT-OF-BOUNDS EVENTS
-        # ------------------------------------------------------------------
-        # BONUS FOR GOAL (ball crossing the goal line)
+        # ----------------------------------------------------------------------
+        # EVENT-BASED REWARDS → goals, possession loss, ball out
+        # ----------------------------------------------------------------------
         if self._is_goal(bx_m, by_m) and self.ball.get_owner() is not self.attacker:
             reward += 10.0
 
-        # PENALTY FOR POSSESSION LOSS
         if self.possession_lost:
             reward -= 2.5
 
-        # BALL OUT OF BOUNDS
         if self._is_ball_completely_out(bx_m, by_m):
             reward -= 2.5
 
-        # ------------------------------------------------------------------
-        # INVALID SHOT ATTEMPT
-        # ------------------------------------------------------------------
         if shot_flag and self.ball.owner is not self.attacker:
             reward -= 0.25
-            self.shot_start_bonus = 0.0  # no shot bonus
+            self.shot_start_bonus = 0.0
 
-        # ------------------------------------------------------------------
-        # START OF SHOT: ALL ANGLE-BASED REWARDS ARE RELATIVE TO THE GOAL
-        # ------------------------------------------------------------------
+        # ----------------------------------------------------------------------
+        # SHOOTING REWARD (triggered when a shot is initiated)
+        # ----------------------------------------------------------------------
         if self.is_shooting and self.shot_just_started:
 
-            # Reward based on pre-computed shot_quality (e.g. FOV / mechanics)
             reward += shot_quality
 
-            # Bonus for initiating a shot at all
+            # Shot initiation bonus
             self.shot_start_bonus = 0.3
             reward += self.shot_start_bonus
 
-            # Direction from BALL to GOAL CENTER (goal-relative reference)
+            # Directions
             goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m], dtype=float)
-            gn = np.linalg.norm(goal_dir)
-            if gn > 1e-6:
-                goal_dir = goal_dir / gn
-            else:
-                goal_dir = np.array([1.0, 0.0], dtype=float)  # fallback
+            goal_dir /= (np.linalg.norm(goal_dir) + 1e-6)
 
-            # Direction of the shot (unit vector)
             shot_dir = (
-                self.shot_direction
-                if self.shot_direction is not None
-                else goal_dir.copy()
+                self.shot_direction if self.shot_direction is not None else goal_dir.copy()
             )
+            shot_dir /= (np.linalg.norm(shot_dir) + 1e-6)
 
-            if np.linalg.norm(shot_dir) > 1e-6:
-                shot_dir = shot_dir / np.linalg.norm(shot_dir)
-            else:
-                shot_dir = goal_dir.copy()
-
-            # ---------------- GAUSSIAN ANGLE REWARD (GOAL-RELATIVE) ----------------
-            # angle between shot direction and goal direction
+            # Angle shot→goal
             cos_angle = np.clip(np.dot(shot_dir, goal_dir), -1.0, 1.0)
-            angle = np.arccos(cos_angle)  # [0, π]
+            angle = np.arccos(cos_angle)
 
-            # tighter tolerance (e.g. 30°) to push towards the goal center
-            sigma = np.radians(30.0)
-            angle_reward = float(np.exp(-(angle ** 2) / (2.0 * sigma ** 2)))  # (0, 1]
+            # ------------------------------------------------------------------
+            # GAUSSIAN ANGLE REWARD (core component)
+            # More reward as angle → 0°
+            # ------------------------------------------------------------------
+            sigma = np.radians(28.0)
+            angle_reward = float(np.exp(-(angle ** 2) / (2.0 * sigma ** 2)))
+            reward += 5.0 * angle_reward
 
-            # strong positive signal for goal-oriented shots
-            reward += 4.0 * angle_reward  # ∈ (0, +4]
+            # ------------------------------------------------------------------
+            # SOFT PENALTY FOR BAD ANGLES (smooth, PPO-friendly)
+            # ------------------------------------------------------------------
+            bad_angle_penalty = (angle / np.pi) ** 2      # ∈ [0..1]
+            reward -= 2.0 * bad_angle_penalty
 
-            # ------------- HARD PENALTY FOR VERY SIDEWAYS/BACKWARD SHOTS ----------
-            if angle > np.radians(45.0):
-                reward -= 2.5
-
-            # ----------------- DISTANCE-TO-GOAL SHAPING (GOAL-PROXIMITY) ----------
+            # ------------------------------------------------------------------
+            # DISTANCE-BASED SHAPING (closer = better)
+            # ------------------------------------------------------------------
             dist = float(np.linalg.norm([self.goal_x - x_m, self.goal_y - y_m]))
             max_dist = float(np.linalg.norm([
                 self.pitch.x_max - self.pitch.x_min,
                 0.5 * (self.pitch.y_max - self.pitch.y_min),
             ]))
-
             dist_norm = 1.0 - dist / (max_dist + 1e-6)
             dist_norm = float(np.clip(dist_norm, 0.0, 1.0))
 
-            # distance reshaped between -0.2 and +0.6
-            dist_reward = -0.2 + dist_norm * 0.8  # ∈ [-0.2, +0.6]
+            dist_reward = -0.2 + dist_norm * 0.8
             reward += dist_reward
 
-            # LOGGING: TIME OF SHOT IN STEPS (for later conversion to seconds if needed)
             self.shot_step = self._t
 
         else:
-            # no shot in this step
             self.shot_step = None
 
-        # ------------------------------------------------------------------
-        # FINAL EPISODE BONUS / PENALTY
-        # ------------------------------------------------------------------
+        # ----------------------------------------------------------------------
+        # FINAL EPISODE BONUS → use ball landing and final shot angle
+        # ----------------------------------------------------------------------
         terminated_now = self._check_termination()
         if self._t == self.max_steps - 1 or terminated_now:
 
             if getattr(self, "shot_start_bonus", 0.0) > 0.0:
-                # Bonus for having taken (at least) one shot
-                # self.shot_pos_rew ∈ [-0.03, 0.07]
-                # scaled into roughly [1.5, 6.5]
+
+                # Base final bonus
                 reward += 3.0 + 5.0 * (self.shot_pos_rew * 10.0)
 
-                # SMALL final consolidation based on final shot direction vs goal
-                # (goal-relative, but low weight to avoid double-counting)
+                # (1) Vertical landing accuracy (where the ball ends)
+                dy_final = abs(by_m - self.goal_y)
+                goal_half_h = self.pitch.goal_width / 2.0
+                dy_norm = dy_final / (goal_half_h + 1e-6)
+
+                center_bonus = float(1.0 - np.clip(dy_norm, 0.0, 1.0))
+                reward += 3.0 * center_bonus
+
                 goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m], dtype=float)
                 goal_dir /= (np.linalg.norm(goal_dir) + 1e-6)
 
+                # (2) Final angular reward (how good was shot direction)
                 if self.shot_direction is not None and np.linalg.norm(self.shot_direction) > 1e-6:
                     final_shot_dir = self.shot_direction / np.linalg.norm(self.shot_direction)
-                    final_alignment = float(np.clip(np.dot(final_shot_dir, goal_dir), -1.0, 1.0))
-                    final_alignment_clamped = max(final_alignment, 0.0)
-                    reward += 0.5 * final_alignment_clamped  # small consolidation term
-            else:
-                # Episode ends with no shots at all
-                reward -= 7.5
 
-        # ------------------------------------------------------------------
-        # LOGGING (for diagnostics/debug)
-        # ------------------------------------------------------------------
+                    final_cos = np.clip(np.dot(final_shot_dir, goal_dir), -1.0, 1.0)
+                    final_angle = np.arccos(final_cos)
+
+                    final_angle_reward = np.exp(-(final_angle**2) / (2 * np.radians(30)**2))
+                    reward += 2.0 * final_angle_reward
+
+                    final_penalty = (final_angle / np.pi) ** 2
+                    reward -= 1.5 * final_penalty
+
+            else:
+                reward -= 7.5    # episode ended with no shot
+
+        # ----------------------------------------------------------------------
+        # LOGGING (for analysis and debugging)
+        # ----------------------------------------------------------------------
         self.reward_components = {
             "position": float(pos_reward),
             "shot_start_bonus": float(getattr(self, "shot_start_bonus", 0.0)),
@@ -393,6 +376,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         }
 
         return float(reward)
+
 
 
 
