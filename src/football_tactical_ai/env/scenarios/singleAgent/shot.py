@@ -293,6 +293,8 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
 
             # DISTANCE-BASED SHAPING (closer = better)
             dist = float(np.linalg.norm([self.goal_x - x_m, self.goal_y - y_m]))
+
+            
             max_dist = float(np.linalg.norm([
                 self.pitch.x_max - self.pitch.x_min,
                 0.5 * (self.pitch.y_max - self.pitch.y_min),
@@ -303,6 +305,8 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             dist_reward = -0.2 + dist_norm * 0.8
             reward += dist_reward
 
+            # LOGGING METRICS
+            self.shot_distance = dist
             self.shot_step = self._t
 
         # FINAL EPISODE BONUS ==> use ball landing and final shot angle
