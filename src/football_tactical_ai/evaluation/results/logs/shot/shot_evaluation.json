@@ -1,40 +1,79 @@
 {
   "edgeBox": {
-    "mean": 5.156840011049933,
-    "std": 7.424787954842726,
-    "min": -10.69064242611155,
-    "max": 13.728209567769587,
+    "mean": 6.546797754545295,
+    "std": 7.80134230089475,
+    "min": -8.354676914479098,
+    "max": 14.292443522253743,
     "runs": [
-      -10.6122487430851,
-      10.227400725069883,
-      7.845362357270183,
-      6.202592397517254,
-      9.523719673080311,
-      8.32689633201728,
-      8.066935817095771,
-      6.592597501340224,
-      12.706954991443654,
-      6.092184980672025,
-      9.769149339984285,
-      10.399625320569076,
-      7.740576230710088,
-      -10.69064242611155,
-      -0.6353587062316834,
-      -10.67075080176483,
-      13.728209567769587,
-      10.435978676738754,
-      0.3109259401655329,
-      7.776691046747927
+      13.986398093657186,
+      -6.026612905087443,
+      6.935005345574021,
+      -8.186615897700328,
+      7.283317756264601,
+      11.616280739386895,
+      7.925629465644152,
+      13.487676679420382,
+      11.919779623900801,
+      10.91082286807649,
+      -8.257886742363459,
+      4.704278723808817,
+      -8.354676914479098,
+      14.292443522253743,
+      11.03138775830714,
+      8.544732946918332,
+      13.878670447643152,
+      9.204195576515517,
+      2.1709625511929307,
+      13.870165451972095
     ],
     "shot_metrics": [
       {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 124,
+        "shot_angle": 0.4773534186633302,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.06988965276412228,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 22,
+        "shot_angle": 1.0931049424795134,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.06067062649888315,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 2,
+        "shot_angle": 1.093126630267364,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.05830824263201648,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
         "valid_shot": null,
         "shot_distance": null,
-        "time_to_shot": null,
+        "shot_step": null,
         "shot_angle": null,
         "shot_power": null,
         "reward_components": {
-          "position": 0.06037504199662483,
+          "position": 0.060818781084408954,
           "shot_start_bonus": 0.0,
           "goal": 0.0,
           "possession_lost": -3.0
@@ -43,116 +82,12 @@
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 2.9583333333333335,
-        "shot_angle": 1.0935090445849371,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.06727754146914358,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 1.375,
-        "shot_angle": 0.477600090107792,
-        "shot_power": 31.5,
-        "reward_components": {
-          "position": 0.062950408068869,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.3333333333333333,
-        "shot_angle": 0.47767787066204975,
-        "shot_power": 31.5,
-        "reward_components": {
-          "position": 0.05845253711404283,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 2.25,
-        "shot_angle": 0.4773111989835514,
-        "shot_power": 31.5,
-        "reward_components": {
-          "position": 0.06390373727313761,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 1.6666666666666667,
-        "shot_angle": 1.0933196385070871,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.06376891938787008,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 1.25,
-        "shot_angle": 0.47757209671755335,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.0627987761154617,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.5,
-        "shot_angle": 1.0932226677594623,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.06037504199662483,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 4.041666666666667,
-        "shot_angle": 0.47725987957530125,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.06868847238811382,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.041666666666666664,
-        "shot_angle": 0.47766040868182735,
-        "shot_power": 21.0,
+        "shot_step": 14,
+        "shot_angle": 1.0932512434549881,
+        "shot_power": 27.680179595947266,
         "reward_components": {
           "position": 0.0595174386268936,
-          "shot_start_bonus": 0.5,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }
@@ -160,12 +95,12 @@
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 2.2083333333333335,
-        "shot_angle": 0.4772065123203558,
+        "shot_step": 87,
+        "shot_angle": 0.4776359498774317,
         "shot_power": 21.0,
         "reward_components": {
-          "position": 0.06411708325548042,
-          "shot_start_bonus": 0.5,
+          "position": 0.06782382386446043,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }
@@ -173,12 +108,12 @@
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 2.5833333333333335,
-        "shot_angle": 0.4772990915617042,
+        "shot_step": 19,
+        "shot_angle": 1.09313022514794,
         "shot_power": 21.0,
         "reward_components": {
-          "position": 0.06618468890261953,
-          "shot_start_bonus": 0.5,
+          "position": 0.06191517164412502,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }
@@ -186,12 +121,38 @@
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 1.375,
-        "shot_angle": 1.0932471124158611,
-        "shot_power": 31.5,
+        "shot_step": 114,
+        "shot_angle": 0.47739020346555844,
+        "shot_power": 21.0,
         "reward_components": {
-          "position": 0.06176522849364591,
-          "shot_start_bonus": 0.5,
+          "position": 0.06972995711029115,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 67,
+        "shot_angle": 0.43753333543911177,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.06627738491467824,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 69,
+        "shot_angle": 0.47751731283602256,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.06713153631164852,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }
@@ -199,11 +160,37 @@
       {
         "valid_shot": null,
         "shot_distance": null,
-        "time_to_shot": null,
+        "shot_step": null,
         "shot_angle": null,
         "shot_power": null,
         "reward_components": {
-          "position": 0.060818781084408954,
+          "position": 0.05966370891892983,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": -3.0
+        }
+      },
+      {
+        "valid_shot": null,
+        "shot_distance": null,
+        "shot_step": null,
+        "shot_angle": null,
+        "shot_power": null,
+        "reward_components": {
+          "position": 0.06473373680281508,
+          "shot_start_bonus": 0.0,
+          "goal": 15.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": null,
+        "shot_distance": null,
+        "shot_step": null,
+        "shot_angle": null,
+        "shot_power": null,
+        "reward_components": {
+          "position": 0.0595174386268936,
           "shot_start_bonus": 0.0,
           "goal": 0.0,
           "possession_lost": -3.0
@@ -212,12 +199,64 @@
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 3.625,
-        "shot_angle": 2.6642617965485433,
+        "shot_step": 138,
+        "shot_angle": 0.47757892345022396,
         "shot_power": 21.0,
         "reward_components": {
-          "position": 0.0685210455722747,
-          "shot_start_bonus": 0.5,
+          "position": 0.06899508337158775,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 143,
+        "shot_angle": 2.0481012486658323,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.06932859062327887,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 29,
+        "shot_angle": 0.4775913026923634,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.062950408068869,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 127,
+        "shot_angle": 1.0933943993090032,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.06988965276412228,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 43,
+        "shot_angle": 0.47766948318418806,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.06467343574583692,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }
@@ -225,64 +264,25 @@
       {
         "valid_shot": null,
         "shot_distance": null,
-        "time_to_shot": null,
+        "shot_step": null,
         "shot_angle": null,
         "shot_power": null,
         "reward_components": {
-          "position": 0.060818781084408954,
+          "position": -0.03,
           "shot_start_bonus": 0.0,
           "goal": 0.0,
-          "possession_lost": -3.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 4.708333333333333,
-        "shot_angle": 0.47727217305940134,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.06956726553610618,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
           "possession_lost": 0.0
         }
       },
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 3.625,
-        "shot_angle": 0.739263866837862,
+        "shot_step": 120,
+        "shot_angle": 1.0932937501695168,
         "shot_power": 21.0,
         "reward_components": {
-          "position": 0.06917303020125373,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 3.9166666666666665,
-        "shot_angle": 2.047840698584079,
-        "shot_power": 31.5,
-        "reward_components": {
-          "position": 0.06504512878444989,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 1.0833333333333333,
-        "shot_angle": 0.47753477535500405,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.06249625388629623,
-          "shot_start_bonus": 0.5,
+          "position": 0.06972670067506229,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }
@@ -290,327 +290,102 @@
     ]
   },
   "left": {
-    "mean": 4.636412917661505,
-    "std": 2.5854237144601746,
-    "min": -5.463954538727266,
-    "max": 7.34613358879905,
+    "mean": 0.8646431901325109,
+    "std": 8.252494282861406,
+    "min": -8.118470875444272,
+    "max": 13.141454898364799,
     "runs": [
-      -5.463954538727266,
-      4.19533761758181,
-      5.465483846825827,
-      5.235312121198712,
-      5.499184318849925,
-      3.9931218073606987,
-      5.852689406033093,
-      5.066942897184841,
-      3.6197078040913238,
-      7.34613358879905,
-      7.057396843937647,
-      3.455875665403177,
-      3.824240394527532,
-      5.992535033967798,
-      6.300876217500821,
-      4.781879733364688,
-      4.76586797773705,
-      3.8124409644755515,
-      7.074341544637312,
-      4.852845108480507
+      11.732505020531814,
+      -8.016539485350034,
+      -8.052296113488708,
+      12.377645457460465,
+      -7.753217330914701,
+      -7.887797575438851,
+      -7.755157730310765,
+      5.031279900230251,
+      -7.755083528881441,
+      10.400053612533961,
+      6.996359542564573,
+      -8.118470875444272,
+      4.135948533100196,
+      0.9685158798571161,
+      -8.022221930458977,
+      7.809586533415029,
+      -6.141064354133369,
+      13.141454898364799,
+      4.705211292691373,
+      9.496152056321758
     ],
     "shot_metrics": [
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 1.4166666666666667,
-        "shot_angle": 2.0473182217658046,
-        "shot_power": 31.5,
-        "reward_components": {
-          "position": 0.03877396709104303,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 1.125,
-        "shot_angle": 1.094334036526741,
-        "shot_power": 31.5,
-        "reward_components": {
-          "position": 0.03539365844107718,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.75,
-        "shot_angle": 0.47651886823659645,
-        "shot_power": 31.5,
-        "reward_components": {
-          "position": 0.035900612576299604,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.3333333333333333,
-        "shot_angle": 0.47658818058355423,
+        "shot_step": 166,
+        "shot_angle": 1.0943576371761725,
         "shot_power": 21.0,
         "reward_components": {
-          "position": 0.03539365844107718,
-          "shot_start_bonus": 0.5,
+          "position": 0.05954228773161649,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }
       },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.4583333333333333,
-        "shot_angle": 0.4766554639578961,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.037124408240655396,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.6666666666666666,
-        "shot_angle": 1.0942699579106443,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.03420141738042404,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.7916666666666666,
-        "shot_angle": 0.4765678194468209,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.03655477468042058,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.20833333333333334,
-        "shot_angle": 0.4765996034238899,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.03753442939339696,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.4583333333333333,
-        "shot_angle": 1.0942364956864712,
-        "shot_power": 31.5,
-        "reward_components": {
-          "position": 0.031733410776918776,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 1.7916666666666667,
-        "shot_angle": 0.47650313735688204,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.03791590074316982,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 1.6666666666666667,
-        "shot_angle": 0.47651650264615575,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.03982731656642935,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.20833333333333334,
-        "shot_angle": 1.094174344038427,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.03336728615377514,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.4583333333333333,
-        "shot_angle": 1.0942125985158608,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.032980508399034714,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 1.0416666666666667,
-        "shot_angle": 0.47647024637653684,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.03768233992287853,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 1.25,
-        "shot_angle": 0.47644997124835475,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.03768233992287853,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.20833333333333334,
-        "shot_angle": 0.4765996034238899,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.03420141738042404,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.08333333333333333,
-        "shot_angle": 0.4765955715832482,
-        "shot_power": 31.5,
-        "reward_components": {
-          "position": 0.031733410776918776,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.75,
-        "shot_angle": 1.0942669200069033,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.03753442939339696,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 1.5,
-        "shot_angle": 0.4765661878623234,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.04234436269673482,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 0.125,
-        "shot_angle": 0.4765809850457713,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.03420141738042404,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      }
-    ]
-  },
-  "right": {
-    "mean": 7.0976053432102955,
-    "std": 14.478687114191379,
-    "min": -10.21830476869204,
-    "max": 33.789948069549766,
-    "runs": [
-      -10.117659685085593,
-      15.790675644865726,
-      -10.074195869316807,
-      29.565487496943128,
-      15.945842144410388,
-      6.563865123258115,
-      8.699443714128053,
-      6.766989389846956,
-      10.267045525981844,
-      -10.181093465788974,
-      16.662397894031724,
-      13.274813527648238,
-      30.14297334760085,
-      14.147286570773351,
-      11.322684040909246,
-      -10.156292291628715,
-      -10.21830476869204,
-      -10.140679478073576,
-      -10.09912006715577,
-      33.789948069549766
-    ],
-    "shot_metrics": [
       {
         "valid_shot": null,
         "shot_distance": null,
-        "time_to_shot": null,
+        "shot_step": null,
+        "shot_angle": null,
+        "shot_power": null,
+        "reward_components": {
+          "position": 0.03768233992287853,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": -3.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 4,
+        "shot_angle": 1.0941821785473829,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.03643969378133123,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 170,
+        "shot_angle": 1.094268298744715,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.06281392817292096,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": null,
+        "shot_distance": null,
+        "shot_step": null,
+        "shot_angle": null,
+        "shot_power": null,
+        "reward_components": {
+          "position": 0.04059418227087232,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": -3.0
+        }
+      },
+      {
+        "valid_shot": null,
+        "shot_distance": null,
+        "shot_step": null,
         "shot_angle": null,
         "shot_power": null,
         "reward_components": {
@@ -621,113 +396,9 @@
         }
       },
       {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 8.458333333333334,
-        "shot_angle": 0.4778498856932472,
-        "shot_power": 31.5,
-        "reward_components": {
-          "position": 0.0654260706754473,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
         "valid_shot": null,
         "shot_distance": null,
-        "time_to_shot": null,
-        "shot_angle": null,
-        "shot_power": null,
-        "reward_components": {
-          "position": 0.04440470399502214,
-          "shot_start_bonus": 0.0,
-          "goal": 0.0,
-          "possession_lost": -3.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 8.333333333333334,
-        "shot_angle": 1.0929831333807227,
-        "shot_power": 31.5,
-        "reward_components": {
-          "position": 0.0654260706754473,
-          "shot_start_bonus": 0.5,
-          "goal": 15.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 8.333333333333334,
-        "shot_angle": 0.47782498683728086,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.0665229100555483,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 1.0833333333333333,
-        "shot_angle": 1.0919808932777495,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.04587680227534466,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 8.833333333333334,
-        "shot_angle": 0.7485320220996994,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.06708397333064617,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 10.416666666666666,
-        "shot_angle": 1.9899199811761243,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": -0.03,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 10.958333333333334,
-        "shot_angle": 0.4777051896826727,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.06139143989342309,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": null,
-        "shot_distance": null,
-        "time_to_shot": null,
+        "shot_step": null,
         "shot_angle": null,
         "shot_power": null,
         "reward_components": {
@@ -740,64 +411,51 @@
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 6.958333333333333,
-        "shot_angle": 1.0928184074474125,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.0652735110426189,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 6.25,
-        "shot_angle": 0.4780269008230666,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.06583044098327237,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 9.666666666666666,
-        "shot_angle": 1.0930871511924998,
+        "shot_step": 2,
+        "shot_angle": 0.4765955715832482,
         "shot_power": 31.5,
         "reward_components": {
-          "position": 0.06544788484169714,
-          "shot_start_bonus": 0.5,
-          "goal": 15.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 10.083333333333334,
-        "shot_angle": 0.47770434506755544,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.06446037081306942,
-          "shot_start_bonus": 0.5,
+          "position": 0.03493829640276171,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }
       },
       {
+        "valid_shot": null,
+        "shot_distance": null,
+        "shot_step": null,
+        "shot_angle": null,
+        "shot_power": null,
+        "reward_components": {
+          "position": 0.04440470399502214,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": -3.0
+        }
+      },
+      {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 3.9583333333333335,
-        "shot_angle": 1.0924952675509498,
+        "shot_step": 100,
+        "shot_angle": 0.47651092221191543,
         "shot_power": 31.5,
         "reward_components": {
-          "position": 0.0585609126820093,
-          "shot_start_bonus": 0.5,
+          "position": 0.05269169432271173,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 65,
+        "shot_angle": 1.0943616161614922,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.046240641671938226,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }
@@ -805,46 +463,46 @@
       {
         "valid_shot": null,
         "shot_distance": null,
-        "time_to_shot": null,
+        "shot_step": null,
         "shot_angle": null,
         "shot_power": null,
         "reward_components": {
-          "position": 0.04316514640591164,
+          "position": 0.04000996107009344,
           "shot_start_bonus": 0.0,
           "goal": 0.0,
           "possession_lost": -3.0
         }
       },
       {
-        "valid_shot": null,
+        "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": null,
-        "shot_angle": null,
-        "shot_power": null,
+        "shot_step": 8,
+        "shot_angle": 1.0942077865150872,
+        "shot_power": 31.5,
         "reward_components": {
-          "position": 0.041628617207489796,
-          "shot_start_bonus": 0.0,
+          "position": 0.03336728615377514,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
-          "possession_lost": -3.0
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 16,
+        "shot_angle": 2.042718380790948,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.03464739024794029,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
         }
       },
       {
         "valid_shot": null,
         "shot_distance": null,
-        "time_to_shot": null,
-        "shot_angle": null,
-        "shot_power": null,
-        "reward_components": {
-          "position": 0.04316514640591164,
-          "shot_start_bonus": 0.0,
-          "goal": 0.0,
-          "possession_lost": -3.0
-        }
-      },
-      {
-        "valid_shot": null,
-        "shot_distance": null,
-        "time_to_shot": null,
+        "shot_step": null,
         "shot_angle": null,
         "shot_power": null,
         "reward_components": {
@@ -857,54 +515,158 @@
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 10.333333333333334,
-        "shot_angle": 1.093058824726941,
+        "shot_step": 67,
+        "shot_angle": 1.0942117194848275,
         "shot_power": 21.0,
         "reward_components": {
-          "position": 0.06446037081306942,
-          "shot_start_bonus": 0.5,
-          "goal": 15.0,
+          "position": 0.04828019830354137,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 56,
+        "shot_angle": 1.0942591494906275,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.045150643255567724,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 147,
+        "shot_angle": 0.47641259103578276,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.05696616766252734,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 18,
+        "shot_angle": 1.0943206444546776,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.035900612576299604,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 111,
+        "shot_angle": 1.0943910745306171,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.05245846201208633,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
           "possession_lost": 0.0
         }
       }
     ]
   },
-  "central": {
-    "mean": 1.8658376220763913,
-    "std": 8.772395064151816,
-    "min": -9.054472611153614,
-    "max": 13.812284995940086,
+  "right": {
+    "mean": 2.977789414761781,
+    "std": 8.408035595385709,
+    "min": -8.200317679703412,
+    "max": 17.2702075653886,
     "runs": [
-      -8.891239120842492,
-      3.9939892367022223,
-      10.084759317916287,
-      13.16489846465587,
-      10.35421768960726,
-      -8.867291200691158,
-      13.812284995940086,
-      9.97704000863413,
-      2.92959789786138,
-      -8.76555498675108,
-      -8.896672336632843,
-      -9.054472611153614,
-      11.379496778172397,
-      12.316924607500678,
-      -8.918982220165496,
-      -0.32208420376874436,
-      -0.22280675267284233,
-      -8.942472002502965,
-      5.427820354569307,
-      6.757298525149455
+      7.893867845266438,
+      5.439267620349568,
+      5.004434917787906,
+      -8.125845959658868,
+      -8.113903093315214,
+      4.289275826266451,
+      8.79446855615697,
+      -2.564731560884927,
+      -7.649763687429476,
+      -7.8901931702612185,
+      6.387205663860784,
+      17.2702075653886,
+      -8.200317679703412,
+      5.39310495499661,
+      16.192146325210878,
+      5.962185939624886,
+      5.129380250697219,
+      6.479596089896823,
+      15.911785941081785,
+      -8.046384050096197
     ],
     "shot_metrics": [
       {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 130,
+        "shot_angle": 2.662899915208733,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.05513980548801625,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 37,
+        "shot_angle": 0.47901570213492445,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.03768233992287853,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 28,
+        "shot_angle": 0.47903286422797636,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.037124408240655396,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
         "valid_shot": null,
         "shot_distance": null,
-        "time_to_shot": null,
+        "shot_step": null,
         "shot_angle": null,
         "shot_power": null,
         "reward_components": {
-          "position": 0.04512610827594385,
+          "position": 0.03831625531455428,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": -3.0
+        }
+      },
+      {
+        "valid_shot": null,
+        "shot_distance": null,
+        "shot_step": null,
+        "shot_angle": null,
+        "shot_power": null,
+        "reward_components": {
+          "position": 0.04000996107009344,
           "shot_start_bonus": 0.0,
           "goal": 0.0,
           "possession_lost": -3.0
@@ -913,12 +675,12 @@
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 0.25,
-        "shot_angle": 1.0928807023221636,
+        "shot_step": 9,
+        "shot_angle": 0.47902420653090205,
         "shot_power": 31.5,
         "reward_components": {
-          "position": 0.03029405155135207,
-          "shot_start_bonus": 0.5,
+          "position": 0.03336728615377514,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }
@@ -926,25 +688,354 @@
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 2.75,
-        "shot_angle": 0.4642871170699923,
+        "shot_step": 76,
+        "shot_angle": 1.0918820051960367,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.04361326850071334,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 105,
+        "shot_angle": 1.0921120082173374,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.050595074153718306,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": null,
+        "shot_distance": null,
+        "shot_step": null,
+        "shot_angle": null,
+        "shot_power": null,
+        "reward_components": {
+          "position": 0.044016991061259364,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": -3.0
+        }
+      },
+      {
+        "valid_shot": null,
+        "shot_distance": null,
+        "shot_step": null,
+        "shot_angle": null,
+        "shot_power": null,
+        "reward_components": {
+          "position": 0.04284214305167318,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": -3.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 22,
+        "shot_angle": 1.0918182040137632,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.041628617207489796,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 216,
+        "shot_angle": 1.0923544438289754,
         "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.05381714098459786,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": null,
+        "shot_distance": null,
+        "shot_step": null,
+        "shot_angle": null,
+        "shot_power": null,
+        "reward_components": {
+          "position": 0.03831625531455428,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": -3.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 8,
+        "shot_angle": 1.0917815082124458,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.03625013700915214,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 200,
+        "shot_angle": 1.0921247213865026,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.05211721986278103,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 12,
+        "shot_angle": 1.0918368156836733,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.03878856556384139,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 3,
+        "shot_angle": 1.0917803709603253,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.03493829640276171,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 35,
+        "shot_angle": 1.091760552074088,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.03768233992287853,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 189,
+        "shot_angle": 1.0921279246928473,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.05006391778908295,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": null,
+        "shot_distance": null,
+        "shot_step": null,
+        "shot_angle": null,
+        "shot_power": null,
+        "reward_components": {
+          "position": 0.04000996107009344,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": -3.0
+        }
+      }
+    ]
+  },
+  "central": {
+    "mean": 7.37268198191519,
+    "std": 7.527672349281411,
+    "min": -6.86117295662828,
+    "max": 20.352197421199335,
+    "runs": [
+      -0.12929982259149897,
+      10.679226253092526,
+      7.421838890339419,
+      -5.251164416598787,
+      6.405144599087252,
+      8.993047587709503,
+      18.151699670620154,
+      16.34940995553184,
+      5.231678377732392,
+      -6.86117295662828,
+      17.444667920993062,
+      9.139497526465423,
+      20.352197421199335,
+      -6.775245985458757,
+      5.7959298991557375,
+      8.177767254590234,
+      8.969135007641622,
+      6.227120369561645,
+      5.721689577968981,
+      11.41047250789199
+    ],
+    "shot_metrics": [
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 3,
+        "shot_angle": 2.663563161151874,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.03371585618434615,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 107,
+        "shot_angle": 0.47779212223290346,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.05704571594663592,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 59,
+        "shot_angle": 1.092991015542221,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.04388176937510993,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 51,
+        "shot_angle": 0.4778796798774226,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.04549497549878159,
+          "shot_start_bonus": 0.0,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 34,
+        "shot_angle": 1.0928677534946587,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.040588419715692395,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 86,
+        "shot_angle": 1.0931447640227927,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.0500325519505149,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 236,
+        "shot_angle": 1.0933614368478382,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.06949089220586291,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 214,
+        "shot_angle": 0.47783280946321194,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.06717753600954278,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 14,
+        "shot_angle": 0.47793558530337293,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.03552725115960881,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": null,
+        "shot_distance": null,
+        "shot_step": null,
+        "shot_angle": null,
+        "shot_power": null,
         "reward_components": {
           "position": 0.0453718189592338,
-          "shot_start_bonus": 0.5,
+          "shot_start_bonus": 0.0,
           "goal": 0.0,
-          "possession_lost": 0.0
+          "possession_lost": -3.0
         }
       },
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 6.083333333333333,
-        "shot_angle": 0.47719915407203595,
+        "shot_step": 220,
+        "shot_angle": 1.0930921007529184,
         "shot_power": 21.0,
         "reward_components": {
-          "position": 0.05879690702936741,
-          "shot_start_bonus": 0.5,
+          "position": 0.06781424159187431,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }
@@ -952,194 +1043,51 @@
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 4.875,
-        "shot_angle": 1.0934749301956628,
+        "shot_step": 77,
+        "shot_angle": 0.7995812532484794,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.0486388698346608,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 283,
+        "shot_angle": 0.47737789448923124,
         "shot_power": 31.5,
         "reward_components": {
-          "position": 0.05379524875422585,
-          "shot_start_bonus": 0.5,
+          "position": 0.06956726553610618,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }
       },
       {
-        "valid_shot": null,
-        "shot_distance": null,
-        "time_to_shot": null,
-        "shot_angle": null,
-        "shot_power": null,
-        "reward_components": {
-          "position": 0.04475904333235958,
-          "shot_start_bonus": 0.0,
-          "goal": 0.0,
-          "possession_lost": -3.0
-        }
-      },
-      {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 6.5,
-        "shot_angle": 0.4773129225586875,
+        "shot_step": 18,
+        "shot_angle": 1.0928445999837404,
         "shot_power": 21.0,
         "reward_components": {
-          "position": 0.06240116379415832,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 4.125,
-        "shot_angle": 0.47729042598442567,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.05297840473852625,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 7.625,
-        "shot_angle": 2.664282617391585,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.06680224498313062,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": null,
-        "shot_distance": null,
-        "time_to_shot": null,
-        "shot_angle": null,
-        "shot_power": null,
-        "reward_components": {
-          "position": 0.04512610827594385,
+          "position": 0.03722640516511476,
           "shot_start_bonus": 0.0,
           "goal": 0.0,
-          "possession_lost": -3.0
-        }
-      },
-      {
-        "valid_shot": null,
-        "shot_distance": null,
-        "time_to_shot": null,
-        "shot_angle": null,
-        "shot_power": null,
-        "reward_components": {
-          "position": 0.04427241173920074,
-          "shot_start_bonus": 0.0,
-          "goal": 0.0,
-          "possession_lost": -3.0
-        }
-      },
-      {
-        "valid_shot": null,
-        "shot_distance": null,
-        "time_to_shot": null,
-        "shot_angle": null,
-        "shot_power": null,
-        "reward_components": {
-          "position": 0.04512610827594385,
-          "shot_start_bonus": 0.0,
-          "goal": 0.0,
-          "possession_lost": -3.0
+          "possession_lost": 0.0
         }
       },
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 4.958333333333333,
-        "shot_angle": 0.47723358459748355,
+        "shot_step": 23,
+        "shot_angle": 1.0928423356031245,
         "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.05547127803321705,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 4.666666666666667,
-        "shot_angle": 0.15338191762301664,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.05503561646718433,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": null,
-        "shot_distance": null,
-        "time_to_shot": null,
-        "shot_angle": null,
-        "shot_power": null,
-        "reward_components": {
-          "position": 0.04475904333235958,
-          "shot_start_bonus": 0.0,
-          "goal": 0.0,
-          "possession_lost": -3.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 5.041666666666667,
-        "shot_angle": 2.2964626092510176,
-        "shot_power": 21.0,
-        "reward_components": {
-          "position": 0.05547127803321705,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 5.5,
-        "shot_angle": 2.0483743267040686,
-        "shot_power": 31.5,
-        "reward_components": {
-          "position": 0.058789658598121325,
-          "shot_start_bonus": 0.5,
-          "goal": 0.0,
-          "possession_lost": 0.0
-        }
-      },
-      {
-        "valid_shot": null,
-        "shot_distance": null,
-        "time_to_shot": null,
-        "shot_angle": null,
-        "shot_power": null,
-        "reward_components": {
-          "position": 0.04475904333235958,
-          "shot_start_bonus": 0.0,
-          "goal": 0.0,
-          "possession_lost": -3.0
-        }
-      },
-      {
-        "valid_shot": true,
-        "shot_distance": null,
-        "time_to_shot": 1.3333333333333333,
-        "shot_angle": 1.092951604972713,
-        "shot_power": 31.5,
         "reward_components": {
           "position": 0.03880204382757539,
-          "shot_start_bonus": 0.5,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }
@@ -1147,12 +1095,64 @@
       {
         "valid_shot": true,
         "shot_distance": null,
-        "time_to_shot": 2.25,
-        "shot_angle": 1.0931135242012877,
+        "shot_step": 62,
+        "shot_angle": 1.092986947909003,
         "shot_power": 21.0,
         "reward_components": {
-          "position": 0.04366857433297382,
-          "shot_start_bonus": 0.5,
+          "position": 0.047081715882277136,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 85,
+        "shot_angle": 0.47780893568361865,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.05016332406515277,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 36,
+        "shot_angle": 1.0928506955441024,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.03891446544282397,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 28,
+        "shot_angle": 0.47796157549746926,
+        "shot_power": 31.5,
+        "reward_components": {
+          "position": 0.03711673731806041,
+          "shot_start_bonus": 0.3,
+          "goal": 0.0,
+          "possession_lost": 0.0
+        }
+      },
+      {
+        "valid_shot": true,
+        "shot_distance": null,
+        "shot_step": 117,
+        "shot_angle": 1.0930627665883923,
+        "shot_power": 21.0,
+        "reward_components": {
+          "position": 0.05830824263201648,
+          "shot_start_bonus": 0.3,
           "goal": 0.0,
           "possession_lost": 0.0
         }

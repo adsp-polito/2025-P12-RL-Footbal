@@ -7,7 +7,7 @@ from typing import Any
 class PlayerDefender(BasePlayer):
     
     def __init__(self,
-                 tackling: float = 0.5,
+                 tackling: float = 0.15,
                  shooting: float = 0.5,
                  precision: float = 0.5,
                  speed: float = 0.5,

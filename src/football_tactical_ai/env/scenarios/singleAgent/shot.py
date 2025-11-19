@@ -164,8 +164,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             pitch_h = self.pitch.y_max - self.pitch.y_min
             bx = self.shot_position[0] * pitch_w + self.pitch.x_min
             by = self.shot_position[1] * pitch_h + self.pitch.y_min
-            s = float(np.linalg.norm([self.goal_x - bx, self.goal_y - by]))
-            self.shot_pos_rew = self._get_position_reward(bx, by)
+            self.shot_pos_rew = self._get_position_reward(bx, by)   # in [-0.03, 0.07]
 
             # shot initial velocity
             vel_real = actual_dir * actual_power
@@ -218,10 +217,12 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         ball_x, ball_y = self.ball.position
         bx_m, by_m = denormalize(ball_x, ball_y)
 
-        # POSITIONAL REWARD (scaled down)
+        # POSITIONAL REWARD
         # Encourages moving toward better shooting areas
-        pos_reward = self._get_position_reward(x_m, y_m)
-        reward += 0.5 * pos_reward
+        min_r = -0.03
+        max_r =  0.07      
+        pos_reward = self._get_position_reward(x_m, y_m, min_reward=min_r, max_reward=max_r)
+        reward += pos_reward
 
         # READINESS REWARD → encourages moving toward goal direction
         vec_to_goal = np.array([self.goal_x - x_m, self.goal_y - y_m])
@@ -230,23 +231,29 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         movement_norm = movement / (np.linalg.norm(movement) + 1e-6)
         readiness = float(np.dot(movement_norm, vec_to_goal))  # [-1, +1]
 
+        # READINESS: always non-negative
+        pos_norm = np.clip((pos_reward - min_r) / (max_r - min_r), 0.0, 1.0)
+        readiness_weight = 1.0 - pos_norm
+
         if self.ball.owner is self.attacker:
-            reward += 0.05 * readiness
+            reward += readiness_weight * 0.05 * readiness   # ∈ [0, 0.05]
 
-        # BONUS FOR GOAL (large but stable)
-        if self._is_goal(bx_m, by_m):
-            reward += 7.5
+        # BONUS FOR GOAL
+        if self._is_goal(bx_m, by_m) and not self.ball.get_owner() is self.attacker:
+            reward += 10.0
 
-        # PENALTIES
+        # PENALTY FOR POSSESSION LOSS
         if self.possession_lost:
             reward -= 2.5
 
+        # BALL OUT OF BOUNDS
         if self._is_ball_completely_out(bx_m, by_m):
             reward -= 2.5
 
         # Invalid shot attempt
         if shot_flag and self.ball.owner is not self.attacker:
             reward -= 0.25
+            self.shot_start_bonus = 0.0  # no shot bonus
 
         # START OF SHOT
         if self.is_shooting and self.shot_just_started:
@@ -255,7 +262,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             reward += shot_quality
 
             # Bonus for initiating the shot
-            self.shot_start_bonus = 0.5
+            self.shot_start_bonus = 0.3
             reward += self.shot_start_bonus
 
             # Normalized direction to goal (for angle shaping)
@@ -271,16 +278,18 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             )
 
             # ALIGNMENT REWARD → KEY COMPONENT
-            alignment = float(np.clip(np.dot(shot_dir, goal_dir), -1, 1))
-            reward += 4.0 * alignment      # ∈ [-4, +4]
+            alignment = np.clip(np.dot(shot_dir, goal_dir), -1, 1)
 
-            # PENALTY FOR VERY POOR SHOTS
-            if alignment < 0.2:            # poorly oriented shot
-                reward -= 1.0
-            if alignment < 0.1:            # badly oriented shot
+            # main alignment reward
+            reward += 2.0 * alignment   # ∈ [-2, +2]
+
+            # alignment soft penalties (non-cumulative -> elif)
+            if alignment < -0.25:
                 reward -= 2.0
-            if alignment < 0.0:            # completely wrong direction
-                reward -= 3.0
+            elif alignment < 0.0:
+                reward -= 1.5
+            elif alignment < 0.25:
+                reward -= 1.0
 
             # DISTANCE-TO-GOAL SHAPING
             dist = np.linalg.norm([self.goal_x - x_m, self.goal_y - y_m])
@@ -292,8 +301,9 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             dist_norm = 1 - dist / max_dist
             dist_norm = np.clip(dist_norm, 0.0, 1.0)
 
-            dist_norm = 2 * dist_norm - 1    # [-1, 1]
-            reward += dist_norm               
+            # distance reshaped between -0.2 and +0.6
+            dist_reward = -0.2 + dist_norm * 0.8     # [-0.2, +0.6]
+            reward += dist_reward       
 
             # LOGGING: TIME OF SHOT IN SECONDS
             if self.is_shooting:
@@ -309,17 +319,19 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             if self.shot_start_bonus > 0:
 
                 # Bonus for having taken a shot (scaled positional shot reward)
-                reward += 2.0 + 6.0 * (self.shot_pos_rew * 10)
+                # remember: self.shot_pos_rew ∈ [-0.03, 0.07]
+                reward += 3.0 + 5.0 * (self.shot_pos_rew * 10)      # ∈ [-0.5, 6.5]
 
                 # FINAL SHOT ANGLE CONSOLIDATION REWARD
                 goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m])
                 goal_dir /= (np.linalg.norm(goal_dir) + 1e-6)
 
                 final_alignment = float(np.dot(self.shot_direction, goal_dir))
-                reward += 2.0 * final_alignment     # ∈ [-2, 2]
+                final_alignment_clamped = max(final_alignment, 0.0)
+                reward += 2.0 * final_alignment_clamped   # ∈ [0, +2.0]
 
             else:
-                reward -= 10      # episode ends with no shots
+                reward -= 7.5      # episode ends with no shots
 
         # LOGGING
         self.reward_components = {

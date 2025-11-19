@@ -144,7 +144,7 @@ def plot_shot_trajectories(json_path, save_dir, title):
                 linestyle="--", label="Average ball")
 
     ax.set_title(title, fontsize=16, fontweight="bold")
-    ax.legend(frameon=True)
+    ax.legend(frameon=True, loc = "upper left")
 
     out = os.path.join(save_dir, os.path.basename(json_path).replace(".json",".png"))
     plt.tight_layout()
@@ -243,7 +243,7 @@ def plot_all_testcases_single_pitch(folder, save_path):
                     linestyle="--", alpha=0.9,
                     label=f"{fname.replace('shot_trajectories_', '').replace('.json', '')} - ball")
 
-    ax.legend(frameon=True)
+    ax.legend(frameon=True, loc = "upper left")
     ax.set_title("Shot Scenario - All Test Cases", fontsize=16, fontweight="bold")
 
     plt.tight_layout()
