@@ -205,32 +205,24 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
 
         reward = 0.0
 
-        # ----------------------------------------------------------------------
-        # SMALL TIME PENALTY → encourages fast decision-making
-        # ----------------------------------------------------------------------
+        # SMALL TIME PENALTY ==> encourages fast decision-making
         reward -= 0.01
 
-        # ----------------------------------------------------------------------
         # REAL POSITIONS IN METERS (attacker and ball)
-        # ----------------------------------------------------------------------
         att_x, att_y = self.attacker.get_position()
         x_m, y_m = denormalize(att_x, att_y)
 
         ball_x, ball_y = self.ball.position
         bx_m, by_m = denormalize(ball_x, ball_y)
 
-        # ----------------------------------------------------------------------
-        # POSITIONAL REWARD (pitch spatial grid)
-        # ----------------------------------------------------------------------
+        # POSITIONAL REWARD
         min_r, max_r = -0.03, 0.07
         pos_reward = self._get_position_reward(x_m, y_m,
                                             min_reward=min_r,
                                             max_reward=max_r)
         reward += pos_reward
 
-        # ----------------------------------------------------------------------
-        # READINESS → encourages moving toward the goal direction
-        # ----------------------------------------------------------------------
+        # READINESS ==> encourages moving toward the goal direction
         if movement is None:
             movement = np.array([0.0, 0.0], dtype=float)
         else:
@@ -253,9 +245,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         if self.ball.owner is self.attacker:
             reward += readiness_weight * 0.05 * readiness
 
-        # ----------------------------------------------------------------------
-        # EVENT-BASED REWARDS → goals, possession loss, ball out
-        # ----------------------------------------------------------------------
+        # EVENT-BASED REWARDS ==> goals, possession loss, ball out
         if self._is_goal(bx_m, by_m) and self.ball.get_owner() is not self.attacker:
             reward += 10.0
 
@@ -269,9 +259,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             reward -= 0.25
             self.shot_start_bonus = 0.0
 
-        # ----------------------------------------------------------------------
-        # SHOOTING REWARD (triggered when a shot is initiated)
-        # ----------------------------------------------------------------------
+        # SHOOTING REWARD
         if self.is_shooting and self.shot_just_started:
 
             reward += shot_quality
@@ -293,23 +281,17 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             cos_angle = np.clip(np.dot(shot_dir, goal_dir), -1.0, 1.0)
             angle = np.arccos(cos_angle)
 
-            # ------------------------------------------------------------------
-            # GAUSSIAN ANGLE REWARD (core component)
-            # More reward as angle → 0°
-            # ------------------------------------------------------------------
+            # GAUSSIAN ANGLE REWARD
+            # More reward as angle ==> 0°
             sigma = np.radians(28.0)
             angle_reward = float(np.exp(-(angle ** 2) / (2.0 * sigma ** 2)))
             reward += 5.0 * angle_reward
 
-            # ------------------------------------------------------------------
-            # SOFT PENALTY FOR BAD ANGLES (smooth, PPO-friendly)
-            # ------------------------------------------------------------------
-            bad_angle_penalty = (angle / np.pi) ** 2      # ∈ [0..1]
+            # SOFT PENALTY FOR BAD ANGLES 
+            bad_angle_penalty = (angle / np.pi) ** 2      # ∈ [0, 1]
             reward -= 2.0 * bad_angle_penalty
 
-            # ------------------------------------------------------------------
             # DISTANCE-BASED SHAPING (closer = better)
-            # ------------------------------------------------------------------
             dist = float(np.linalg.norm([self.goal_x - x_m, self.goal_y - y_m]))
             max_dist = float(np.linalg.norm([
                 self.pitch.x_max - self.pitch.x_min,
@@ -323,12 +305,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
 
             self.shot_step = self._t
 
-        else:
-            self.shot_step = None
-
-        # ----------------------------------------------------------------------
-        # FINAL EPISODE BONUS → use ball landing and final shot angle
-        # ----------------------------------------------------------------------
+        # FINAL EPISODE BONUS ==> use ball landing and final shot angle
         terminated_now = self._check_termination()
         if self._t == self.max_steps - 1 or terminated_now:
 
@@ -337,7 +314,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
                 # Base final bonus
                 reward += 3.0 + 5.0 * (self.shot_pos_rew * 10.0)
 
-                # (1) Vertical landing accuracy (where the ball ends)
+                # Vertical landing accuracy (where the ball ends)
                 dy_final = abs(by_m - self.goal_y)
                 goal_half_h = self.pitch.goal_width / 2.0
                 dy_norm = dy_final / (goal_half_h + 1e-6)
@@ -348,7 +325,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
                 goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m], dtype=float)
                 goal_dir /= (np.linalg.norm(goal_dir) + 1e-6)
 
-                # (2) Final angular reward (how good was shot direction)
+                # Final angular reward (how good was shot direction)
                 if self.shot_direction is not None and np.linalg.norm(self.shot_direction) > 1e-6:
                     final_shot_dir = self.shot_direction / np.linalg.norm(self.shot_direction)
 
@@ -364,9 +341,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             else:
                 reward -= 7.5    # episode ended with no shot
 
-        # ----------------------------------------------------------------------
         # LOGGING (for analysis and debugging)
-        # ----------------------------------------------------------------------
         self.reward_components = {
             "position": float(pos_reward),
             "shot_start_bonus": float(getattr(self, "shot_start_bonus", 0.0)),

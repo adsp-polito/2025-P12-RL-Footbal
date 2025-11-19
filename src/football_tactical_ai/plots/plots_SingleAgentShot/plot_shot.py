@@ -3,6 +3,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.lines as mlines
 
 from football_tactical_ai.env.objects.pitch import Pitch
 
@@ -22,6 +23,13 @@ def set_plot_style():
 
     mpl.rcParams['axes.spines.top'] = False
     mpl.rcParams['axes.spines.right'] = False
+
+# DENORMALIZATION helper
+def denorm(arr, pitch=Pitch()):
+    return np.column_stack([
+        arr[:,0] * (pitch.x_max - pitch.x_min) + pitch.x_min,
+        arr[:,1] * (pitch.y_max - pitch.y_min) + pitch.y_min
+    ])
 
 
 
@@ -55,24 +63,53 @@ def plot_training_rewards(json_path, window=200, save_name="Shot_RewardCurve.png
 
 
 
-
-# UTILITY
-def compute_average_trajectory(trajs):
-    min_len = min(len(t) for t in trajs)
-    truncated = [t[:min_len] for t in trajs]
-    return np.mean(np.stack(truncated, axis=0), axis=0)
-
-
-
 # 2) SINGLE TEST CASE TRAJECTORIES
 def plot_shot_trajectories(json_path, save_dir, title):
+    """
+    Plot only the BEST run using shot_evaluation.json
+    """
+
     os.makedirs(save_dir, exist_ok=True)
 
+    # Extract scenario name (e.g. shot_trajectories_central.json --> "central")
+    fname = os.path.basename(json_path)
+    scenario_name = fname.replace("shot_trajectories_", "").replace(".json", "")
+
+    # Load trajectory JSON
     with open(json_path, "r") as f:
-        data = json.load(f)
+        traj_data = json.load(f)
+
+    # Load global evaluation JSON
+    eval_path = os.path.join(os.path.dirname(json_path), "shot_evaluation.json")
+    with open(eval_path, "r") as f:
+        eval_data = json.load(f)
+
+    if scenario_name not in eval_data:
+        print(f"[ERROR] Scenario '{scenario_name}' not in shot_evaluation.json")
+        return
+
+    scenario_eval = eval_data[scenario_name]
+
+    # BEST RUN index
+    runs_rewards = scenario_eval["runs"]
+    best_run_idx = int(np.argmax(runs_rewards))
+    best_run_key = f"run_{best_run_idx+1}"
+
+    if best_run_key not in traj_data:
+        print(f"[ERROR] Missing {best_run_key} in {json_path}")
+        return
+
+    att_norm = np.array(traj_data[best_run_key]["attacker"])
+    ball_norm = np.array(traj_data[best_run_key]["ball"])
+
+    # Shot step
+    shot_step = scenario_eval["shot_metrics"][best_run_idx].get("shot_step", None)
+    if shot_step is None:
+        shot_step = len(att_norm) - 1
 
     pitch = Pitch()
 
+    # Draw pitch
     fig, ax = pitch.draw_pitch(
         ax=None,
         field_color="green",
@@ -81,72 +118,69 @@ def plot_shot_trajectories(json_path, save_dir, title):
         show_heatmap=False,
         show_rewards=False,
     )
-
-    # Remove axis spines
     ax.spines['left'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
 
-    cmap = plt.get_cmap("tab20")
-    run_idx = 0
+    # COLOR 
+    col = "#00BFFF" 
 
-    all_att = []
-    all_ball = []
 
-    for run_data in data.values():
+    att_real = denorm(att_norm, pitch=pitch)
+    ball_real = denorm(ball_norm, pitch=pitch)
 
-        if "attacker" not in run_data or "ball" not in run_data:
-            continue
+    # Plot attacker path
+    ax.plot(
+        att_real[:shot_step+2, 0],
+        att_real[:shot_step+2, 1],
+        color=col,
+        linewidth=3.0,
+        linestyle="-",
+        label="Attacker"
+    )
 
-        att_norm = np.array(run_data["attacker"])
-        ball_norm = np.array(run_data["ball"])
+    # Plot ball trajectory (dashed)
+    ax.plot(
+        ball_real[shot_step-2:, 0],
+        ball_real[shot_step-2:, 1],
+        color=col,
+        linewidth=2.5,
+        linestyle="--",
+        alpha=1.0,
+        label="Ball"
+    )
 
-        # DENORMALIZE
-        att_real = []
-        ball_real = []
+    # MARKERS
 
-        for x, y in att_norm:
-            att_real.append((
-                x*(pitch.x_max-pitch.x_min)+pitch.x_min,
-                y*(pitch.y_max-pitch.y_min)+pitch.y_min
-            ))
+    # Starting point (circle)
+    start_x, start_y = att_real[0]
+    ax.scatter(
+        start_x, start_y,
+        color=col,
+        s=200,
+        marker='o',
+        edgecolor="black",
+        linewidth=0.7,
+        zorder=5
+    )
 
-        for x, y in ball_norm:
-            ball_real.append((
-                x*(pitch.x_max-pitch.x_min)+pitch.x_min,
-                y*(pitch.y_max-pitch.y_min)+pitch.y_min
-            ))
+    # Shot point (square)
+    shot_x, shot_y = att_real[shot_step]
+    ax.scatter(
+        shot_x, shot_y,
+        color=col,
+        s=200,
+        marker='s',
+        edgecolor="black",
+        linewidth=0.8,
+        zorder=6
+    )
 
-        att_real = np.array(att_real)
-        ball_real = np.array(ball_real)
 
-        all_att.append(att_real)
-        all_ball.append(ball_real)
+    # Title + Save
+    ax.set_title(f"{title} — BEST RUN", fontsize=16, fontweight="bold")
+    ax.legend(frameon=True, loc="upper left")
 
-        col = cmap(run_idx % 20)
-
-        # attacker
-        ax.plot(att_real[:,0], att_real[:,1], color=col, alpha=0.55, linewidth=1.4)
-
-        # ball
-        ax.plot(ball_real[:,0], ball_real[:,1], color=col, alpha=0.45,
-                linewidth=1.2, linestyle="--")
-
-        run_idx += 1
-
-    # AVERAGE TRAJECTORIES
-    if all_att:
-        avg_att = compute_average_trajectory(all_att)
-        ax.plot(avg_att[:,0], avg_att[:,1], color="black", linewidth=2.4, label="Average attacker")
-
-    if all_ball:
-        avg_ball = compute_average_trajectory(all_ball)
-        ax.plot(avg_ball[:,0], avg_ball[:,1], color="red", linewidth=2.0,
-                linestyle="--", label="Average ball")
-
-    ax.set_title(title, fontsize=16, fontweight="bold")
-    ax.legend(frameon=True, loc = "upper left")
-
-    out = os.path.join(save_dir, os.path.basename(json_path).replace(".json",".png"))
+    out = os.path.join(save_dir, fname.replace(".json", ".png"))
     plt.tight_layout()
     plt.savefig(out, dpi=500, bbox_inches="tight")
     plt.close(fig)
@@ -155,17 +189,38 @@ def plot_shot_trajectories(json_path, save_dir, title):
 
 
 
+
 # 3) ALL TEST CASES ON SINGLE PITCH
 def plot_all_testcases_single_pitch(folder, save_path):
+    """
+    For each test-case:
+    - Load its trajectories (shot_trajectories_*.json)
+    - Use the unique shot_evaluation.json to find the BEST RUN
+    - Plot attacker only until the shot step
+    - Plot ball trajectory from shot step onward
+    - Draw start marker (circle) and shot marker (square)
+    """
+
+    # Collect all trajectory files
     traj_files = sorted([
         f for f in os.listdir(folder)
         if f.startswith("shot_trajectories_") and f.endswith(".json")
     ])
 
     if not traj_files:
-        print("[ERROR] No files found.")
+        print("[ERROR] No trajectories found.")
         return
 
+    # Load GLOBAL shot_evaluation.json
+    eval_path = os.path.join(folder, "shot_evaluation.json")
+    if not os.path.exists(eval_path):
+        print("[ERROR] shot_evaluation.json NOT FOUND.")
+        return
+
+    with open(eval_path, "r") as f:
+        eval_data = json.load(f)
+
+    # Prepare pitch figure
     set_plot_style()
     pitch = Pitch()
 
@@ -177,80 +232,135 @@ def plot_all_testcases_single_pitch(folder, save_path):
         show_heatmap=False,
         show_rewards=False,
     )
-
     ax.spines['left'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
 
     palette = plt.get_cmap("tab10").colors
     color_idx = 0
 
-    for fname in traj_files:
-        with open(os.path.join(folder, fname)) as f:
-            data = json.load(f)
+    # Process each trajectory file
+    for traj_file in traj_files:
 
+        scenario_name = traj_file.replace("shot_trajectories_", "").replace(".json", "")
+
+        if scenario_name not in eval_data:
+            print(f"[WARNING] '{scenario_name}' missing in shot_evaluation.json — skipping.")
+            continue
+
+        traj_path = os.path.join(folder, traj_file)
+
+        with open(traj_path, "r") as f:
+            traj_data = json.load(f)
+
+        scenario_eval = eval_data[scenario_name]
+
+        rewards = scenario_eval["runs"]
+        best_idx = int(np.argmax(rewards))
+        best_run_key = f"run_{best_idx+1}"
+
+        if best_run_key not in traj_data:
+            print(f"[WARNING] Missing {best_run_key} in {traj_file}")
+            continue
+
+        att_norm = np.array(traj_data[best_run_key]["attacker"])
+        ball_norm = np.array(traj_data[best_run_key]["ball"])
+        shot_step = scenario_eval["shot_metrics"][best_idx].get("shot_step", None)
+
+        if shot_step is None:
+            shot_step = len(att_norm) - 1
+
+        # Assign consistent color
         col = palette[color_idx % len(palette)]
         color_idx += 1
 
-        all_att = []
-        all_ball = []
+        att_real = denorm(att_norm, pitch=pitch)
+        ball_real = denorm(ball_norm, pitch=pitch)
 
-        for run_data in data.values():
+        # Plot attacker path until shot
+        ax.plot(
+            att_real[:shot_step+2,0],
+            att_real[:shot_step+2,1],
+            color=col,
+            linewidth=3.0,
+            linestyle="-",
+            label=f"{scenario_name} - attacker"
+        )
 
-            if "attacker" not in run_data or "ball" not in run_data:
-                continue
+        # Plot ball trajectory after shot
+        ax.plot(
+            ball_real[shot_step-2:,0],
+            ball_real[shot_step-2:,1],
+            color=col,
+            linewidth=2.5,
+            linestyle="--",
+            alpha=1.0,
+            label=f"{scenario_name} - ball"
+        )
 
-            att = np.array(run_data["attacker"])
-            ball = np.array(run_data["ball"])
 
-            # DENORMALIZE
-            att_real = []
-            ball_real = []
+        # STARTING POINT MARKER
+        start_x, start_y = att_real[0]
+        ax.scatter(
+            start_x, start_y,
+            color=col,
+            s=150,
+            marker='o',   # circle
+            edgecolor="black",
+            linewidth=1.0,
+            zorder=5
+        )
 
-            for x, y in att:
-                att_real.append((
-                    x*(pitch.x_max-pitch.x_min)+pitch.x_min,
-                    y*(pitch.y_max-pitch.y_min)+pitch.y_min
-                ))
+        # SHOT POINT MARKER
+        shot_x, shot_y = att_real[shot_step]
+        ax.scatter(
+            shot_x, shot_y,
+            color=col,
+            s=150,
+            marker='s',   # square
+            edgecolor="black",
+            linewidth=1.0,
+            zorder=6
+        )
 
-            for x, y in ball:
-                ball_real.append((
-                    x*(pitch.x_max-pitch.x_min)+pitch.x_min,
-                    y*(pitch.y_max-pitch.y_min)+pitch.y_min
-                ))
 
-            att_real = np.array(att_real)
-            ball_real = np.array(ball_real)
+    # LEGEND — trajectories + start and shot markers
 
-            all_att.append(att_real)
-            all_ball.append(ball_real)
+    # Dummy legend entries
+    start_handle = mlines.Line2D(
+        [], [], 
+        color="white",
+        marker='o',
+        markersize=10,
+        linestyle='None',
+        markeredgecolor="black",
+        label="Start point"
+    )
 
-            # attacker faint
-            ax.plot(att_real[:,0], att_real[:,1], color=col, alpha=0.55, linewidth=1.3)
+    shot_handle = mlines.Line2D(
+        [], [], 
+        color="white",
+        marker='s',
+        markersize=12,
+        linestyle='None',
+        markeredgecolor="black",
+        label="Shot point"
+    )
 
-            # ball faint
-            ax.plot(ball_real[:,0], ball_real[:,1], color=col, alpha=0.45,
-                    linewidth=1.1, linestyle="--")
+    # Merge with existing trajectory legend entries
+    handles, labels = ax.get_legend_handles_labels()
+    handles.extend([start_handle, shot_handle])
+    labels.extend(["Start point", "Shot point"])
 
-        # AVERAGE TRAJECTORIES
-        if all_att:
-            avg_att = compute_average_trajectory(all_att)
-            ax.plot(avg_att[:,0], avg_att[:,1], color=col, linewidth=2.3,
-                    label=f"{fname.replace('shot_trajectories_', '').replace('.json', '')} - attacker")
+    ax.legend(handles, labels, frameon=True, loc="upper left")
 
-        if all_ball:
-            avg_ball = compute_average_trajectory(all_ball)
-            ax.plot(avg_ball[:,0], avg_ball[:,1], color=col, linewidth=2.0,
-                    linestyle="--", alpha=0.9,
-                    label=f"{fname.replace('shot_trajectories_', '').replace('.json', '')} - ball")
-
-    ax.legend(frameon=True, loc = "upper left")
-    ax.set_title("Shot Scenario - All Test Cases", fontsize=16, fontweight="bold")
+    ax.set_title("Shot Scenario — BEST RUN per Test Case", fontsize=16, fontweight="bold")
 
     plt.tight_layout()
     plt.savefig(save_path, dpi=500, bbox_inches="tight")
     plt.close(fig)
 
     print(f"[SAVED] {save_path}")
+
 
 
 
