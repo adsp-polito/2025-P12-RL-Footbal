@@ -85,8 +85,6 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.fov_invalid_movements = 0
         self.invalid_shot_fov = 0
         self.total_shots = 0
-        self.valid_shots = 0
-        self.valid_shot_ratio = 0.0
 
 
     def reset(self, seed=None, options=None):
@@ -124,8 +122,6 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.fov_invalid_movements = 0
         self.invalid_shot_fov = 0
         self.total_shots = 0
-        self.valid_shots = 0
-        self.valid_shot_ratio = 0.0
 
         # Return initial observation and info dictionary as required by Gym API
         return self._get_obs(), {}
@@ -193,7 +189,6 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
                 # LOG METRICS
                 self.valid_shot = True
                 self.shot_power = float(actual_power)
-                self.valid_shots += 1
 
                 # Compute shot angle relative to the goal
                 att_x, att_y = self.attacker.get_position()
@@ -201,14 +196,10 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
                 vec /= np.linalg.norm(vec)
                 self.shot_angle = float(np.arccos(np.clip(np.dot(actual_dir, vec), -1, 1)))
 
-                # Compute shot distance
+                # Convert to normalized ball velocity
                 pitch_w = self.pitch.x_max - self.pitch.x_min
                 pitch_h = self.pitch.y_max - self.pitch.y_min
-                bx = self.shot_position[0] * pitch_w + self.pitch.x_min
-                by = self.shot_position[1] * pitch_h + self.pitch.y_min
-                self.shot_distance = float(np.linalg.norm([self.goal_x - bx, self.goal_y - by]))
 
-                # Convert to normalized ball velocity
                 velocity_real = actual_dir * actual_power
                 velocity_norm = np.array([velocity_real[0] / pitch_w,
                                         velocity_real[1] / pitch_h])
@@ -218,9 +209,6 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
                 # Count how many invalid shots were due to FOV
                 self.valid_shot = False
                 self.invalid_shot_fov += 1
-        
-        # Update ratio of valid shots
-        self.valid_shot_ratio = self.valid_shots / max(self.total_shots, 1) if self.total_shots > 0 else 0.0
 
         # Movement direction is stored for FOV reward logic
         self.attempted_movement_direction = movement.copy()
@@ -252,188 +240,126 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         truncated = self._t >= self.max_steps
 
         return self._get_obs(), reward, terminated, truncated, {}
-
-
-
     
-    def compute_reward(self, shot_flag=None, shot_quality=0.0, movement=None):
+
+    def compute_reward(self, shot_flag=None, shot_quality = None, movement=None):
         """
-        Compute the reward for the current step in the FOV-constrained shot scenario
-
-        This version is based on the plain Shot scenario, with additional shaping
-        to encourage:
-        - moving inside the field of view (FOV)
-        - shooting only when the target direction is visible
-
-        Args:
-            shot_flag (bool): Whether a shot was attempted this step
-            shot_quality (float): Quality of the shot attempted (if any)
-            movement (np.ndarray): 2D movement vector of the attacker (action space)
-
-        Returns:
-            reward (float): Computed reward for the current step
+        FOV-CENTRIC REWARD FUNCTION
+        Focus:
+            - Move inside the field of view (FOV)
+            - Shoot only when the target is within the FOV
+        No shot-quality, angle reward, or distance shaping.
         """
 
         reward = 0.0
 
-        # Small constant time-penalty for encouraging fast decision-making
-        reward -= 0.01
+        # TIME PENALTY
+        reward -= 0.02
 
-        # REAL POSITIONS IN METERS (attacker + ball)
+        # REAL POSITIONS
         att_x, att_y = self.attacker.get_position()
         x_m, y_m = denormalize(att_x, att_y)
 
         ball_x, ball_y = self.ball.position
         bx_m, by_m = denormalize(ball_x, ball_y)
 
-        # BASE POSITIONAL REWARD (scaled down)
-        pos_reward = self._get_position_reward(x_m, y_m)
-        reward += 0.5 * pos_reward
-
-        # READINESS + MOVEMENT FOV SHAPING
-        # Encourages moving TOWARD a better shooting position before shooting
-        # ONLY applied when attacker has possession
-        vec_to_goal = np.array([self.goal_x - x_m, self.goal_y - y_m])
-        vec_to_goal /= (np.linalg.norm(vec_to_goal) + 1e-6)
-
-        # Movement direction from the action (attempted movement)
+        # MOVEMENT FOV LOGIC
         if movement is None:
-            movement = np.array([0.0, 0.0], dtype=float)
+            movement = np.array([0.0, 0.0])
+
         movement = np.asarray(movement, dtype=float)
         movement_norm = movement / (np.linalg.norm(movement) + 1e-6)
 
-        readiness = float(np.dot(movement_norm, vec_to_goal))   # ∈ [-1, +1]
-
-        # Direction used for FOV visibility check:
-        # if we have an explicit attempted_movement_direction, prefer that
+        # Direction used for FOV test
         move_dir = movement_norm.copy()
         if hasattr(self, "attempted_movement_direction"):
-            dir_vec = np.asarray(self.attempted_movement_direction, dtype=float)
-            if np.linalg.norm(dir_vec) > 1e-6:
-                move_dir = dir_vec / np.linalg.norm(dir_vec)
+            d = np.asarray(self.attempted_movement_direction, dtype=float)
+            if np.linalg.norm(d) > 1e-6:
+                move_dir = d / np.linalg.norm(d)
 
-        # Is the attempted movement direction inside FOV?
         move_visible = self.attacker.is_direction_visible(move_dir)
 
+        # Reward movement only when the attacker has the ball
         if self.ball.owner is self.attacker:
             if move_visible:
-                # Same readiness term as Shot, but only when inside FOV
-                reward += 0.05 * readiness
-                # Small dense bonus for actually trying to move within FOV
-                reward += 0.02 * np.linalg.norm(movement_norm)
+                # BASE POSITIONAL REWARD
+                # Standard positional reward are clipped in [-0.5, +0.1]
+                pos_reward = self._get_position_reward(x_m, y_m, min_reward=-0.5, max_reward=0.1)
+                reward += pos_reward     # reward move inside FOV
             else:
-                # Small penalty for trying to move outside FOV
-                reward -= 0.01
+                reward -= 0.02                                      # penalty if moving outside FOV
 
-        # BASE EVENT REWARDS (goal, possession loss, out-of-bounds)
-        # BONUS FOR GOAL
-        if self._is_goal(bx_m, by_m):
-            reward += 15.0  # same scale as Shot
-
-        # PENALTY FOR POSSESSION LOSS
-        if self.possession_lost:
-            reward -= 3.0
-
-        # PENALTY FOR OUT OF BOUNDS (ball exits field)
-        if self._is_ball_completely_out(bx_m, by_m):
-            reward -= 3.0
-
-        # SHOT VALIDITY + FOV-CONSTRAINED SHOT SHAPING
+        # SHOT FOV LOGIC
         shot_in_fov = getattr(self, "shot_in_fov", True)
+        self.shot_start_bonus = 0.0       # reset each step by default
 
         if shot_flag:
-            # Standard invalid shot (attacker is not the owner of the ball  → cannot shoot)
+
+            # LOGGING METRICS
+            self.shot_distance = float(np.linalg.norm([self.goal_x - x_m, self.goal_y - y_m]))
+            self.shot_step = self._t
+
+            # Shot attempted without having the ball
             if self.ball.owner is not self.attacker:
                 reward -= 0.25
+
             else:
-                # Agent has the ball and attempts a shot
-                if not shot_in_fov:
-                    # Explicit penalty for shooting out of FOV
-                    reward -= 0.25
+                # Shot attempted with possession
+                if shot_in_fov:
+                    reward += shot_quality          # reward valid shot proportional to quality
+                    self.shot_start_bonus = 0.5     # used also in final reward
+                    reward += self.shot_start_bonus
+                    
                 else:
-                    # Small bonus for respecting the FOV constraint when shooting
-                    reward += 0.2
+                    reward -= 0.02
+                    self.shot_start_bonus = 0.0
 
-        # START OF SHOT: QUALITY, ALIGNMENT, DISTANCE (with FOV modulation)
-        if self.is_shooting and self.shot_just_started:
+        # EVENTS
+        goal_reward = 0.0
+        loss_penalty = 0.0
+        out_penalty = 0.0
 
-            # SHOT QUALITY REWARD
-            reward += shot_quality          # in [0, 1], direct addition
+        if self._is_goal(bx_m, by_m):
+            goal_reward = 7.5
+            reward += goal_reward
 
-            # Reward for initiating the shot
-            self.shot_start_bonus = 0.3
-            reward += self.shot_start_bonus
+        if self.possession_lost:
+            loss_penalty = -2.5
+            reward += loss_penalty
 
-            # SOFT ALIGNMENT REWARD MODULATED BY FOV
-            goal_dir = np.array([self.goal_x - bx_m, self.goal_y - by_m])
-            gn = np.linalg.norm(goal_dir)
-            if gn > 1e-6:
-                goal_dir /= gn
-            else:
-                goal_dir = np.array([1.0, 0.0])
+        if self._is_ball_completely_out(bx_m, by_m):
+            out_penalty = -2.5
+            reward += out_penalty
 
-            shot_dir = (
-                self.shot_direction
-                if self.shot_direction is not None
-                else goal_dir
-            )
-
-            alignment = float(np.clip(np.dot(shot_dir, goal_dir), -1, 1))
-
-            # Compute the base alignment bonus as in the Shot scenario
-            alignment_bonus = 0.0
-            if alignment > 0.7:
-                alignment_bonus = 0.4
-            elif alignment > 0.4:
-                alignment_bonus = 0.1
-            elif alignment < 0.1:
-                alignment_bonus = -0.2  # soft penalty
-
-            # FOV modulation: strong effect if the shot is inside FOV,
-            # attenuated effect if it is outside.
-            if shot_in_fov:
-                reward += alignment_bonus
-            else:
-                reward += 0.5 * alignment_bonus  # still matters, but less
-
-            # DISTANCE TO GOAL REWARD
-            dist = np.linalg.norm([self.goal_x - x_m, self.goal_y - y_m])
-            max_dist = np.linalg.norm([
-                self.pitch.x_max - self.pitch.x_min,
-                0.5 * (self.pitch.y_max - self.pitch.y_min),
-            ])
-
-            dist_norm = 1 - dist / max_dist      # ∈ [0,1]
-            dist_norm = np.clip(dist_norm, 0.0, 1.0)
-
-            # Very soft shaping to avoid dominating the reward
-            reward += 0.3 * dist_norm   # ∈ [0, 0.3]
-
-            # LOGGING: TIME OF SHOT IN SECONDS
-            if self.is_shooting:
-                self.shot_step = self._t
-            else:
-                self.shot_step = None
-
-        # FINAL EPISODE BONUS / PENALTY
+        # FINAL EPISODE BONUS
         terminated_now = self._check_termination()
-        if self._t == self.max_steps - 1 or terminated_now:
-            if self.shot_start_bonus > 0:
-                # Episode ends: at least one valid shot taken (under FOV constraints)
-                reward += 5.0
-            else:
-                # Episode ends: no shots taken
-                reward -= 5.0
+        final_bonus = 0.0
 
-        # LOGGING: LAST REWARD COMPONENTS
+        if self._t == self.max_steps - 1 or terminated_now:
+
+            if self.shot_start_bonus > 0:
+                final_bonus = 5.0       # at least one valid in-FOV shot
+                reward += final_bonus
+            else:
+                final_bonus = -7.5      # no valid in-FOV shots
+                reward += final_bonus
+
+        # LOGGING
         self.reward_components = {
-            "position": float(pos_reward),
+            "time_penalty": -0.01,
+            "movement_in_fov": float(0.05*np.linalg.norm(movement_norm)) if (self.ball.owner is self.attacker and move_visible) else 0.0,
+            "movement_out_fov": -0.05 if (self.ball.owner is self.attacker and not move_visible) else 0.0,
+            "shot_in_fov_bonus": 0.40 if (shot_flag and self.ball.owner is self.attacker and shot_in_fov) else 0.0,
+            "shot_out_fov_penalty": -0.40 if (shot_flag and self.ball.owner is self.attacker and not shot_in_fov) else 0.0,
+            "goal": float(goal_reward),
+            "possession_lost": float(loss_penalty),
+            "ball_out": float(out_penalty),
+            "final_bonus": float(final_bonus),
             "shot_start_bonus": float(self.shot_start_bonus),
-            "goal": 15.0 if self._is_goal(bx_m, by_m) else 0.0,
-            "possession_lost": -3.0 if self.possession_lost else 0.0,
         }
 
-        return reward
+        return float(reward)
+
 
 
     def _update_ball_position(self, action=None):

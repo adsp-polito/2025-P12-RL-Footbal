@@ -6,6 +6,10 @@ import matplotlib as mpl
 
 from football_tactical_ai.env.objects.pitch import Pitch
 
+#  DIRECTORY SETUP
+SAVE_ROOT = "src/football_tactical_ai/plots/plots_SingleAgentMove"
+os.makedirs(SAVE_ROOT, exist_ok=True)
+
 
 # GLOBAL PLOTTING STYLE
 def set_plot_style():
@@ -24,18 +28,16 @@ def set_plot_style():
     mpl.rcParams['axes.spines.right'] = False
 
 
-
-# 1) TRAINING REWARD CURVE
-def plot_training_rewards(json_path, window=200, save_name="reward_curve.png"):
+# 1) REWARD CURVE PLOTTING
+def plot_training_rewards(json_path, window=300,
+                          save_path=f"{SAVE_ROOT}/SingleAgentMove_RewardCurve.png"):
     """
-    Generate and save a smoothed reward curve from the training log
-    The JSON file must contain entries of the form:
-    {"episode": int, "reward": float}.
+    Plot a clean, professional smoothed reward curve for the training.
     """
 
     set_plot_style()
 
-    # Load reward values
+    # Load rewards
     with open(json_path, "r") as f:
         data = json.load(f)
 
@@ -45,22 +47,33 @@ def plot_training_rewards(json_path, window=200, save_name="reward_curve.png"):
     # Moving average smoothing
     smooth = np.convolve(rewards, np.ones(window) / window, mode="valid")
 
-    # Plot figure
-    fig, ax = plt.subplots()
-    ax.plot(episodes, rewards, alpha=0.20, color="#7f7f7f", linewidth=0.8)
-    ax.plot(episodes[window-1:], smooth, color="#0072B2", linewidth=2.2,
-            label=f"Moving Average ({window})")
+    # Create figure
+    fig, ax = plt.subplots(figsize=(12, 6))
 
-    ax.set_title("Training Reward Curve - OffensiveScenarioMove", fontsize=16, fontweight="bold")
-    ax.set_xlabel("Episode")
-    ax.set_ylabel("Reward")
-    ax.legend(frameon=True, loc="lower right")
+    # Plot main curve
+    ax.plot(episodes[window-1:], smooth,
+            color="#0072B2", linewidth=2.5)
 
-    # Save figure in target folder
-    plt.savefig(save_name, dpi=500, bbox_inches="tight")
+    # Title and labels
+    ax.set_title("Training Reward Curve - OffensiveScenarioMove",
+                 fontsize=18, fontweight="bold", pad=15)
+    ax.set_xlabel("Episode", fontsize=14)
+    ax.set_ylabel("Reward", fontsize=14)
+
+    # Grid (clean)
+    ax.grid(True, linestyle="--", linewidth=0.6, alpha=0.25)
+
+    # Remove top/right spines
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    ax.legend([f"Moving Average ({window} episodes)"], frameon=True, loc="lower right")
+
+    # Save
+    plt.savefig(save_path, dpi=500, bbox_inches="tight")
     plt.close(fig)
 
-    print(f"[SAVED] {save_name}")
+    print(f"[SAVED] {save_path}")
 
 
 
@@ -311,16 +324,13 @@ def plot_all_testcases_single_pitch(folder, save_path):
 
 
 
-# SCRIPT EXECUTION
-SAVE_ROOT = "src/football_tactical_ai/plots/plots_SingleAgentMove"
-os.makedirs(SAVE_ROOT, exist_ok=True)
+# SCRIPT EXECUTION
 
 # 1) Reward curve
 plot_training_rewards(
     json_path="src/football_tactical_ai/training/rewards/singleAgentMove/rewards.json",
-    window=200,
-    save_name=f"{SAVE_ROOT}/SingleAgentMove_RewardCurve.png"
-)
+    window=300,
+    save_path=f"{SAVE_ROOT}/SingleAgentMove_RewardCurve.png",)
 
 # 2) All testcases
 plot_all_testcases(
