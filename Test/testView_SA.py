@@ -33,7 +33,6 @@ rewards.append(0.0)  # No reward yet for frame 0
 
 terminated = truncated = False
 
-
 # Main interaction loop: run episode until terminated or truncated
 while not terminated and not truncated:
 

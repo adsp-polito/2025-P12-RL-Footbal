@@ -187,7 +187,6 @@ def evaluate_single(scenario="move"):
                     "shot_step": env.shot_step,
                     "shot_angle": env.shot_angle,
                     "shot_power": env.shot_power,
-                    "reward_components": env.reward_components,
                 })
 
             # VIEW-SPECIFIC METRICS
@@ -198,12 +197,9 @@ def evaluate_single(scenario="move"):
                     "shot_step": env.shot_step,
                     "shot_angle": env.shot_angle,
                     "shot_power": env.shot_power,
-                    "reward_components": env.reward_components,
                     "fov_valid_movements": env.fov_valid_movements,
                     "fov_invalid_movements": env.fov_invalid_movements,
-                    "fov_valid_ratio": env.fov_valid_movements / max(env.fov_invalid_movements + env.fov_valid_movements, 1),
                     "invalid_shot_fov": env.invalid_shot_fov,
-                    "valid_shot_ratio": env.valid_shot_ratio,
                 })
 
 
@@ -254,5 +250,5 @@ def evaluate_single(scenario="move"):
 # RUN DIRECTLY
 if __name__ == "__main__":
     #evaluate_single("move")
-    evaluate_single("shot")
-    #evaluate_single("view")
+    #evaluate_single("shot")
+    evaluate_single("view")

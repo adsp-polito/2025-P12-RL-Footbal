@@ -78,13 +78,16 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.shot_step = None
         self.shot_angle = None
         self.shot_power = None
-        self.reward_components = None
+        self.shot_start_bonus = 0.0
 
         # FOV logging metrics
         self.fov_valid_movements = 0
         self.fov_invalid_movements = 0
         self.invalid_shot_fov = 0
         self.total_shots = 0
+
+        # movement flag
+        self.move_visible = False # True if last movement was inside FOV, False otherwise
 
 
     def reset(self, seed=None, options=None):
@@ -114,7 +117,6 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.shot_step = None
         self.shot_angle = None
         self.shot_power = None
-        self.reward_components = None
         self.shot_start_bonus = 0.0
 
         # Reset FOV metrics
@@ -122,6 +124,9 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self.fov_invalid_movements = 0
         self.invalid_shot_fov = 0
         self.total_shots = 0
+
+        # movement flag
+        self.move_visible = False
 
         # Return initial observation and info dictionary as required by Gym API
         return self._get_obs(), {}
@@ -161,6 +166,14 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
         # Default shot quality (used only when a shot is validly started)
         shot_quality = 0.0
+
+        # FOV CHECK
+        if self.attacker.is_direction_visible(movement):    
+            self.fov_valid_movements += 1
+            self.move_visible = True
+        else:
+            self.fov_invalid_movements += 1
+            self.move_visible = False
 
         # Attempt to start a shot only if attacker has the ball and no shot is active
         if shot_flag and not self.is_shooting and self.ball.owner is self.attacker:
@@ -213,16 +226,12 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         # Movement direction is stored for FOV reward logic
         self.attempted_movement_direction = movement.copy()
 
-        # Apply movement only if direction is visible
-        if np.linalg.norm(movement) > 0:
-            if self.attacker.is_direction_visible(movement):    # FOV CHECK
-                self.fov_valid_movements += 1
-                self._apply_attacker_action(action, enable_fov=True)
-                if self.ball.owner is self.attacker:
-                    self._update_ball_position(movement)
-            else:
-                self.fov_invalid_movements += 1
+        # Apply attacker action (movement + dribbling)
+        # Movement FOV check only for reward, not blocking
+        self._apply_attacker_action(action, enable_fov=False)   
 
+        if self.ball.owner is self.attacker:
+                self._update_ball_position(movement)
 
         # Update ball physics: either free or in shooting trajectory
         if self.is_shooting or self.ball.owner is None:
@@ -232,7 +241,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         self._apply_defender_ai()
 
         # Compute reward for the current state transition
-        reward = self.compute_reward(shot_flag=shot_flag, shot_quality=shot_quality, movement=movement)
+        reward = self.compute_reward(shot_flag=shot_flag, shot_quality=shot_quality, move_visible=self.move_visible)
 
         # Termination check performed after applying all state updates
         self._t += 1
@@ -242,7 +251,8 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         return self._get_obs(), reward, terminated, truncated, {}
     
 
-    def compute_reward(self, shot_flag=None, shot_quality = None, movement=None):
+
+    def compute_reward(self, shot_flag=None, shot_quality = None, move_visible=False):
         """
         FOV-CENTRIC REWARD FUNCTION
         Focus:
@@ -263,35 +273,21 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         ball_x, ball_y = self.ball.position
         bx_m, by_m = denormalize(ball_x, ball_y)
 
-        # MOVEMENT FOV LOGIC
-        if movement is None:
-            movement = np.array([0.0, 0.0])
+        # Base positional reward from the grid
+        pos_reward = self._get_position_reward(
+            x_m, y_m,
+            min_reward=-0.02,
+            max_reward=0.08
+        )
 
-        movement = np.asarray(movement, dtype=float)
-        movement_norm = movement / (np.linalg.norm(movement) + 1e-6)
+        if move_visible:
+            # Inside FOV → full positional reward
+            reward += pos_reward
+        else:
+            # Outside FOV → positional reward still counted,
+            # but with an extra penalty
+            reward -= 0.03   
 
-        # Direction used for FOV test
-        move_dir = movement_norm.copy()
-        if hasattr(self, "attempted_movement_direction"):
-            d = np.asarray(self.attempted_movement_direction, dtype=float)
-            if np.linalg.norm(d) > 1e-6:
-                move_dir = d / np.linalg.norm(d)
-
-        move_visible = self.attacker.is_direction_visible(move_dir)
-
-        # Reward movement only when the attacker has the ball
-        if self.ball.owner is self.attacker:
-            if move_visible:
-                # BASE POSITIONAL REWARD
-                # Standard positional reward are clipped in [-0.5, +0.1]
-                pos_reward = self._get_position_reward(x_m, y_m, min_reward=-0.5, max_reward=0.1)
-                reward += pos_reward     # reward move inside FOV
-            else:
-                reward -= 0.02                                      # penalty if moving outside FOV
-
-        # SHOT FOV LOGIC
-        shot_in_fov = getattr(self, "shot_in_fov", True)
-        self.shot_start_bonus = 0.0       # reset each step by default
 
         if shot_flag:
 
@@ -305,13 +301,13 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
             else:
                 # Shot attempted with possession
-                if shot_in_fov:
-                    reward += shot_quality          # reward valid shot proportional to quality
-                    self.shot_start_bonus = 0.5     # used also in final reward
+                if self.shot_in_fov:
+                    reward += shot_quality           # reward valid shot proportional to quality
+                    self.shot_start_bonus = 0.25      # used also in final reward
                     reward += self.shot_start_bonus
                     
                 else:
-                    reward -= 0.02
+                    reward -= 0.5               # penalty for invalid shot outside FOV
                     self.shot_start_bonus = 0.0
 
         # EVENTS
@@ -319,16 +315,17 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         loss_penalty = 0.0
         out_penalty = 0.0
 
-        if self._is_goal(bx_m, by_m):
-            goal_reward = 7.5
+        # GOAL REWARD only after shot
+        if self._is_goal(bx_m, by_m) and self.ball.owner is None:
+            goal_reward = 10.0
             reward += goal_reward
 
         if self.possession_lost:
-            loss_penalty = -2.5
+            loss_penalty = -3.0
             reward += loss_penalty
 
         if self._is_ball_completely_out(bx_m, by_m):
-            out_penalty = -2.5
+            out_penalty = -3.0
             reward += out_penalty
 
         # FINAL EPISODE BONUS
@@ -337,26 +334,12 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
 
         if self._t == self.max_steps - 1 or terminated_now:
 
-            if self.shot_start_bonus > 0:
-                final_bonus = 5.0       # at least one valid in-FOV shot
+            if self.shot_in_fov:
+                final_bonus = 1.5       # at least one valid in-FOV shot
                 reward += final_bonus
             else:
-                final_bonus = -7.5      # no valid in-FOV shots
-                reward += final_bonus
-
-        # LOGGING
-        self.reward_components = {
-            "time_penalty": -0.01,
-            "movement_in_fov": float(0.05*np.linalg.norm(movement_norm)) if (self.ball.owner is self.attacker and move_visible) else 0.0,
-            "movement_out_fov": -0.05 if (self.ball.owner is self.attacker and not move_visible) else 0.0,
-            "shot_in_fov_bonus": 0.40 if (shot_flag and self.ball.owner is self.attacker and shot_in_fov) else 0.0,
-            "shot_out_fov_penalty": -0.40 if (shot_flag and self.ball.owner is self.attacker and not shot_in_fov) else 0.0,
-            "goal": float(goal_reward),
-            "possession_lost": float(loss_penalty),
-            "ball_out": float(out_penalty),
-            "final_bonus": float(final_bonus),
-            "shot_start_bonus": float(self.shot_start_bonus),
-        }
+                final_bonus = 1.5       # no valid in-FOV shots
+                reward -= final_bonus
 
         return float(reward)
 
