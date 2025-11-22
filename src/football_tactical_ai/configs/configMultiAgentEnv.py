@@ -8,9 +8,9 @@ for any Multi-Agent setup, with override options for key parameters
 def get_config(
     fps: int = 24,
     seconds: int = 10,
-    n_attackers: int = 3,
-    n_defenders: int = 2,
-    include_goalkeeper: bool = True,
+    n_attackers: int = 2,
+    n_defenders: int = 1,
+    include_goalkeeper: bool = False,
 ) -> dict:
     """
     Return a fully constructed configuration dictionary for the multi-agent football environment

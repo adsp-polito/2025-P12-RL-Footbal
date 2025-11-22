@@ -104,7 +104,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
         reward += pos_reward
 
     # Time penalty to encourage quicker actions
-    reward -= 0.005
+    reward -= 0.02
 
     # 2. BALL CHASING (when ball is free)
     if ball is not None and ball.get_owner() is None:
@@ -115,11 +115,11 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
 
     # 3. POSSESSION EVENTS
     if context.get("possession_lost", False):
-        reward -= 0.25
+        reward -= 2.5
         attacker_reward.consecutive_passes = 0
 
     if context.get("ball_out_by") == agent_id:
-        reward -= 1.5
+        reward -= 2.5
         attacker_reward.consecutive_passes = 0
 
     # 4. PASSING BEHAVIOR
@@ -136,16 +136,16 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
         # Reward passer
         if context.get("pass_from") == agent_id:
             if context.get("invalid_pass_direction", False):
-                reward += 0.5  # less reward for wrong direction
+                reward += 0.25  # less reward for wrong direction
             else:
-                reward += 1.0  # normal passer reward
+                reward += 0.5  # normal passer reward
 
         # Reward receiver
         if context.get("pass_to") == agent_id:
-            reward += 0.5
+            reward += 0.25
 
         # Small synergy bonus for teamwork
-        reward += 0.25
+        reward += 0.10
 
         # Diminishing reward on consecutive passes and penalize excessive ball circulation
         # The agent receives a small positive reward for short, effective pass sequences 
@@ -180,14 +180,12 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
         attacker_reward.consecutive_passes = 0
         attacker_reward.shot_started = True
 
-
-
     # 5. SHOOTING BEHAVIOR
     if context.get("start_shot_bonus", False) and not context.get("invalid_shot_attempt", False):
-        reward += 0.5  # base shooting reward
-        reward += 0.5 * context.get("shot_positional_quality", 0.0)
+        reward += 0.25  # base shooting reward
+        reward += 0.25 * context.get("shot_positional_quality", 0.0)
         if context.get("shot_quality") is not None:
-            reward += 0.5 * context["shot_quality"]
+            reward += 0.25 * context["shot_quality"]
 
     # Penalize bad or misaligned shots
     if context.get("invalid_shot_attempt", False):
@@ -213,9 +211,9 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
 
         # Impatience penalty near the goal if not shooting
         if dist_goal < 18 and not context.get("start_shot_bonus", False):
-            reward -= 0.05 * (1 + attacker_reward.consecutive_passes / 2)
+            reward -= 0.25 * (1 + attacker_reward.consecutive_passes / 2)
         if dist_goal < 11 and not context.get("start_shot_bonus", False):
-            reward -= 0.1 * (1 + attacker_reward.consecutive_passes / 2)
+            reward -= 0.5 * (1 + attacker_reward.consecutive_passes / 2)
 
     # 7. GOALS
     if context.get("goal_scored", False):
@@ -248,7 +246,6 @@ def defender_reward(agent_id, player, pos_reward, ball, context, pitch):
 
     # 1. BASE POSITIONING AND SURVIVAL
     reward += pos_reward              # dense positional shaping
-    reward += 0.005                   # small time survival bonus
 
     # 2. BALL CHASING (incentive to contest loose balls)
     if ball is not None and ball.get_owner() is None:

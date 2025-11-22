@@ -138,7 +138,6 @@ class FootballMultiEnv(MultiAgentEnv):
         # - Attackers interpret (flag1=pass, flag2=shoot)
         # - Defenders interpret (flag1=tackle, flag2=shoot)
         # - Goalkeeper interprets (flag1=dive, flag2=shoot)
-
         self.action_spaces = {}
         for agent_id in self.agents:
             self.action_spaces[agent_id] = spaces.Box(
@@ -171,7 +170,6 @@ class FootballMultiEnv(MultiAgentEnv):
         #    [rel_x, rel_y, action_code, visible_flag, team_flag, has_ball_flag]
         #
         # Total dim = 4 + 6 + 2 + params_dim + (N-1)*6 ===> min: (4+6+2+9+(0*6))=21, max: (4+6+2+9+(5*6))=51
-
         def _compute_obs_dim(player):
             base_dim = 4 + 6 + 2 + (len(self.agents) - 1) * 6
             role = player.get_role()
@@ -273,6 +271,10 @@ class FootballMultiEnv(MultiAgentEnv):
 
         for aid, pos in zip(self.attacker_ids, coords):
             start_positions[aid] = pos
+
+        # set the ball at the first attacker position
+        ball_start_x, ball_start_y = start_positions.get("att_1", (60, 40))
+        self.ball.set_position(normalize(ball_start_x, ball_start_y))
 
         # Defender positions (Team B)
         if len(self.defender_ids) == 2:
