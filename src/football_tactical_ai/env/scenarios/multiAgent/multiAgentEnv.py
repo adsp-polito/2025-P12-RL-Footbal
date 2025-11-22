@@ -1,3 +1,4 @@
+from matplotlib.style import context
 import numpy as np
 from ray.rllib.env import MultiAgentEnv
 from typing import Dict, Any
@@ -541,6 +542,11 @@ class FootballMultiEnv(MultiAgentEnv):
             # Start from existing agent_context (which may already contain pass info)
             context = agent_contexts.get(agent_id, {}).copy()
             role = self.players[agent_id].get_role()
+
+            # SHOTTER-SPECIFIC for evaluation
+            context["shot_attempted"] = agent_contexts.get(agent_id, {}).get("shot_attempted", False)
+            context["pass_attempted"] = agent_contexts.get(agent_id, {}).get("pass_attempted", False)
+
 
             # COMMON FIELDS 
             context.update({

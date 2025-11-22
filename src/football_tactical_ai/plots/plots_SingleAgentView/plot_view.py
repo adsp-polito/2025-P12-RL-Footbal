@@ -215,13 +215,13 @@ plot_training_rewards(
 )
 
 # 2) Movement accuracy
-plot_movement_accuracy(
-    eval_json_path="src/football_tactical_ai/evaluation/results/logs/view/view_evaluation.json",
-    save_path=f"{SAVE_ROOT}/SingleAgentView_MovementAccuracy.png"
-)
+#plot_movement_accuracy(
+#    eval_json_path="src/football_tactical_ai/evaluation/results/logs/view/view_evaluation.json",
+#    save_path=f"{SAVE_ROOT}/SingleAgentView_MovementAccuracy.png"
+#)
 
 # 3) Shot accuracy
-plot_shot_accuracy(
-    eval_json_path = f"src/football_tactical_ai/evaluation/results/logs/view/view_evaluation.json",
-    save_path=f"{SAVE_ROOT}/SingleAgentView_ShotAccuracy.png"
-)
+#plot_shot_accuracy(
+#    eval_json_path = f"src/football_tactical_ai/evaluation/results/logs/view/view_evaluation.json",
+#    save_path=f"{SAVE_ROOT}/SingleAgentView_ShotAccuracy.png"
+#)

@@ -52,9 +52,9 @@ multiagent_params = {
     # Environment-specific settings for multi-agent scenario
     # NOTE: increase defenders/GK here to test larger scenarios (e.g. 2v2, 3v3, 3v2+GK)
     "env_settings": {
-        "n_attackers": 3,            # Number of attackers (Team A)
-        "n_defenders": 0,            # Number of defenders (Team B)
-        "include_goalkeeper": True,  # Whether to include a goalkeeper
+        "n_attackers": 2,            # Number of attackers (Team A)
+        "n_defenders": 1,            # Number of defenders (Team B)
+        "include_goalkeeper": False,  # Whether to include a goalkeeper
     },
 
     # RLlib PPO configuration parameters
@@ -91,14 +91,14 @@ multiagent_params = {
                 
 
         # Training Dynamics
-        "train_batch_size": 2048,         # Number of timesteps per training batch
-        "rollout_fragment_length": 128,   # Number of steps per rollout fragment
-        "minibatch_size": 256,            # Size of minibatches for SGD
-        "num_epochs": 3,                  # Number of passes over each batch of data
+        "train_batch_size": 2048,            # Number of timesteps per training batch
+        "rollout_fragment_length": "auto",   # Number of steps per rollout fragment
+        "minibatch_size": 256,               # Size of minibatches for SGD
+        "num_epochs": 3,                     # Number of passes over each batch of data
 
         # Parallelism
         # Each worker simulates multiple environments in parallel (if in local ==> 3 is ok)
-        "num_workers": 3, 
+        "num_workers": 0, 
         "num_envs_per_worker": 1,
 
         # Use GPUs if available (set to 0 if none available)
