@@ -41,12 +41,11 @@ multiagent_params = {
         "show_names": True,     
     },
 
-    # Paths for saving models, renders, and plots
+    # path settings for saving outputs
     "paths": {
-        "rewards_dir": "src/football_tactical_ai/training/plots/multiAgent",              
+        "rewards_dir": "src/football_tactical_ai/training/rewards/multiAgent",              
         "save_model_path": "src/football_tactical_ai/training/models/multiAgentModel",               
-        "save_render_dir": "src/football_tactical_ai/training/renders/multiAgent",                   
-        "plot_path": "src/football_tactical_ai/training/plots/multiAgent/multiAgentRewards.png",   
+        "save_render_dir": "src/football_tactical_ai/training/renders/multiAgent"
     },
 
     # Environment-specific settings for multi-agent scenario
@@ -61,32 +60,39 @@ multiagent_params = {
     "rllib": {
         "framework": "torch",  # Use PyTorch backend for PPO
 
+        # Learning rate
+        "lr": 2e-4,
+
         # Learning Rate Schedule
-        "lr": [
-            [0,         2e-4],     
-            [180_000,   1e-4],     
-            [360_000,   5e-5],
-            [480_000, 2e-5],
-            [720_000, 1e-5],
-        ],
+        #"lr": [
+        #    [0,         2e-4],     
+        #   [180_000,   1e-4],     
+        #    [360_000,   5e-5],
+        #    [480_000, 2e-5],
+        #    [720_000, 1e-5],
+        #],
 
         # Core RL Parameters
         "gamma": 0.95,          # Discount factor for future rewards
         "lambda": 0.97,         # GAE parameter for advantage estimation
 
-        # Exploration coefficient schedule
-        "entropy_coeff": [
-            [0,        0.1],    
-            [180_000,  0.075],     
-            [360_000,  0.05],      
-            [480_000,  0.025],
-            [720_000,  0.001],
-        ],
+
+        # Exploratrion coefficient
+        "entropy_coeff": 0.02,
+
+        # Exploration coefficient schedule (can be a fixed float or a schedule)
+        #"entropy_coeff": [
+        #    [0,        0.1],    
+        #    [180_000,  0.075],     
+        #    [360_000,  0.05],      
+        #    [480_000,  0.025],
+        #    [720_000,  0.001],
+        #],
         
 
         "clip_param": 0.2,           # PPO clipping parameter for stable updates
         "vf_clip_param": 20.0,       # Value function clipping to stabilize training
-        "vf_loss_coeff": 1.5,        # Weight of value function loss in total loss
+        "vf_loss_coeff": 1.0,        # Weight of value function loss in total loss
         "grad_clip": 1.0,            # Gradient clipping to prevent exploding gradients
                 
 
@@ -109,6 +115,8 @@ multiagent_params = {
             "fcnet_hiddens": [256, 128, 64],
             "fcnet_activation": "relu",
             "uses_new_env_api": True,   # True to use the new env API
+            "custom_action_dist": "mixed_gauss_bernoulli", # Custom action distribution
+
         },
     },
 

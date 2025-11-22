@@ -18,6 +18,12 @@ from football_tactical_ai.env.scenarios.multiAgent.multiAgentEnv import Football
 from football_tactical_ai.configs import configTrainMultiAgent as CFG_MA
 from football_tactical_ai.helpers.helperEvaluation import evaluate_and_render_multi
 
+from ray.rllib.models import ModelCatalog
+from football_tactical_ai.env.scenarios.multiAgent.mixed_action_dist import MixedGaussianBernoulli
+
+ModelCatalog.register_custom_action_dist("mixed_gauss_bernoulli", MixedGaussianBernoulli)
+
+
 import warnings
 import ray
 import logging
@@ -193,7 +199,6 @@ def make_schedule_fn(schedule: list):
                 return v0 + alpha * (v1 - v0)
         return schedule[-1][1]  # after the last point → last value
     return fn
-
 
 def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
     """

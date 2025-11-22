@@ -131,7 +131,7 @@ def evaluate_and_render_multi(
     # Debug logs (disabled in FAST mode)
     log_files = {}
     if debug:
-        base_dir = f"training/debug_logs/episode_{episode}"
+        base_dir = f"src/football_tactical_ai/training/trainingMultiAgent/debug_logs/episode_{episode}"
         os.makedirs(base_dir, exist_ok=True)
         for agent in env.agents:
             fname = os.path.join(base_dir, f"{agent}.log")

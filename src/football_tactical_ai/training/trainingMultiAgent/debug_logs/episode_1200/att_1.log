@@ -1,0 +1,722 @@
+Debug log for att_1 (Episode 1200)
+================================================================================
+[Step 1] Action=[ 0.95487756 -0.8835656   1.          0.          0.02728832  0.9599955
+ -0.6625669 ] | Reward=+1.026 | Cum=+1.026 | Info={'shot_attempted': False, 'pass_attempted': True, 'pass_quality': 0.5, 'pass_power': 6.500569162331521, 'pass_direction': [-0.011288069936811154, 0.9999362877089228], 'invalid_pass_direction': False, 'start_pass_bonus': True, 'pass_to': 'att_2', 'pass_direction_raw': [0.823011149931694, -0.5680234564621105], 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'possession_lost': False}
+
+[Step 2] Action=[ 0.9796976  -0.93299764  1.          0.          0.00962143  0.98305124
+ -0.7616745 ] | Reward=+0.019 | Cum=+1.046 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 3] Action=[ 0.9797002  -0.9330007   1.          0.          0.00962274  0.9830526
+ -0.7616898 ] | Reward=+0.014 | Cum=+1.059 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 4] Action=[ 0.97970283 -0.93300366  1.          0.          0.00962405  0.98305404
+ -0.7617048 ] | Reward=+0.009 | Cum=+1.068 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 5] Action=[ 0.9797054  -0.93300676  1.          0.          0.00962477  0.9830554
+ -0.76172   ] | Reward=+0.005 | Cum=+1.073 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 6] Action=[ 0.9797082  -0.93300986  1.          0.          0.00962584  0.98305696
+ -0.761736  ] | Reward=+0.001 | Cum=+1.074 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 7] Action=[ 0.9797114  -0.93301326  1.          0.          0.00962584  0.98305887
+ -0.7617545 ] | Reward=-0.001 | Cum=+1.074 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 8] Action=[ 0.9797147  -0.93301654  1.          0.          0.00962536  0.9830608
+ -0.7617731 ] | Reward=-0.003 | Cum=+1.071 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 9] Action=[ 0.9797179  -0.9330199   1.          0.          0.00962524  0.9830627
+ -0.7617918 ] | Reward=-0.005 | Cum=+1.066 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 10] Action=[ 0.9797211  -0.9330232   1.          0.          0.00962524  0.9830646
+ -0.7618104 ] | Reward=-0.006 | Cum=+1.060 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 11] Action=[ 0.9797249  -0.9330266   1.          0.          0.00961892  0.9830664
+ -0.76182973] | Reward=-0.008 | Cum=+1.052 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 12] Action=[ 0.97972876 -0.93303     1.          0.          0.00961058  0.9830682
+ -0.76184934] | Reward=-0.009 | Cum=+1.043 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 13] Action=[ 0.9797326  -0.9330334   1.          0.          0.00960295  0.9830701
+ -0.7618691 ] | Reward=-0.009 | Cum=+1.035 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 14] Action=[ 0.9797387  -0.93304116  1.          0.          0.00959866  0.9830738
+ -0.76189846] | Reward=-0.010 | Cum=+1.025 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 15] Action=[ 0.9797452  -0.93304974  1.          0.          0.00959544  0.9830778
+ -0.76192963] | Reward=-0.010 | Cum=+1.015 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 16] Action=[ 0.97975177 -0.9330583   1.          0.          0.0095921   0.9830819
+ -0.7619606 ] | Reward=-0.011 | Cum=+1.004 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 17] Action=[ 0.97975826 -0.9330669   1.          0.          0.00958912  0.98308593
+ -0.7619916 ] | Reward=-0.011 | Cum=+0.993 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 18] Action=[ 0.97976476 -0.9330755   1.          0.          0.00958591  0.98309
+ -0.76202285] | Reward=-0.012 | Cum=+0.981 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 19] Action=[ 0.97977126 -0.933084    1.          0.          0.00958233  0.98309404
+ -0.76205385] | Reward=-0.011 | Cum=+0.971 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 20] Action=[ 0.97977775 -0.93309253  1.          0.          0.00957923  0.9830981
+ -0.7620849 ] | Reward=-0.011 | Cum=+0.959 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 21] Action=[ 0.97978425 -0.93310106  1.          0.          0.00957613  0.98310214
+ -0.7621158 ] | Reward=-0.011 | Cum=+0.948 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 22] Action=[ 0.9797907  -0.9331095   1.          0.          0.00957339  0.98310614
+ -0.7621467 ] | Reward=-0.012 | Cum=+0.937 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 23] Action=[ 0.9797971  -0.93311805  1.          0.          0.00956993  0.9831102
+ -0.76217747] | Reward=-0.012 | Cum=+0.925 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 24] Action=[ 0.9798041  -0.9331276   1.          0.          0.00956779  0.9831146
+ -0.76221114] | Reward=-0.012 | Cum=+0.913 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 25] Action=[ 0.9798112  -0.93313754  1.          0.          0.00956636  0.9831192
+ -0.76224536] | Reward=-0.011 | Cum=+0.902 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 26] Action=[ 0.9798182  -0.9331475   1.          0.          0.00956505  0.9831238
+ -0.7622796 ] | Reward=-0.011 | Cum=+0.891 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 27] Action=[ 0.9798253  -0.93315744  1.          0.          0.00956362  0.9831283
+ -0.762314  ] | Reward=-0.011 | Cum=+0.880 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 28] Action=[ 0.97983235 -0.93316734  1.          0.          0.00956219  0.9831329
+ -0.7623483 ] | Reward=-0.011 | Cum=+0.869 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 29] Action=[ 0.9798394  -0.9331772   1.          0.          0.00956052  0.9831374
+ -0.7623824 ] | Reward=-0.011 | Cum=+0.857 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 30] Action=[ 0.9798465  -0.9331871   1.          0.          0.00955932  0.983142
+ -0.76241654] | Reward=-0.011 | Cum=+0.846 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 31] Action=[ 0.97985345 -0.93319696  1.          0.          0.00955778  0.98314655
+ -0.76245075] | Reward=-0.010 | Cum=+0.836 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 32] Action=[ 0.9798605  -0.9332068   1.          0.          0.00955635  0.9831511
+ -0.76248485] | Reward=-0.010 | Cum=+0.825 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 33] Action=[ 0.97986746 -0.9332167   1.          0.          0.00955503  0.9831556
+ -0.76251876] | Reward=-0.010 | Cum=+0.815 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 34] Action=[ 0.9798745  -0.9332265   1.          0.          0.00955348  0.98316014
+ -0.7625528 ] | Reward=+0.589 | Cum=+1.404 | Info={'shot_attempted': False, 'pass_attempted': False, 'pass_completed': True, 'pass_to': 'att_2', 'pass_from': 'att_1', 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 35] Action=[ 0.9799901  -0.932399    1.          0.          0.0106936   0.98300284
+ -0.7673752 ] | Reward=-0.020 | Cum=+1.384 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 36] Action=[ 0.9684359  -0.9104226   1.          0.          0.01905305  0.9734207
+ -0.7168697 ] | Reward=-0.020 | Cum=+1.364 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 37] Action=[ 0.96842253 -0.91040766  1.          0.          0.01909201  0.9734156
+ -0.716824  ] | Reward=-0.020 | Cum=+1.344 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 38] Action=[ 0.9684092  -0.91039264  1.          0.          0.01913098  0.97341055
+ -0.7167785 ] | Reward=-0.020 | Cum=+1.325 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 39] Action=[ 0.9683959  -0.9103777   1.          0.          0.01916959  0.9734055
+ -0.71673316] | Reward=-0.020 | Cum=+1.305 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 40] Action=[ 0.96838254 -0.9103627   1.          0.          0.0192082   0.9734005
+ -0.71668774] | Reward=-0.020 | Cum=+1.285 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 41] Action=[ 0.96836925 -0.9103478   1.          0.          0.01924705  0.97339547
+ -0.71664244] | Reward=-0.020 | Cum=+1.265 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 42] Action=[ 0.9683561  -0.9103332   1.          0.          0.01928685  0.97339064
+ -0.7165976 ] | Reward=-0.020 | Cum=+1.245 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 43] Action=[ 0.96834326 -0.91032016  1.          0.          0.01933154  0.9733866
+ -0.7165545 ] | Reward=-0.020 | Cum=+1.225 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 44] Action=[ 0.96833044 -0.91030705  1.          0.          0.0193761   0.9733826
+ -0.7165117 ] | Reward=-0.020 | Cum=+1.205 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 45] Action=[ 0.9683177  -0.91029394  1.          0.          0.01942091  0.9733786
+ -0.7164687 ] | Reward=-0.020 | Cum=+1.186 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 46] Action=[ 0.96830493 -0.91028094  1.          0.          0.01946524  0.9733746
+ -0.716426  ] | Reward=-0.020 | Cum=+1.166 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 47] Action=[ 0.9682922  -0.91026795  1.          0.          0.01950969  0.9733707
+ -0.7163833 ] | Reward=-0.020 | Cum=+1.146 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 48] Action=[ 0.9682794  -0.9102549   1.          0.          0.01955413  0.9733667
+ -0.7163405 ] | Reward=-0.020 | Cum=+1.126 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 49] Action=[ 0.9682667  -0.91024196  1.          0.          0.01959846  0.9733627
+ -0.7162978 ] | Reward=-0.020 | Cum=+1.107 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 50] Action=[ 0.96825427 -0.9102294   1.          0.          0.01964279  0.97335887
+ -0.7162561 ] | Reward=-0.020 | Cum=+1.087 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 51] Action=[ 0.9682425  -0.9102176   1.          0.          0.01968664  0.9733555
+ -0.7162167 ] | Reward=-0.020 | Cum=+1.067 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 52] Action=[ 0.96823084 -0.910206    1.          0.          0.01973014  0.97335213
+ -0.71617776] | Reward=-0.020 | Cum=+1.048 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 53] Action=[ 0.9682192  -0.91019446  1.          0.          0.01977363  0.97334874
+ -0.71613884] | Reward=-0.020 | Cum=+1.028 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 54] Action=[ 0.96820754 -0.91018283  1.          0.          0.01981701  0.9733454
+ -0.71610004] | Reward=-0.019 | Cum=+1.009 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 55] Action=[ 0.9681959  -0.9101713   1.          0.          0.01986026  0.97334206
+ -0.7160612 ] | Reward=-0.019 | Cum=+0.989 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 56] Action=[ 0.9681845  -0.91016006  1.          0.          0.01990364  0.9733389
+ -0.7160231 ] | Reward=-0.019 | Cum=+0.970 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 57] Action=[ 0.9681733  -0.9101494   1.          0.          0.0199482   0.97333604
+ -0.71598667] | Reward=-0.019 | Cum=+0.951 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 58] Action=[ 0.9681622  -0.9101388   1.          0.          0.01999253  0.9733331
+ -0.71595013] | Reward=-0.019 | Cum=+0.932 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 59] Action=[ 0.9681511  -0.91012824  1.          0.          0.02003674  0.97333026
+ -0.7159136 ] | Reward=-0.019 | Cum=+0.912 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 60] Action=[ 0.96814    -0.9101176   1.          0.          0.02008071  0.9733274
+ -0.7158772 ] | Reward=-0.019 | Cum=+0.893 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 61] Action=[ 0.96812886 -0.9101071   1.          0.          0.02012504  0.97332454
+ -0.71584094] | Reward=-0.019 | Cum=+0.875 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 62] Action=[ 0.96811783 -0.9100966   1.          0.          0.02016913  0.9733217
+ -0.71580446] | Reward=-0.019 | Cum=+0.856 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 63] Action=[ 0.96810675 -0.91008604  1.          0.          0.0202131   0.9733188
+ -0.71576816] | Reward=-0.019 | Cum=+0.837 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 64] Action=[ 0.9680957  -0.91007555  1.          0.          0.02025683  0.97331595
+ -0.715732  ] | Reward=-0.018 | Cum=+0.819 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 65] Action=[ 0.96808463 -0.910065    1.          0.          0.02030068  0.9733131
+ -0.71569586] | Reward=-0.018 | Cum=+0.801 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 66] Action=[ 0.96807367 -0.91005456  1.          0.          0.02034442  0.9733103
+ -0.7156596 ] | Reward=-0.018 | Cum=+0.783 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 67] Action=[ 0.96806264 -0.9100441   1.          0.          0.0203885   0.97330743
+ -0.71562356] | Reward=-0.018 | Cum=+0.765 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 68] Action=[ 0.9680516  -0.91003364  1.          0.          0.02043188  0.97330457
+ -0.7155877 ] | Reward=-0.018 | Cum=+0.747 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 69] Action=[ 0.96804065 -0.9100233   1.          0.          0.02047549  0.97330177
+ -0.71555156] | Reward=-0.017 | Cum=+0.730 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 70] Action=[ 0.9680297  -0.9100128   1.          0.          0.0205191   0.97329897
+ -0.7155157 ] | Reward=-0.017 | Cum=+0.713 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 71] Action=[ 0.9680187  -0.9100024   1.          0.          0.0205626   0.9732961
+ -0.71547985] | Reward=-0.017 | Cum=+0.697 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 72] Action=[ 0.96800774 -0.909992    1.          0.          0.02060585  0.9732933
+ -0.71544397] | Reward=-0.016 | Cum=+0.681 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 73] Action=[ 0.96799684 -0.9099816   1.          0.          0.02064934  0.97329044
+ -0.71540815] | Reward=-0.016 | Cum=+0.665 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 74] Action=[ 0.96798587 -0.90997124  1.          0.          0.02069236  0.97328764
+ -0.71537256] | Reward=-0.015 | Cum=+0.650 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 75] Action=[ 0.96797496 -0.9099609   1.          0.          0.02073549  0.97328484
+ -0.71533686] | Reward=-0.015 | Cum=+0.635 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 76] Action=[ 0.9679641  -0.9099506   1.          0.          0.02077863  0.97328204
+ -0.7153013 ] | Reward=-0.014 | Cum=+0.621 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 77] Action=[ 0.9679532  -0.9099403   1.          0.          0.02082177  0.97327924
+ -0.71526563] | Reward=-0.013 | Cum=+0.608 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 78] Action=[ 0.9679423  -0.90992993  1.          0.          0.02086466  0.97327644
+ -0.7152301 ] | Reward=-0.013 | Cum=+0.595 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 79] Action=[ 0.96793145 -0.9099197   1.          0.          0.0209078   0.97327363
+ -0.71519464] | Reward=-0.012 | Cum=+0.584 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 80] Action=[ 0.9679206  -0.9099094   1.          0.          0.02095057  0.97327083
+ -0.7151593 ] | Reward=-0.011 | Cum=+0.573 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 81] Action=[ 0.9679098  -0.9098991   1.          0.          0.02099335  0.9732681
+ -0.7151238 ] | Reward=-0.010 | Cum=+0.563 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 82] Action=[ 0.96789896 -0.90988886  1.          0.          0.02103589  0.9732653
+ -0.71508867] | Reward=-0.009 | Cum=+0.554 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 83] Action=[ 0.9678882  -0.9098787   1.          0.          0.02107891  0.97326255
+ -0.7150534 ] | Reward=-0.007 | Cum=+0.547 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 84] Action=[ 0.9678773  -0.90986836  1.          0.          0.02112156  0.97325975
+ -0.715018  ] | Reward=-0.006 | Cum=+0.541 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 85] Action=[ 0.9678666  -0.9098582   1.          0.          0.02116398  0.97325695
+ -0.7149828 ] | Reward=-0.004 | Cum=+0.537 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 86] Action=[ 0.9678558  -0.90984803  1.          0.          0.02120628  0.9732542
+ -0.71494776] | Reward=-0.003 | Cum=+0.534 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 87] Action=[ 0.967845   -0.90983796  1.          0.          0.02125013  0.97325134
+ -0.7149121 ] | Reward=-0.001 | Cum=+0.533 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 88] Action=[ 0.9678342  -0.9098282   1.          0.          0.02129398  0.97324836
+ -0.7148761 ] | Reward=+0.001 | Cum=+0.535 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 89] Action=[ 0.9678233  -0.9098183   1.          0.          0.02133807  0.97324544
+ -0.7148404 ] | Reward=+0.004 | Cum=+0.538 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 90] Action=[ 0.96781254 -0.90980846  1.          0.          0.02138204  0.9732425
+ -0.71480465] | Reward=+0.006 | Cum=+0.544 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 91] Action=[ 0.96780175 -0.9097986   1.          0.          0.02142589  0.9732396
+ -0.714769  ] | Reward=+0.080 | Cum=+0.624 | Info={'shot_attempted': False, 'pass_attempted': False, 'start_pass_bonus': False, 'invalid_pass_attempt': True, 'pass_completed': True, 'pass_from': 'att_2', 'pass_to': 'att_1', 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': True, 'start_shot_bonus': False, 'possession_lost': False}
+
+[Step 92] Action=[ 0.9465441  -0.87119436  1.          0.          0.02968808  0.95302445
+ -0.64419806] | Reward=+1.026 | Cum=+1.650 | Info={'shot_attempted': False, 'pass_attempted': True, 'pass_quality': 0.5, 'pass_power': 6.518207393679767, 'pass_direction': [0.10617737177762833, 0.9943472058201779], 'invalid_pass_direction': False, 'start_pass_bonus': True, 'pass_to': 'att_2', 'pass_direction_raw': [0.8284821971058076, -0.5600136150860807], 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'possession_lost': False}
+
+[Step 93] Action=[ 0.9797194  -0.93290323  1.          0.          0.01194288  0.983112
+ -0.7612884 ] | Reward=+0.028 | Cum=+1.678 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 94] Action=[ 0.9797232  -0.93290925  1.          0.          0.01194717  0.98311454
+ -0.76130813] | Reward=+0.026 | Cum=+1.704 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 95] Action=[ 0.979727   -0.93291533  1.          0.          0.01195134  0.9831171
+ -0.76132774] | Reward=+0.022 | Cum=+1.725 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 96] Action=[ 0.9797308  -0.93292135  1.          0.          0.01195587  0.98311967
+ -0.76134735] | Reward=+0.017 | Cum=+1.743 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 97] Action=[ 0.9797346  -0.93292737  1.          0.          0.01196016  0.9831222
+ -0.76136714] | Reward=+0.013 | Cum=+1.756 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 98] Action=[ 0.97973835 -0.9329334   1.          0.          0.01196445  0.98312485
+ -0.76138663] | Reward=+0.010 | Cum=+1.766 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 99] Action=[ 0.979743   -0.93294096  1.          0.          0.01197053  0.9831281
+ -0.76140976] | Reward=+0.007 | Cum=+1.773 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 100] Action=[ 0.9797495  -0.93295234  1.          0.          0.01198042  0.9831329
+ -0.76144123] | Reward=+0.005 | Cum=+1.778 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 101] Action=[ 0.97975606 -0.9329636   1.          0.          0.01199055  0.9831378
+ -0.76147276] | Reward=+0.003 | Cum=+1.781 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 102] Action=[ 0.97976255 -0.93297493  1.          0.          0.01200045  0.9831426
+ -0.76150435] | Reward=+0.001 | Cum=+1.782 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 103] Action=[ 0.97976905 -0.9329862   1.          0.          0.0120107   0.98314744
+ -0.7615357 ] | Reward=-0.001 | Cum=+1.781 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 104] Action=[ 0.9797756  -0.93299747  1.          0.          0.01202059  0.98315233
+ -0.76156706] | Reward=-0.001 | Cum=+1.780 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 105] Action=[ 0.97978204 -0.93300873  1.          0.          0.01203084  0.98315716
+ -0.7615985 ] | Reward=-0.002 | Cum=+1.777 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 106] Action=[ 0.97978854 -0.93302     1.          0.          0.01204085  0.983162
+ -0.7616298 ] | Reward=-0.003 | Cum=+1.774 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 107] Action=[ 0.9797958  -0.93303293  1.          0.          0.01205241  0.98316735
+ -0.7616645 ] | Reward=-0.004 | Cum=+1.770 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 108] Action=[ 0.9798031  -0.9330459   1.          0.          0.0120641   0.9831728
+ -0.76169956] | Reward=-0.005 | Cum=+1.766 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 109] Action=[ 0.97981036 -0.9330589   1.          0.          0.01207625  0.9831782
+ -0.7617344 ] | Reward=-0.005 | Cum=+1.761 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 110] Action=[ 0.97981757 -0.9330719   1.          0.          0.0120877   0.9831836
+ -0.76176935] | Reward=-0.006 | Cum=+1.755 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 111] Action=[ 0.9798254  -0.9330858   1.          0.          0.01210009  0.98318946
+ -0.76180726] | Reward=-0.005 | Cum=+1.750 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 112] Action=[ 0.9798339  -0.9331005   1.          0.          0.01211225  0.9831959
+ -0.76184905] | Reward=-0.005 | Cum=+1.745 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 113] Action=[ 0.97984236 -0.9331152   1.          0.          0.01212393  0.98320234
+ -0.7618907 ] | Reward=-0.006 | Cum=+1.739 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 114] Action=[ 0.9798508  -0.93312985  1.          0.          0.01213597  0.9832087
+ -0.7619324 ] | Reward=-0.006 | Cum=+1.733 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 115] Action=[ 0.9798595  -0.9331445   1.          0.          0.01214515  0.9832151
+ -0.7619744 ] | Reward=-0.006 | Cum=+1.727 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 116] Action=[ 0.97986853 -0.9331592   1.          0.          0.01214956  0.9832215
+ -0.76201695] | Reward=-0.006 | Cum=+1.721 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 117] Action=[ 0.9798776  -0.93317384  1.          0.          0.01215397  0.9832278
+ -0.76205957] | Reward=-0.005 | Cum=+1.715 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 118] Action=[ 0.97988665 -0.93318856  1.          0.          0.01215802  0.9832341
+ -0.7621022 ] | Reward=-0.006 | Cum=+1.710 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 119] Action=[ 0.97989565 -0.9332032   1.          0.          0.01216219  0.9832404
+ -0.76214474] | Reward=-0.006 | Cum=+1.704 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 120] Action=[ 0.97990465 -0.9332179   1.          0.          0.01216648  0.98324674
+ -0.76218706] | Reward=-0.006 | Cum=+1.698 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 121] Action=[ 0.97991365 -0.9332325   1.          0.          0.01217077  0.983253
+ -0.7622296 ] | Reward=-0.006 | Cum=+1.692 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 122] Action=[ 0.97992265 -0.9332471   1.          0.          0.01217482  0.9832593
+ -0.76227194] | Reward=-0.006 | Cum=+1.687 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 123] Action=[ 0.9799316  -0.9332617   1.          0.          0.01217947  0.9832656
+ -0.7623143 ] | Reward=-0.005 | Cum=+1.682 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 124] Action=[ 0.97994053 -0.93327624  1.          0.          0.01218353  0.98327184
+ -0.7623567 ] | Reward=-0.005 | Cum=+1.676 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 125] Action=[ 0.9799495  -0.9332908   1.          0.          0.0121877   0.98327816
+ -0.7623988 ] | Reward=-0.005 | Cum=+1.671 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 126] Action=[ 0.9799584  -0.9333053   1.          0.          0.01219175  0.9832844
+ -0.762441  ] | Reward=-0.005 | Cum=+1.666 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 127] Action=[ 0.97996736 -0.9333198   1.          0.          0.01219604  0.9832906
+ -0.7624831 ] | Reward=-0.005 | Cum=+1.661 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 128] Action=[ 0.97997624 -0.9333343   1.          0.          0.01220033  0.9832969
+ -0.76252526] | Reward=-0.005 | Cum=+1.655 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 129] Action=[ 0.9799851  -0.9333488   1.          0.          0.01220462  0.9833031
+ -0.7625673 ] | Reward=-0.004 | Cum=+1.651 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 130] Action=[ 0.97999394 -0.9333632   1.          0.          0.01220891  0.9833093
+ -0.76260924] | Reward=-0.005 | Cum=+1.647 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 131] Action=[ 0.9800028  -0.93337774  1.          0.          0.01221285  0.9833156
+ -0.76265126] | Reward=-0.005 | Cum=+1.642 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 132] Action=[ 0.9800117  -0.93339217  1.          0.          0.01221702  0.98332185
+ -0.7626934 ] | Reward=-0.005 | Cum=+1.638 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 133] Action=[ 0.9800217  -0.9334105   1.          0.          0.01221297  0.98332936
+ -0.76274645] | Reward=-0.005 | Cum=+1.633 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 134] Action=[ 0.98003167 -0.9334288   1.          0.          0.01220903  0.9833369
+ -0.7627993 ] | Reward=-0.005 | Cum=+1.628 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 135] Action=[ 0.9800416  -0.9334472   1.          0.          0.01220736  0.9833445
+ -0.7628523 ] | Reward=-0.004 | Cum=+1.625 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 136] Action=[ 0.9800515  -0.9334655   1.          0.          0.01220569  0.98335207
+ -0.7629052 ] | Reward=-0.004 | Cum=+1.621 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 137] Action=[ 0.9800615  -0.9334837   1.          0.          0.01220426  0.98335963
+ -0.7629581 ] | Reward=-0.004 | Cum=+1.617 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 138] Action=[ 0.98007137 -0.93350196  1.          0.          0.01220224  0.98336715
+ -0.7630108 ] | Reward=-0.004 | Cum=+1.613 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 139] Action=[ 0.98008126 -0.9335202   1.          0.          0.01220069  0.9833747
+ -0.7630636 ] | Reward=-0.004 | Cum=+1.610 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 140] Action=[ 0.98009115 -0.9335384   1.          0.          0.01219878  0.9833822
+ -0.7631161 ] | Reward=-0.004 | Cum=+1.606 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 141] Action=[ 0.980101   -0.93355656  1.          0.          0.01219723  0.98338974
+ -0.76316875] | Reward=-0.003 | Cum=+1.603 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 142] Action=[ 0.98011106 -0.9335752   1.          0.          0.01219401  0.98339736
+ -0.76322275] | Reward=-0.003 | Cum=+1.600 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 143] Action=[ 0.9801214  -0.9335944   1.          0.          0.0121896   0.98340523
+ -0.7632776 ] | Reward=-0.003 | Cum=+1.597 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 144] Action=[ 0.9801317  -0.93361354  1.          0.          0.01218555  0.98341304
+ -0.7633325 ] | Reward=-0.003 | Cum=+1.594 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 145] Action=[ 0.98014194 -0.9336326   1.          0.          0.01218138  0.9834208
+ -0.7633875 ] | Reward=-0.003 | Cum=+1.590 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 146] Action=[ 0.9801522  -0.93365175  1.          0.          0.01217721  0.9834286
+ -0.76344216] | Reward=-0.003 | Cum=+1.587 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 147] Action=[ 0.98016256 -0.93367094  1.          0.          0.01217232  0.98343647
+ -0.76349723] | Reward=-0.002 | Cum=+1.585 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 148] Action=[ 0.9801731  -0.93369037  1.          0.          0.01216457  0.9834445
+ -0.76355284] | Reward=-0.003 | Cum=+1.583 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 149] Action=[ 0.98018366 -0.9337098   1.          0.          0.01215718  0.9834526
+ -0.76360863] | Reward=-0.003 | Cum=+1.580 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 150] Action=[ 0.9801942  -0.9337293   1.          0.          0.01214979  0.98346066
+ -0.7636642 ] | Reward=-0.003 | Cum=+1.578 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 151] Action=[ 0.9802047  -0.93374866  1.          0.          0.0121424   0.9834687
+ -0.7637197 ] | Reward=-0.003 | Cum=+1.575 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 152] Action=[ 0.9802152  -0.9337681   1.          0.          0.01213454  0.98347676
+ -0.7637752 ] | Reward=-0.003 | Cum=+1.573 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 153] Action=[ 0.9802257  -0.93378747  1.          0.          0.01212739  0.9834848
+ -0.7638304 ] | Reward=-0.002 | Cum=+1.571 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 154] Action=[ 0.9802362  -0.9338068   1.          0.          0.01211964  0.9834928
+ -0.763886  ] | Reward=-0.002 | Cum=+1.569 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 155] Action=[ 0.9802466  -0.93382615  1.          0.          0.01211273  0.9835008
+ -0.7639412 ] | Reward=-0.002 | Cum=+1.568 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 156] Action=[ 0.98025703 -0.93384546  1.          0.          0.0121051   0.9835088
+ -0.7639965 ] | Reward=-0.002 | Cum=+1.566 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 157] Action=[ 0.98026747 -0.9338647   1.          0.          0.01209759  0.9835168
+ -0.76405156] | Reward=-0.002 | Cum=+1.564 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 158] Action=[ 0.98027784 -0.93388397  1.          0.          0.01209008  0.9835248
+ -0.76410663] | Reward=-0.002 | Cum=+1.562 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 159] Action=[ 0.98028827 -0.9339032   1.          0.          0.01208281  0.9835327
+ -0.76416165] | Reward=-0.001 | Cum=+1.561 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 160] Action=[ 0.98029864 -0.93392247  1.          0.          0.01207542  0.9835407
+ -0.7642167 ] | Reward=-0.001 | Cum=+1.560 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 161] Action=[ 0.98030895 -0.93394166  1.          0.          0.01206803  0.98354864
+ -0.76427174] | Reward=-0.001 | Cum=+1.558 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 162] Action=[ 0.9803193  -0.9339608   1.          0.          0.01206064  0.98355657
+ -0.7643265 ] | Reward=-0.001 | Cum=+1.557 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 163] Action=[ 0.98032963 -0.9339799   1.          0.          0.01205313  0.9835645
+ -0.76438135] | Reward=-0.001 | Cum=+1.556 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 164] Action=[ 0.98033994 -0.93399906  1.          0.          0.01204586  0.9835724
+ -0.7644361 ] | Reward=-0.001 | Cum=+1.554 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 165] Action=[ 0.98035026 -0.9340182   1.          0.          0.01203859  0.98358035
+ -0.76449096] | Reward=-0.001 | Cum=+1.553 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 166] Action=[ 0.98036057 -0.93403727  1.          0.          0.0120312   0.9835883
+ -0.7645456 ] | Reward=-0.000 | Cum=+1.552 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 167] Action=[ 0.9803708  -0.93405634  1.          0.          0.01202393  0.98359615
+ -0.76460016] | Reward=-0.001 | Cum=+1.551 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 168] Action=[ 0.9803811  -0.93407536  1.          0.          0.01201642  0.983604
+ -0.76465464] | Reward=-0.001 | Cum=+1.550 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 169] Action=[ 0.98039126 -0.93409437  1.          0.          0.01200915  0.9836119
+ -0.7647092 ] | Reward=-0.001 | Cum=+1.549 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 170] Action=[ 0.9804015  -0.9341133   1.          0.          0.01200176  0.98361975
+ -0.76476365] | Reward=-0.001 | Cum=+1.548 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 171] Action=[ 0.9804117  -0.9341323   1.          0.          0.01199449  0.9836276
+ -0.76481795] | Reward=-0.001 | Cum=+1.547 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 172] Action=[ 0.9804219  -0.9341513   1.          0.          0.01198686  0.9836355
+ -0.76487225] | Reward=-0.000 | Cum=+1.547 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 173] Action=[ 0.9804321  -0.9341701   1.          0.          0.01197995  0.9836433
+ -0.76492655] | Reward=-0.001 | Cum=+1.547 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 174] Action=[ 0.9804422  -0.934189    1.          0.          0.01197232  0.9836511
+ -0.7649808 ] | Reward=-0.001 | Cum=+1.546 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 175] Action=[ 0.9804524  -0.9342079   1.          0.          0.01196517  0.98365897
+ -0.76503503] | Reward=-0.001 | Cum=+1.546 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 176] Action=[ 0.9804625  -0.9342268   1.          0.          0.01195813  0.9836668
+ -0.7650889 ] | Reward=-0.001 | Cum=+1.545 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 177] Action=[ 0.98047304 -0.93424624  1.          0.          0.01195003  0.98367494
+ -0.76514494] | Reward=-0.001 | Cum=+1.544 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 178] Action=[ 0.98048383 -0.9342662   1.          0.          0.0119418   0.98368347
+ -0.76520216] | Reward=+0.000 | Cum=+1.545 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 179] Action=[ 0.9804947 -0.9342865  1.         0.         0.0119306  0.9836919
+ -0.765259 ] | Reward=-0.000 | Cum=+1.545 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 180] Action=[ 0.98050547 -0.9343069   1.          0.          0.01191606  0.98370016
+ -0.76531535] | Reward=-0.000 | Cum=+1.544 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 181] Action=[ 0.98051625 -0.93432736  1.          0.          0.01190164  0.98370844
+ -0.7653718 ] | Reward=-0.000 | Cum=+1.544 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 182] Action=[ 0.980527   -0.9343478   1.          0.          0.01188757  0.98371667
+ -0.7654281 ] | Reward=-0.000 | Cum=+1.544 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 183] Action=[ 0.9805378  -0.9343682   1.          0.          0.01187327  0.9837249
+ -0.76548445] | Reward=-0.000 | Cum=+1.543 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 184] Action=[ 0.9805485  -0.9343886   1.          0.          0.01185897  0.9837332
+ -0.76554054] | Reward=+0.001 | Cum=+1.544 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 185] Action=[ 0.98055923 -0.93440896  1.          0.          0.0118449   0.98374134
+ -0.7655967 ] | Reward=-0.000 | Cum=+1.544 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 186] Action=[ 0.9805699  -0.9344293   1.          0.          0.01183072  0.98374957
+ -0.76565266] | Reward=-0.000 | Cum=+1.544 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 187] Action=[ 0.98058057 -0.93444955  1.          0.          0.01181641  0.9837578
+ -0.7657087 ] | Reward=-0.000 | Cum=+1.544 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 188] Action=[ 0.98059124 -0.9344698   1.          0.          0.01180223  0.983766
+ -0.76576465] | Reward=-0.000 | Cum=+1.544 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 189] Action=[ 0.9806019  -0.9344901   1.          0.          0.01178817  0.9837742
+ -0.7658206 ] | Reward=+0.600 | Cum=+2.144 | Info={'shot_attempted': False, 'pass_attempted': False, 'pass_completed': True, 'pass_to': 'att_2', 'pass_from': 'att_1', 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 190] Action=[ 0.980835   -0.934196    1.          0.          0.01146062  0.983812
+ -0.77165985] | Reward=-0.020 | Cum=+2.124 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 191] Action=[ 0.96981835 -0.91291404  1.          0.          0.01951171  0.97462285
+ -0.7223415 ] | Reward=-0.020 | Cum=+2.104 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 192] Action=[ 0.96980464 -0.91289604  1.          0.          0.0195471   0.97461647
+ -0.72229403] | Reward=-0.020 | Cum=+2.084 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 193] Action=[ 0.96979094 -0.9128781   1.          0.          0.0195825   0.97461003
+ -0.7222465 ] | Reward=-0.020 | Cum=+2.064 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 194] Action=[ 0.9697772  -0.91286016  1.          0.          0.01961824  0.97460365
+ -0.7221993 ] | Reward=-0.020 | Cum=+2.044 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 195] Action=[ 0.9697635  -0.91284215  1.          0.          0.0196528   0.97459733
+ -0.72215194] | Reward=-0.020 | Cum=+2.024 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 196] Action=[ 0.96974987 -0.9128243   1.          0.          0.01968843  0.97459096
+ -0.72210467] | Reward=-0.020 | Cum=+2.004 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 197] Action=[ 0.9697363  -0.9128064   1.          0.          0.01972311  0.9745846
+ -0.7220573 ] | Reward=-0.020 | Cum=+1.984 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 198] Action=[ 0.9697227  -0.91278845  1.          0.          0.01975766  0.97457826
+ -0.7220099 ] | Reward=-0.020 | Cum=+1.964 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 199] Action=[ 0.96970916 -0.91277057  1.          0.          0.01979234  0.97457194
+ -0.72196245] | Reward=-0.020 | Cum=+1.944 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 200] Action=[ 0.9696956  -0.9127527   1.          0.          0.01982666  0.97456557
+ -0.72191525] | Reward=-0.020 | Cum=+1.924 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 201] Action=[ 0.9696824  -0.91273594  1.          0.          0.01986515  0.9745599
+ -0.72186935] | Reward=-0.020 | Cum=+1.904 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 202] Action=[ 0.96966934 -0.9127198   1.          0.          0.01990543  0.97455454
+ -0.7218244 ] | Reward=-0.020 | Cum=+1.884 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 203] Action=[ 0.9696562  -0.91270375  1.          0.          0.0199463   0.9745492
+ -0.7217793 ] | Reward=-0.020 | Cum=+1.864 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 204] Action=[ 0.9696432  -0.91268766  1.          0.          0.01998646  0.9745438
+ -0.72173446] | Reward=-0.020 | Cum=+1.844 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 205] Action=[ 0.9696301  -0.9126716   1.          0.          0.02002673  0.9745385
+ -0.72168964] | Reward=-0.020 | Cum=+1.824 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 206] Action=[ 0.9696171  -0.9126556   1.          0.          0.02006701  0.97453314
+ -0.72164476] | Reward=-0.020 | Cum=+1.804 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 207] Action=[ 0.96960413 -0.91263956  1.          0.          0.02010729  0.97452784
+ -0.7216    ] | Reward=-0.020 | Cum=+1.784 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 208] Action=[ 0.96959114 -0.9126236   1.          0.          0.0201472   0.97452253
+ -0.72155523] | Reward=-0.020 | Cum=+1.764 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 209] Action=[ 0.96957815 -0.91260767  1.          0.          0.02018748  0.97451717
+ -0.7215107 ] | Reward=-0.020 | Cum=+1.744 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 210] Action=[ 0.9695652  -0.91259205  1.          0.          0.02022859  0.97451204
+ -0.7214656 ] | Reward=-0.020 | Cum=+1.724 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 211] Action=[ 0.9695522  -0.91257715  1.          0.          0.02027185  0.97450715
+ -0.72141945] | Reward=-0.020 | Cum=+1.704 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 212] Action=[ 0.9695393  -0.91256225  1.          0.          0.02031498  0.97450227
+ -0.7213733 ] | Reward=-0.020 | Cum=+1.684 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 213] Action=[ 0.96952635 -0.91254735  1.          0.          0.02035788  0.9744974
+ -0.7213275 ] | Reward=-0.020 | Cum=+1.664 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 214] Action=[ 0.9695134 -0.9125325  1.         0.         0.0204009  0.9744925
+ -0.7212814] | Reward=-0.020 | Cum=+1.644 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 215] Action=[ 0.9695006  -0.91251785  1.          0.          0.0204438   0.9744877
+ -0.7212361 ] | Reward=-0.020 | Cum=+1.624 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 216] Action=[ 0.9694881  -0.91250366  1.          0.          0.02048598  0.9744831
+ -0.72119135] | Reward=-0.020 | Cum=+1.604 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 217] Action=[ 0.9694755  -0.9124894   1.          0.          0.02052804  0.9744785
+ -0.7211465 ] | Reward=-0.020 | Cum=+1.584 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 218] Action=[ 0.969463   -0.91247517  1.          0.          0.02057034  0.97447383
+ -0.7211019 ] | Reward=-0.020 | Cum=+1.564 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 219] Action=[ 0.9694504  -0.9124609   1.          0.          0.02061217  0.97446924
+ -0.7210575 ] | Reward=-0.020 | Cum=+1.544 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 220] Action=[ 0.96943796 -0.91244674  1.          0.          0.02065435  0.9744646
+ -0.72101295] | Reward=-0.020 | Cum=+1.524 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 221] Action=[ 0.96942544 -0.9124326   1.          0.          0.02069605  0.97446
+ -0.72096837] | Reward=-0.020 | Cum=+1.504 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 222] Action=[ 0.9694129  -0.9124184   1.          0.          0.02073823  0.9744554
+ -0.7209241 ] | Reward=-0.020 | Cum=+1.484 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 223] Action=[ 0.96940047 -0.91240436  1.          0.          0.0207797   0.9744508
+ -0.7208798 ] | Reward=-0.020 | Cum=+1.464 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 224] Action=[ 0.969388   -0.91239023  1.          0.          0.02082188  0.97444624
+ -0.7208354 ] | Reward=-0.020 | Cum=+1.444 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 225] Action=[ 0.96937555 -0.91237617  1.          0.          0.02086311  0.9744417
+ -0.7207914 ] | Reward=-0.020 | Cum=+1.424 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 226] Action=[ 0.9693634  -0.9123627   1.          0.          0.02090351  0.97443724
+ -0.72074825] | Reward=-0.020 | Cum=+1.404 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 227] Action=[ 0.9693512  -0.9123492   1.          0.          0.02094426  0.9744328
+ -0.720705  ] | Reward=-0.020 | Cum=+1.384 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 228] Action=[ 0.96933895 -0.91233575  1.          0.          0.02098477  0.9744284
+ -0.720662  ] | Reward=-0.020 | Cum=+1.364 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 229] Action=[ 0.9693268  -0.9123223   1.          0.          0.02102505  0.974424
+ -0.720619  ] | Reward=-0.020 | Cum=+1.344 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 230] Action=[ 0.96931463 -0.9123089   1.          0.          0.02106556  0.97441965
+ -0.7205761 ] | Reward=-0.020 | Cum=+1.324 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 231] Action=[ 0.9693025  -0.91229546  1.          0.          0.02110584  0.97441524
+ -0.7205332 ] | Reward=-0.020 | Cum=+1.304 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 232] Action=[ 0.9692903  -0.912282    1.          0.          0.02114587  0.97441083
+ -0.72049034] | Reward=-0.020 | Cum=+1.284 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 233] Action=[ 0.9692782  -0.91226864  1.          0.          0.02118603  0.9744065
+ -0.72044754] | Reward=-0.020 | Cum=+1.264 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 234] Action=[ 0.9692661  -0.9122553   1.          0.          0.0212263   0.97440207
+ -0.7204049 ] | Reward=-0.020 | Cum=+1.244 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 235] Action=[ 0.969254   -0.91224194  1.          0.          0.02126622  0.9743977
+ -0.7203622 ] | Reward=-0.020 | Cum=+1.224 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 236] Action=[ 0.9692419  -0.9122286   1.          0.          0.02130649  0.97439337
+ -0.7203196 ] | Reward=-0.020 | Cum=+1.204 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 237] Action=[ 0.9692299  -0.91221535  1.          0.          0.02134629  0.97438896
+ -0.720277  ] | Reward=-0.020 | Cum=+1.184 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 238] Action=[ 0.9692178  -0.91220206  1.          0.          0.02138597  0.97438467
+ -0.7202346 ] | Reward=-0.020 | Cum=+1.164 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 239] Action=[ 0.96920574 -0.91218877  1.          0.          0.02142565  0.97438025
+ -0.7201921 ] | Reward=-0.020 | Cum=+1.144 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+
+[Step 240] Action=[ 0.96919376 -0.91217554  1.          0.          0.02146533  0.97437596
+ -0.7201499 ] | Reward=-0.020 | Cum=+1.124 | Info={'shot_attempted': False, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False, 'start_pass_bonus': False, 'possession_lost': False}
+

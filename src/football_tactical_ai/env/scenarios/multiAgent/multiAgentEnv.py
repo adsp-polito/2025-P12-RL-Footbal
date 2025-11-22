@@ -18,7 +18,7 @@ from football_tactical_ai.env.scenarios.multiAgent.rewardGrids import (
     build_defender_grid,
     build_goalkeeper_grid,
 )
-from football_tactical_ai.env.scenarios.multiAgent.multiAgentReward import get_reward
+from football_tactical_ai.env.scenarios.multiAgent.multiAgentReward import get_reward, attacker_reward
 
 # This is a multi-agent environment for a football tactical AI scenario
 class FootballMultiEnv(MultiAgentEnv):
@@ -146,7 +146,6 @@ class FootballMultiEnv(MultiAgentEnv):
                 shape=(7,),
                 dtype=np.float32,
             )
-
 
         # OBSERVATION SPACE
         #
@@ -280,7 +279,7 @@ class FootballMultiEnv(MultiAgentEnv):
         if len(self.defender_ids) == 2:
             coords = [(100, 30), (100, 50)]           # two CBs (RCB and LCB)
         elif len(self.defender_ids) == 1:
-            coords = [(100, 40)]                      # single CB central
+            coords = [(120, 40)]                      # single CB ==> start in front of goal 
         else:
             coords = []
 
@@ -316,6 +315,14 @@ class FootballMultiEnv(MultiAgentEnv):
 
         # Initialize info dict (empty per agent)
         infos = {agent_id: {} for agent_id in self.agents}
+
+        # Reset reward trackers
+        if hasattr(attacker_reward, "consecutive_passes"):
+            attacker_reward.consecutive_passes.clear()
+        if hasattr(attacker_reward, "shot_started"):
+            attacker_reward.shot_started.clear()
+        if hasattr(attacker_reward, "prev_ball_x"):
+            attacker_reward.prev_ball_x.clear()
 
         return observations, infos
 

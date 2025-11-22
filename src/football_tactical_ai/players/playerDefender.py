@@ -4,6 +4,7 @@ from football_tactical_ai.players.playerBase import BasePlayer
 from football_tactical_ai.helpers.helperFunctions import denormalize
 from typing import Any
 
+
 class PlayerDefender(BasePlayer):
     
     def __init__(self,

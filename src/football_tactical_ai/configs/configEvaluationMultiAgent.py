@@ -15,7 +15,7 @@ COMMON = {
 # MULTI-AGENT 2 VS 1 SCENARIO
 MULTI_2V1 = {
 
-    # Path to trained model (MAPPO, IPPO, ecc.)
+    # Path to trained model
     "model_path": "src/football_tactical_ai/training/models/multiAgent_2v1_Model.zip",
 
     # Output directories

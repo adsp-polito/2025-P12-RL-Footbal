@@ -103,9 +103,7 @@ def evaluate_multi(scenario="2v1"):
 
     print(f"\n=== MULTI-AGENT EVALUATION: {scenario.upper()} ===")
 
-    # ------------------------------------------------------------------
     # Load global configuration
-    # ------------------------------------------------------------------
     fps       = COMMON["fps"]
     max_steps = COMMON["max_steps"]
 
@@ -118,9 +116,7 @@ def evaluate_multi(scenario="2v1"):
 
     pitch = Pitch()
 
-    # ------------------------------------------------------------------
     # Load trained model
-    # ------------------------------------------------------------------
     print(f"Loading model: {model_path}")
     model = PPO.load(model_path)
 
@@ -131,9 +127,7 @@ def evaluate_multi(scenario="2v1"):
     test_cases = cfg["test_cases"]
     print(f"Total test cases: {len(test_cases)}")
 
-    # ==================================================================
     # Loop over test cases
-    # ==================================================================
     for idx, case in enumerate(test_cases):
 
         name = case["name"]
@@ -151,9 +145,7 @@ def evaluate_multi(scenario="2v1"):
         rewards_A1 = []
         rewards_A2 = []
 
-        # ------------------------------------------------------------------
         # METRIC ACCUMULATORS
-        # ------------------------------------------------------------------
 
         # Shooting
         shots_A1 = shots_A2 = 0
@@ -173,9 +165,7 @@ def evaluate_multi(scenario="2v1"):
 
         N = 20
 
-        # ==================================================================
         # Run N episodes
-        # ==================================================================
         for run in tqdm(range(N), desc="runs"):
 
             # Create environment
@@ -187,9 +177,7 @@ def evaluate_multi(scenario="2v1"):
                 max_steps   = max_steps,
             )
 
-            # ==================================================================
             # Run VIDEO render only for run == 0
-            # ==================================================================
             if run == 0:
                 evaluate_and_render_multi(
                     model      = model,
@@ -205,9 +193,7 @@ def evaluate_multi(scenario="2v1"):
                     show_names   = cfg["render"]["show_names"],
                 )
 
-            # ==================================================================
             # MANUAL EPISODE ROLLOUT FOR METRICS
-            # ==================================================================
             obs, _ = env.reset()
             done = False
 
@@ -221,15 +207,11 @@ def evaluate_multi(scenario="2v1"):
 
                 obs, rewards, terminated, truncated, infos = env.step(actions)
 
-                # --------------------------------------------------------------
                 # REWARD
-                # --------------------------------------------------------------
                 rewards_A1.append(float(rewards["att_1"]))
                 rewards_A2.append(float(rewards["att_2"]))
 
-                # --------------------------------------------------------------
                 # SHOOTING
-                # --------------------------------------------------------------
                 if infos["att_1"].get("shot_attempted"):
                     shots_A1 += 1
                 if infos["att_2"].get("shot_attempted"):
@@ -240,9 +222,7 @@ def evaluate_multi(scenario="2v1"):
                 if infos["att_2"].get("goal_scored"):
                     goals_A2 += 1
 
-                # --------------------------------------------------------------
                 # PASSING
-                # --------------------------------------------------------------
                 # A1 → A2
                 if infos["att_1"].get("pass_attempted") and infos["att_1"].get("pass_to") == "att_2":
                     attempt_A1_A2 += 1
@@ -255,9 +235,7 @@ def evaluate_multi(scenario="2v1"):
                 if infos["att_2"].get("pass_completed") and infos["att_2"].get("pass_to") == "att_1":
                     complete_A2_A1 += 1
 
-                # --------------------------------------------------------------
                 # POSSESSION
-                # --------------------------------------------------------------
                 if infos["att_1"].get("has_ball"):
                     poss_A1 += 1
                 if infos["att_2"].get("has_ball"):
@@ -268,9 +246,7 @@ def evaluate_multi(scenario="2v1"):
                 if infos["att_2"].get("possession_lost"):
                     lost_A2 += 1
 
-                # --------------------------------------------------------------
                 # OUTCOME
-                # --------------------------------------------------------------
                 if infos["att_1"].get("goal_team") is not None:
                     episodes_with_goal += 1
                 if infos["att_1"].get("ball_out_by") is not None:
@@ -285,9 +261,7 @@ def evaluate_multi(scenario="2v1"):
                 "ball": env.traj_ball
             }
 
-        # ==================================================================
         # COMPUTE AND SAVE STATISTICS FOR THIS TEST CASE
-        # ==================================================================
         summary_eval[name] = {
             "A1": {
                 "mean": float(np.mean(rewards_A1)),
@@ -304,9 +278,7 @@ def evaluate_multi(scenario="2v1"):
                 "runs": rewards_A2,
             },
 
-            # --------------------------------------------------------------
             # SHOOTING
-            # --------------------------------------------------------------
             "shooting_stats": {
                 "shots_A1": shots_A1,
                 "shots_A2": shots_A2,
@@ -314,9 +286,7 @@ def evaluate_multi(scenario="2v1"):
                 "goals_A2": goals_A2,
             },
 
-            # --------------------------------------------------------------
             # PASSING
-            # --------------------------------------------------------------
             "passing_stats": {
                 "attempted_A1_to_A2": attempt_A1_A2,
                 "attempted_A2_to_A1": attempt_A2_A1,
@@ -324,9 +294,7 @@ def evaluate_multi(scenario="2v1"):
                 "completed_A2_to_A1": complete_A2_A1,
             },
 
-            # --------------------------------------------------------------
             # POSSESSION
-            # --------------------------------------------------------------
             "possession_stats": {
                 "poss_time_A1": poss_A1,
                 "poss_time_A2": poss_A2,
@@ -334,9 +302,7 @@ def evaluate_multi(scenario="2v1"):
                 "lost_possession_A2": lost_A2,
             },
 
-            # --------------------------------------------------------------
             # EPISODE OUTCOMES
-            # --------------------------------------------------------------
             "episode_outcomes": {
                 "episodes_with_goal": episodes_with_goal,
                 "episodes_out_of_play": episodes_out,
@@ -350,9 +316,7 @@ def evaluate_multi(scenario="2v1"):
 
         print(f"   → Trajectories saved to {traj_path}")
 
-    # ==================================================================
     # Save global evaluation summary
-    # ==================================================================
     eval_path = os.path.join(save_logs_dir, "multi_evaluation.json")
     with open(eval_path, "w") as f:
         json.dump(summary_eval, f, indent=2)
