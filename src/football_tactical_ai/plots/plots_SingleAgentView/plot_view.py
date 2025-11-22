@@ -130,13 +130,19 @@ def plot_movement_accuracy(eval_json_path, save_path="View_MovementAccuracy.png"
 
 
 
-# 3) SHOT ACCURACY — Lollipop Chart
+# 3) SHOT ACCURACY
 def plot_shot_accuracy(eval_json_path, save_path="View_ShotAccuracy.png"):
     """
-    Horizontal bar chart for shot accuracy (valid shot ratio)
+    Shot accuracy = (#episodes with a valid shot) / (valid episodes + sum(invalid_shot_fov))
+    
+    Handles cases where:
+        - valid_shot=True but invalid_shot_fov > 0 (episode includes previous invalid attempts)
+        - valid_shot=False → only invalid_shot_fov
+        - valid_shot=None → episode is ignored (no shot taken)
     """
     set_plot_style()
 
+    # Load JSON
     with open(eval_json_path) as f:
         data = json.load(f)
 
@@ -145,35 +151,43 @@ def plot_shot_accuracy(eval_json_path, save_path="View_ShotAccuracy.png"):
 
     for case, vals in data.items():
 
-        valid_list = []
-        shot_list = []
+        valid_count = 0          # number of episodes where a valid shot was eventually taken
+        invalid_count = 0        # total number of invalid shots (FOV violations)
 
         for m in vals["view_metrics"]:
-            if m["valid_shot"] is True:
-                valid_list.append(1)
-                shot_list.append(1)
-            elif m["valid_shot"] is False:
-                valid_list.append(0)
-                shot_list.append(1)
-            # None → no shot → ignore episode
 
-        ratio = (sum(valid_list) / len(shot_list)) if shot_list else 0.0
+            v = m["valid_shot"]
+            invalid_fov = m.get("invalid_shot_fov", 0)
+
+            if v is True:
+                # episode ends with a valid shot
+                valid_count += 1
+                invalid_count += invalid_fov   # include invalid attempts BEFORE the valid shot
+
+            elif v is False:
+                # only invalid attempts
+                invalid_count += invalid_fov
+
+            # v is None → ignore (no shot made)
+
+        total_shots = valid_count + invalid_count
+        ratio = valid_count / total_shots if total_shots > 0 else 0.0
 
         cases.append(case.upper())
         shot_acc.append(ratio)
 
-    # Sort for nicer visualization
+    # Sort bars for better visualization
     ordering = np.argsort(shot_acc)
     cases = np.array(cases)[ordering]
     shot_acc = np.array(shot_acc)[ordering]
 
+    # Plot
     fig, ax = plt.subplots(figsize=(9, 5))
-
-    color = "#D55E00"  # ORANGE
+    color = "#D55E00"
 
     ax.barh(cases, shot_acc, color=color, alpha=0.85)
 
-    # Label next to bars
+    # Labels
     for y, r in enumerate(shot_acc):
         ax.text(r + 0.02, y, f"{r:.2f}", va="center",
                 fontsize=12, fontweight="bold", color=color)
@@ -181,12 +195,12 @@ def plot_shot_accuracy(eval_json_path, save_path="View_ShotAccuracy.png"):
     ax.set_xlim(0, 1.05)
     ax.set_xlabel("Shot Accuracy", fontsize=13)
     ax.set_title("Shot Accuracy Across Test Cases", fontsize=16, fontweight="bold")
-
     ax.grid(axis="x", linestyle="--", alpha=0.25)
 
     plt.tight_layout()
     plt.savefig(save_path, dpi=400, bbox_inches="tight")
     plt.close(fig)
+
     print(f"[SAVED] {save_path}")
 
 
