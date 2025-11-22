@@ -335,7 +335,7 @@ class OffensiveScenarioViewSingleAgent(BaseOffensiveScenario):
         if self._t == self.max_steps - 1 or terminated_now:
 
             if self.shot_in_fov:
-                final_bonus = 1.5       # at least one valid in-FOV shot
+                final_bonus = 2.5       # at least one valid in-FOV shot
                 reward += final_bonus
             else:
                 final_bonus = 1.5       # no valid in-FOV shots
