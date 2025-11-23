@@ -24,6 +24,7 @@ def fixed_env_multi(pitch, attackers_m, defender_m, fps, max_steps):
         "n_attackers": 2,
         "n_defenders": 1,
         "include_goalkeeper": False,
+        "randomize_positions": False,
     })
 
     # Buffer per traiettorie

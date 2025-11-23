@@ -54,6 +54,7 @@ multiagent_params = {
         "n_attackers": 2,            # Number of attackers (Team A)
         "n_defenders": 1,            # Number of defenders (Team B)
         "include_goalkeeper": False,  # Whether to include a goalkeeper
+        "randomize_positions": True,  # Whether to randomize starting positions
     },
 
     # RLlib PPO configuration parameters

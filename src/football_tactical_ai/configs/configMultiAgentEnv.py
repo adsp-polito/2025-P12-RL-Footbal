@@ -11,6 +11,7 @@ def get_config(
     n_attackers: int = 2,
     n_defenders: int = 1,
     include_goalkeeper: bool = False,
+    randomize_positions: bool = True,
 ) -> dict:
     """
     Return a fully constructed configuration dictionary for the multi-agent football environment
@@ -31,5 +32,6 @@ def get_config(
         "max_steps": int(fps * seconds),
         "n_attackers": n_attackers,
         "n_defenders": n_defenders,
-        "include_goalkeeper": include_goalkeeper
+        "include_goalkeeper": include_goalkeeper,
+        "randomize_positions": randomize_positions
     }

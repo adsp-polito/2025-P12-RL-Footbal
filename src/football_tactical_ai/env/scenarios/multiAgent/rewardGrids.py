@@ -4,10 +4,15 @@ from football_tactical_ai.env.objects.pitch import Pitch
 def is_out_of_play(pitch: Pitch, x: float, y: float) -> bool:
     return x < 0 or x > pitch.width or y < 0 or y > pitch.height
 
+
+
+
+
+
 def build_attacker_grid(pitch: Pitch,
                         role: str,
                         team: str = "A",
-                        min_reward: float = -0.03,
+                        min_reward: float = -0.04,
                         max_reward: float = 0.07,
                         focus_sharpness: float = 2.5
                     ) -> np.ndarray:

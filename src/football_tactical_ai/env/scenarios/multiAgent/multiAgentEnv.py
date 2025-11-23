@@ -53,6 +53,7 @@ class FootballMultiEnv(MultiAgentEnv):
         self.fps = self.config["fps"]
         self.time_step = self.config["time_step"]
         self.max_steps = self.config["max_steps"]
+        self.randomize_positions = self.config.get("randomize_positions", True)
 
         # Pitch setup
         self.pitch = Pitch()
@@ -255,21 +256,43 @@ class FootballMultiEnv(MultiAgentEnv):
         self.ball.reset()                         # reset ball physics
         self.ball.set_owner("att_1")              # default: att_1 starts with ball
 
+
+
+
         # Define start positions dynamically depending on the number of agents
         start_positions = {}
 
         # Attacker positions (Team A)
-        if len(self.attacker_ids) == 3:
-            coords = [(60, 40), (60, 30), (60, 50)]   # CF central, LW, RW
-        elif len(self.attacker_ids) == 2:
-            coords = [(60, 35), (60, 45)]             # two forwards, slightly apart
-        elif len(self.attacker_ids) == 1:
-            coords = [(60, 40)]                       # single central striker
-        else:
-            coords = []
+        #
+        # Randomization rule:
+        #   - If enabled, attackers are placed anywhere within a 40-meter band
+        #     centered on midfield: x ∈ [40, 80].
+        #
+        # Fixed positions are used only when randomization is disabled.
+        RANDOM_X_MIN = 40   # 20 meters before midfield
+        RANDOM_X_MAX = 80   # 20 meters after midfield
+        RANDOM_Y_MIN = 20   # vertical constraint
+        RANDOM_Y_MAX = 60   # vertical constraint
 
-        for aid, pos in zip(self.attacker_ids, coords):
-            start_positions[aid] = pos
+        if self.randomize_positions:
+            # Randomized attacker placement for improved generalization
+            for aid in self.attacker_ids:
+                x = np.random.uniform(RANDOM_X_MIN, RANDOM_X_MAX)
+                y = np.random.uniform(RANDOM_Y_MIN, RANDOM_Y_MAX)
+                start_positions[aid] = (x, y)
+        else:
+            # Fixed deterministic positions (used for evaluation)
+            if len(self.attacker_ids) == 3:
+                coords = [(60, 40), (60, 30), (60, 50)]   # CF central, LW, RW
+            elif len(self.attacker_ids) == 2:
+                coords = [(60, 35), (60, 45)]             # two forwards, slightly apart
+            elif len(self.attacker_ids) == 1:
+                coords = [(60, 40)]                       # single central striker
+            else:
+                coords = []
+
+            for aid, pos in zip(self.attacker_ids, coords):
+                start_positions[aid] = pos
 
         # set the ball at the first attacker position
         ball_start_x, ball_start_y = start_positions.get("att_1", (60, 40))
