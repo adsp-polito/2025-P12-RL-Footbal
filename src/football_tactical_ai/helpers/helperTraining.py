@@ -18,10 +18,6 @@ from football_tactical_ai.env.scenarios.multiAgent.multiAgentEnv import Football
 from football_tactical_ai.configs import configTrainMultiAgent as CFG_MA
 from football_tactical_ai.helpers.helperEvaluation import evaluate_and_render_multi
 
-from ray.rllib.models import ModelCatalog
-from football_tactical_ai.env.scenarios.multiAgent.mixed_action_dist import MixedGaussianBernoulli
-
-ModelCatalog.register_custom_action_dist("mixed_gauss_bernoulli", MixedGaussianBernoulli)
 
 
 import warnings
@@ -36,6 +32,10 @@ logger.setLevel(logging.ERROR)
 
 ray.shutdown()
 ray.init(ignore_reinit_error=True, log_to_driver=False, include_dashboard=False, num_gpus=1)
+
+
+
+
 
 
 
@@ -153,7 +153,6 @@ def train_SingleAgent(scenario="move"):
     # SAVE MODEL
     model.save(cfg["paths"]["save_model_path"])
     print(f"Model saved → {cfg['paths']['save_model_path']}")
-
 
 
 

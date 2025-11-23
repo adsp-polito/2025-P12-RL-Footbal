@@ -78,7 +78,7 @@ multiagent_params = {
 
 
         # Exploratrion coefficient
-        "entropy_coeff": 0.02,
+        "entropy_coeff": 0.1,
 
         # Exploration coefficient schedule (can be a fixed float or a schedule)
         #"entropy_coeff": [
@@ -108,15 +108,13 @@ multiagent_params = {
         "num_envs_per_worker": 1,
 
         # Use GPUs if available (set to 0 if none available)
-        "num_gpus": 1,  # Adjust based on your hardware
+        "num_gpus": 0,  # Adjust based on your hardware
 
         # Model Architecture
         "model": {
             "fcnet_hiddens": [256, 128, 64],
             "fcnet_activation": "relu",
             "uses_new_env_api": True,   # True to use the new env API
-            "custom_action_dist": "mixed_gauss_bernoulli", # Custom action distribution
-
         },
     },
 

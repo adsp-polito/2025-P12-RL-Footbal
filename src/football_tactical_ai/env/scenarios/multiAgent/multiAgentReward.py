@@ -141,9 +141,9 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
 
     # (A) Valid pass attempt starts
     if context.get("start_pass_bonus", False) and not context.get("invalid_pass_attempt", False):
-        reward += 0.1
+        reward += 0.5
         if context.get("pass_quality") is not None:
-            reward += 0.2 * context["pass_quality"]
+            reward += 0.5 * context["pass_quality"]
 
     # (B) Successful pass completion
     elif context.get("pass_completed", False):
@@ -152,11 +152,11 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
 
         # passer reward
         if context.get("pass_from") == agent_id:
-            reward += 0.15
+            reward += 0.25
 
         # receiver reward
         if context.get("pass_to") == agent_id:
-            reward += 0.10
+            reward += 0.15
 
         # minimal teamwork bonus
         reward += 0.05
@@ -164,18 +164,18 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
         # Chain shaping: reward only the first 2 passes
         if not attacker_reward.shot_started[agent_id]:
             if c <= 2:
-                reward += 0.05
+                reward += 0.10
             else:
-                reward -= 0.10 * (c - 2)
+                reward -= 0.20 * (c - 2)
 
     # (C) Bad pass attempts
     if context.get("invalid_pass_attempt", False):
-        reward -= 0.25
+        reward -= 0.15
 
     if context.get("pass_failed", False):
         reward -= 0.25
 
-    # 5. BALL PROGRESSION BONUS (TOWARD GOAL)
+    # 5. BALL PROGRESSION BONUS
     bx_norm, _ = ball.get_position()
     bx_m, _ = denormalize(bx_norm, 0.0)
     prev_bx = attacker_reward.prev_ball_x[agent_id]
@@ -206,7 +206,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
     if context.get("invalid_shot_direction", False):
         reward -= 0.25
 
-    # Reward angular alignment (smooth scaling)
+    # Reward angular alignment
     alignment = context.get("shot_alignment")
     if alignment is not None:
         reward += 0.1 * (alignment**2 - 0.25)
