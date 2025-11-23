@@ -618,7 +618,7 @@ class FootballMultiEnv(MultiAgentEnv):
             infos[agent_id]["has_ball"] = has_ball
 
         # Step 11: Termination / Truncation
-        terminated_event = (goal_team is not None) or (ball_out_by is not None)
+        terminated_event = (goal_team is not None) or (ball_out_by is not None) or self._is_ball_completely_out(ball_x, ball_y)
         timeout_event = self.episode_step >= self.max_steps
 
         if terminated_event:

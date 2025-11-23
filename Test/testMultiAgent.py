@@ -15,6 +15,7 @@ def test_multiagent_render(save_path="test/videoTest/testMultiAgent.mp4"):
     # Initialize pitch and environment
     pitch = Pitch()
     env = FootballMultiEnv()
+    
     env.reset()  
 
     # Storage for rendering
