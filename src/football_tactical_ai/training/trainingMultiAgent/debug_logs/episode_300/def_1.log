@@ -1,200 +1,722 @@
 Debug log for def_1 (Episode 300)
 ================================================================================
-[Step 1] Action=[-1.         -0.08035266  0.          0.          0.         -0.06221189
- -0.69256806] | Reward=+0.062 | Cum=+0.062 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 1] Action=[-1.         -0.5627513   0.          0.          0.98923963 -0.97045517
+  0.9724294 ] | Reward=+0.061 | Cum=+0.061 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 2] Action=[-1.          0.05738084  0.          0.          0.          0.1280973
- -0.65958875] | Reward=+0.062 | Cum=+0.124 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 2] Action=[-1.         -0.5423504   0.          0.          0.99099463 -0.97130233
+  0.9805082 ] | Reward=+0.061 | Cum=+0.122 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 3] Action=[-1.          0.05754956  0.          0.          0.          0.12816882
- -0.65963775] | Reward=+0.062 | Cum=+0.185 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 3] Action=[-1.        -0.5421023  0.         0.         0.9909855 -0.9712675
+  0.9804915] | Reward=+0.060 | Cum=+0.182 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 4] Action=[-1.          0.05771757  0.          0.          0.          0.12823893
- -0.65968716] | Reward=+0.062 | Cum=+0.247 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 4] Action=[-1.         -0.5418543   0.          0.          0.9909764  -0.97123265
+  0.98047477] | Reward=+0.060 | Cum=+0.242 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 5] Action=[-1.          0.05788533  0.          0.          0.          0.12830952
- -0.6597359 ] | Reward=+0.063 | Cum=+0.310 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 5] Action=[-1.         -0.5416061   0.          0.          0.9909672  -0.97119766
+  0.98045796] | Reward=+0.059 | Cum=+0.301 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 6] Action=[-1.          0.05805332  0.          0.          0.          0.12838057
- -0.65978426] | Reward=+0.063 | Cum=+0.374 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 6] Action=[-1.         -0.5413586   0.          0.          0.990958   -0.9711627
+  0.98044115] | Reward=+0.060 | Cum=+0.361 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 7] Action=[-1.          0.05822108  0.          0.          0.          0.12845162
- -0.65983266] | Reward=+0.063 | Cum=+0.437 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 7] Action=[-1.         -0.5411106   0.          0.          0.9909488  -0.97112757
+  0.9804243 ] | Reward=+0.060 | Cum=+0.421 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 8] Action=[-1.          0.05838764  0.          0.          0.          0.12852196
- -0.6598813 ] | Reward=+0.063 | Cum=+0.500 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 8] Action=[-1.         -0.54086244  0.          0.          0.99093956 -0.9710924
+  0.98040736] | Reward=+0.059 | Cum=+0.481 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 9] Action=[-1.          0.05855444  0.          0.          0.          0.12859184
- -0.6599288 ] | Reward=+0.065 | Cum=+0.566 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 9] Action=[-1.         -0.54061437  0.          0.          0.99093026 -0.9710572
+  0.9803904 ] | Reward=+0.058 | Cum=+0.539 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 10] Action=[-1.          0.05871149  0.          0.          0.          0.12866358
- -0.6599794 ] | Reward=+0.065 | Cum=+0.631 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 10] Action=[-1.         -0.60285634  0.          0.          0.99206614 -0.9784127
+  0.98042214] | Reward=+0.058 | Cum=+0.597 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 11] Action=[-1.          0.05886688  0.          0.          0.          0.12873603
- -0.6600301 ] | Reward=+0.065 | Cum=+0.697 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 11] Action=[-1.         -0.6377985   0.          0.          0.9914453  -0.9801198
+  0.97947717] | Reward=+0.059 | Cum=+0.656 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 12] Action=[-1.          0.05902131  0.          0.          0.          0.12880732
- -0.66007996] | Reward=+0.066 | Cum=+0.762 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 12] Action=[-1.        -0.6376391  0.         0.         0.9914153 -0.9800683
+  0.9794225] | Reward=+0.059 | Cum=+0.715 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 13] Action=[-1.          0.05917527  0.          0.          0.          0.12887765
- -0.6601296 ] | Reward=+0.066 | Cum=+0.828 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 13] Action=[-1.         -0.6374793   0.          0.          0.99138546 -0.98001695
+  0.9793682 ] | Reward=+0.059 | Cum=+0.774 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 14] Action=[-1.          0.05932803  0.          0.          0.          0.12894846
- -0.6601792 ] | Reward=+0.068 | Cum=+0.896 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 14] Action=[-1.         -0.6373199   0.          0.          0.99135554 -0.9799655
+  0.9793138 ] | Reward=+0.058 | Cum=+0.832 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 15] Action=[-1.          0.05948364  0.          0.          0.          0.1290242
- -0.66023195] | Reward=+0.068 | Cum=+0.964 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 15] Action=[-1.         -0.63716     0.          0.          0.99132556 -0.97991395
+  0.97925925] | Reward=+0.058 | Cum=+0.890 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 16] Action=[-1.          0.05964638  0.          0.          0.          0.12911023
- -0.66029346] | Reward=+0.068 | Cum=+1.032 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 16] Action=[-1.         -0.63700056  0.          0.          0.99129546 -0.9798623
+  0.9792046 ] | Reward=+0.059 | Cum=+0.949 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 17] Action=[-1.          0.05980911  0.          0.          0.          0.12919557
- -0.660354  ] | Reward=+0.068 | Cum=+1.099 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 17] Action=[-1.         -0.6368407   0.          0.          0.9912653  -0.9798104
+  0.97914976] | Reward=+0.058 | Cum=+1.008 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 18] Action=[-1.          0.05997114  0.          0.          0.          0.1292809
- -0.6604145 ] | Reward=+0.070 | Cum=+1.169 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 18] Action=[-1.        -0.6366749  0.         0.         0.9912348 -0.9797583
+  0.9790948] | Reward=+0.058 | Cum=+1.066 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 19] Action=[-1.          0.05529727  0.          0.          0.          0.15406728
- -0.6749031 ] | Reward=+0.070 | Cum=+1.239 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 19] Action=[-1.         -0.63651186  0.          0.          0.9912046  -0.9797069
+  0.9790397 ] | Reward=+0.058 | Cum=+1.124 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 20] Action=[-1.          0.05534219  0.          0.          0.          0.15407892
- -0.67555547] | Reward=+0.070 | Cum=+1.309 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 20] Action=[-1.         -0.6363491   0.          0.          0.9911745  -0.97965544
+  0.9789845 ] | Reward=+0.058 | Cum=+1.181 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 21] Action=[-1.          0.05543037  0.          0.          0.          0.15401793
- -0.6761328 ] | Reward=+0.070 | Cum=+1.378 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 21] Action=[-1.         -0.63618565  0.          0.          0.9911443  -0.979604
+  0.97892904] | Reward=+0.059 | Cum=+1.240 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 22] Action=[-1.          0.05552378  0.          0.          0.          0.15395741
- -0.6767085 ] | Reward=+0.069 | Cum=+1.448 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 22] Action=[-1.         -0.6360232   0.          0.          0.991114   -0.9795523
+  0.97887355] | Reward=+0.059 | Cum=+1.299 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 23] Action=[-1.          0.05561719  0.          0.          0.          0.15389806
- -0.6772811 ] | Reward=+0.072 | Cum=+1.519 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 23] Action=[-1.         -0.6358599   0.          0.          0.9910836  -0.97950065
+  0.9788179 ] | Reward=+0.059 | Cum=+1.359 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 24] Action=[-1.          0.05572676  0.          0.          0.          0.15384778
- -0.6778568 ] | Reward=+0.071 | Cum=+1.591 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 24] Action=[-1.         -0.5588948   0.          0.          0.98862314 -0.96918344
+  0.9712476 ] | Reward=+0.058 | Cum=+1.417 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 25] Action=[-1.          0.05584061  0.          0.          0.          0.15379749
- -0.67843133] | Reward=+0.071 | Cum=+1.662 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 25] Action=[-1.         -0.5376326   0.          0.          0.99026537 -0.96991014
+  0.9793452 ] | Reward=+0.058 | Cum=+1.475 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 26] Action=[-1.          0.05595374  0.          0.          0.          0.15374722
- -0.6790029 ] | Reward=+0.071 | Cum=+1.733 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 26] Action=[-1.         -0.5375034   0.          0.          0.9902701  -0.96990997
+  0.97935206] | Reward=+0.058 | Cum=+1.533 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 27] Action=[-1.          0.05606663  0.          0.          0.          0.1536967
- -0.6795731 ] | Reward=+0.073 | Cum=+1.806 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 27] Action=[-1.         -0.5373735   0.          0.          0.9902747  -0.96990967
+  0.9793588 ] | Reward=+0.058 | Cum=+1.591 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 28] Action=[-1.          0.05617929  0.          0.          0.          0.15364642
- -0.68014103] | Reward=+0.073 | Cum=+1.879 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 28] Action=[-1.         -0.53724396  0.          0.          0.9902794  -0.96990925
+  0.97936547] | Reward=+0.057 | Cum=+1.648 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 29] Action=[-1.          0.05629218  0.          0.          0.          0.15359591
- -0.68070775] | Reward=+0.073 | Cum=+1.952 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 29] Action=[-1.         -0.53711593  0.          0.          0.9902841  -0.9699092
+  0.9793724 ] | Reward=+0.056 | Cum=+1.704 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 30] Action=[-1.          0.05640198  0.          0.          0.          0.15354586
- -0.6812728 ] | Reward=+0.072 | Cum=+2.024 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 30] Action=[-1.         -0.53699154  0.          0.          0.99028915 -0.9699101
+  0.97937995] | Reward=+0.056 | Cum=+1.760 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 31] Action=[-1.          0.05649015  0.          0.          0.          0.15349999
- -0.6818418 ] | Reward=+0.072 | Cum=+2.096 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 31] Action=[-1.         -0.53686726  0.          0.          0.99029416 -0.96991086
+  0.9793875 ] | Reward=+0.057 | Cum=+1.817 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 32] Action=[-1.          0.05657666  0.          0.          0.          0.15345412
- -0.6824091 ] | Reward=+0.074 | Cum=+2.171 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 32] Action=[-1.         -0.5367426   0.          0.          0.99029917 -0.96991163
+  0.979395  ] | Reward=+0.056 | Cum=+1.873 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 33] Action=[-1.          0.05666459  0.          0.          0.          0.15340826
- -0.68297476] | Reward=+0.074 | Cum=+2.245 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 33] Action=[-1.         -0.53661835  0.          0.          0.9903041  -0.96991223
+  0.9794023 ] | Reward=+0.056 | Cum=+1.929 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 34] Action=[-1.          0.05675086  0.          0.          0.          0.15336287
- -0.68353826] | Reward=+0.074 | Cum=+2.318 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 34] Action=[-1.        -0.599934   0.         0.         0.9917145 -0.9776825
+  0.9797619] | Reward=+0.056 | Cum=+1.985 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 35] Action=[-1.          0.05683665  0.          0.          0.          0.1533163
- -0.6841005 ] | Reward=+0.073 | Cum=+2.391 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 35] Action=[-1.         -0.6358219   0.          0.          0.99123615 -0.9795768
+  0.97909147] | Reward=+0.054 | Cum=+2.039 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 36] Action=[-1.          0.05692363  0.          0.          0.          0.15327138
- -0.6846606 ] | Reward=+0.075 | Cum=+2.467 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 36] Action=[-1.         -0.63560367  0.          0.          0.9911976  -0.9795087
+  0.9790193 ] | Reward=+0.056 | Cum=+2.095 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 37] Action=[-1.          0.05700989  0.          0.          0.          0.15322573
- -0.6852185 ] | Reward=+0.075 | Cum=+2.541 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 37] Action=[-1.         -0.6353849   0.          0.          0.99115896 -0.9794404
+  0.978947  ] | Reward=+0.056 | Cum=+2.152 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 38] Action=[-1.          0.05709568  0.          0.          0.          0.15318081
- -0.68577534] | Reward=+0.074 | Cum=+2.616 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 38] Action=[-1.         -0.6351656   0.          0.          0.99112016 -0.9793719
+  0.9788744 ] | Reward=+0.056 | Cum=+2.207 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 39] Action=[-1.          0.05718147  0.          0.          0.          0.1531354
- -0.6863299 ] | Reward=+0.074 | Cum=+2.689 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 39] Action=[-1.         -0.6349473   0.          0.          0.99108124 -0.97930324
+  0.97880167] | Reward=+0.056 | Cum=+2.263 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 40] Action=[-1.          0.05726654  0.          0.          0.          0.1530893
- -0.686883  ] | Reward=+0.076 | Cum=+2.765 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 40] Action=[-1.         -0.63472825  0.          0.          0.9910421  -0.97923434
+  0.9787287 ] | Reward=+0.056 | Cum=+2.319 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 41] Action=[-1.          0.05735257  0.          0.          0.          0.15304321
- -0.6874354 ] | Reward=+0.075 | Cum=+2.840 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 41] Action=[-1.         -0.6345097   0.          0.          0.99100286 -0.9791653
+  0.9786556 ] | Reward=+0.056 | Cum=+2.375 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 42] Action=[-1.          0.05744358  0.          0.          0.          0.152995
- -0.6879928 ] | Reward=+0.074 | Cum=+2.915 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 42] Action=[-1.         -0.63428754  0.          0.          0.9909634  -0.97909576
+  0.97858214] | Reward=+0.056 | Cum=+2.431 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 43] Action=[-1.          0.05753649  0.          0.          0.          0.15294704
- -0.6885499 ] | Reward=+0.074 | Cum=+2.988 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 43] Action=[-1.         -0.63406205  0.          0.          0.9909237  -0.97902566
+  0.9785084 ] | Reward=+0.056 | Cum=+2.486 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 44] Action=[-1.          0.05763559  0.          0.          0.          0.15291259
- -0.68910855] | Reward=+0.073 | Cum=+3.061 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 44] Action=[-1.         -0.6338364   0.          0.          0.9908838  -0.97895545
+  0.9784345 ] | Reward=+0.056 | Cum=+2.542 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 45] Action=[-1.          0.05775321  0.          0.          0.          0.15287696
- -0.6896657 ] | Reward=+0.075 | Cum=+3.136 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 45] Action=[-1.         -0.6336114   0.          0.          0.99084383 -0.978885
+  0.97836035] | Reward=+0.056 | Cum=+2.598 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 46] Action=[-1.          0.05787748  0.          0.          0.          0.15284109
- -0.6902214 ] | Reward=+0.074 | Cum=+3.209 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 46] Action=[-1.         -0.63338554  0.          0.          0.99080366 -0.97881436
+  0.978286  ] | Reward=+0.057 | Cum=+2.655 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 47] Action=[-1.          0.05800152  0.          0.          0.          0.152805
- -0.69077575] | Reward=+0.073 | Cum=+3.282 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 47] Action=[-1.         -0.5547176   0.          0.          0.9879516  -0.9677954
+  0.96996605] | Reward=+0.058 | Cum=+2.713 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 48] Action=[-1.          0.05812532  0.          0.          0.          0.15276869
- -0.691328  ] | Reward=+0.071 | Cum=+3.353 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 48] Action=[-1.         -0.5336567   0.          0.          0.98951775 -0.9685007
+  0.9781396 ] | Reward=+0.057 | Cum=+2.770 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 49] Action=[-1.          0.05824769  0.          0.          0.          0.15273236
- -0.6918784 ] | Reward=+0.073 | Cum=+3.427 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 49] Action=[-1.         -0.53362244  0.          0.          0.9895346  -0.9685294
+  0.9781665 ] | Reward=+0.056 | Cum=+2.827 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 50] Action=[-1.          0.05837433  0.          0.          0.          0.15270022
- -0.69242847] | Reward=+0.072 | Cum=+3.498 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 50] Action=[-1.         -0.5335876   0.          0.          0.98955137 -0.9685579
+  0.97819334] | Reward=+0.056 | Cum=+2.882 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 51] Action=[-1.          0.05850098  0.          0.          0.          0.15266831
- -0.6929769 ] | Reward=+0.074 | Cum=+3.572 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 51] Action=[-1.         -0.53355354  0.          0.          0.98956805 -0.9685863
+  0.97822   ] | Reward=+0.052 | Cum=+2.935 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 52] Action=[-1.          0.05862691  0.          0.          0.          0.15263548
- -0.69352394] | Reward=+0.076 | Cum=+3.648 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 52] Action=[-1.         -0.5335185   0.          0.          0.9895846  -0.9686146
+  0.97824657] | Reward=+0.053 | Cum=+2.988 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 53] Action=[-1.          0.0587526   0.          0.          0.          0.15260382
- -0.6940684 ] | Reward=+0.077 | Cum=+3.725 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 53] Action=[-1.         -0.5334839   0.          0.          0.98960114 -0.96864265
+  0.978273  ] | Reward=+0.053 | Cum=+3.041 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 54] Action=[-1.          0.05887781  0.          0.          0.          0.15257262
- -0.6946116 ] | Reward=+0.079 | Cum=+3.804 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 54] Action=[-1.         -0.53344864  0.          0.          0.9896175  -0.9686706
+  0.9782992 ] | Reward=+0.052 | Cum=+3.092 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 55] Action=[-1.          0.05900326  0.          0.          0.          0.15254024
- -0.69515306] | Reward=+0.077 | Cum=+3.881 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 55] Action=[-1.         -0.5334126   0.          0.          0.98963386 -0.9686983
+  0.97832537] | Reward=+0.051 | Cum=+3.143 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 56] Action=[-1.          0.05912846  0.          0.          0.          0.15250811
- -0.6956928 ] | Reward=+0.074 | Cum=+3.955 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 56] Action=[-1.         -0.53337693  0.          0.          0.9896501  -0.968726
+  0.97835135] | Reward=+0.050 | Cum=+3.194 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 57] Action=[-1.          0.05925628  0.          0.          0.          0.15248644
- -0.69622165] | Reward=+0.069 | Cum=+4.024 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 57] Action=[-1.        -0.5333408  0.         0.         0.9896662 -0.9687534
+  0.9783773] | Reward=+0.051 | Cum=+3.245 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 58] Action=[-1.          0.05938434  0.          0.          0.          0.15246642
- -0.6967486 ] | Reward=+0.067 | Cum=+4.091 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 58] Action=[-1.         -0.59686655  0.          0.          0.9913378  -0.97690296
+  0.9790607 ] | Reward=+0.051 | Cum=+3.296 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 59] Action=[-1.          0.0595131   0.          0.          0.          0.15244639
- -0.6972731 ] | Reward=+0.063 | Cum=+4.154 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 59] Action=[-1.         -0.63278997  0.          0.          0.9909569  -0.97889143
+  0.97857946] | Reward=+0.052 | Cum=+3.348 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 60] Action=[-1.          0.05964021  0.          0.          0.          0.15242614
- -0.69779587] | Reward=+0.061 | Cum=+4.215 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 60] Action=[-1.         -0.63252443  0.          0.          0.99091077 -0.978809
+  0.97849333] | Reward=+0.049 | Cum=+3.397 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 61] Action=[-1.          0.05976826  0.          0.          0.          0.15240633
- -0.69831747] | Reward=+0.059 | Cum=+4.274 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 61] Action=[-1.         -0.63225895  0.          0.          0.9908644  -0.9787263
+  0.97840697] | Reward=+0.049 | Cum=+3.446 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 62] Action=[-1.          0.05989535  0.          0.          0.          0.15238677
- -0.6988374 ] | Reward=+0.058 | Cum=+4.333 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 62] Action=[-1.         -0.6319932   0.          0.          0.9908178  -0.97864336
+  0.97832024] | Reward=+0.050 | Cum=+3.496 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 63] Action=[-1.          0.06002197  0.          0.          0.          0.15236604
- -0.6993549 ] | Reward=+0.060 | Cum=+4.393 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 63] Action=[-1.         -0.6317273   0.          0.          0.99077106 -0.97856015
+  0.9782333 ] | Reward=+0.050 | Cum=+3.547 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 64] Action=[-1.          0.06014883  0.          0.          0.          0.15234601
- -0.6998713 ] | Reward=+0.060 | Cum=+4.452 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 64] Action=[-1.         -0.63146174  0.          0.          0.9907241  -0.9784767
+  0.978146  ] | Reward=+0.051 | Cum=+3.597 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 65] Action=[-1.          0.0602764   0.          0.          0.          0.15232064
- -0.70039403] | Reward=+0.059 | Cum=+4.511 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+[Step 65] Action=[-1.         -0.6311957   0.          0.          0.9906769  -0.97839296
+  0.9780586 ] | Reward=+0.051 | Cum=+3.648 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 
-[Step 66] Action=[-1.          0.06039612  0.          0.          0.          0.15228175
- -0.7009173 ] | Reward=+0.047 | Cum=+4.559 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': 'att_2', 'has_ball': False, 'start_shot_bonus': False}
+[Step 66] Action=[-1.         -0.6309275   0.          0.          0.9906299  -0.97830933
+  0.9779715 ] | Reward=+0.051 | Cum=+3.699 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 67] Action=[-1.         -0.6306533   0.          0.          0.9905828  -0.9782251
+  0.97788435] | Reward=+0.052 | Cum=+3.751 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 68] Action=[-1.         -0.630377    0.          0.          0.99053544 -0.9781405
+  0.977797  ] | Reward=+0.050 | Cum=+3.801 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 69] Action=[-1.         -0.63010085  0.          0.          0.9904879  -0.9780556
+  0.97770923] | Reward=+0.050 | Cum=+3.851 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 70] Action=[-1.        -0.6298246  0.         0.         0.9904402 -0.9779705
+  0.9776216] | Reward=+0.050 | Cum=+3.901 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 71] Action=[-1.         -0.6295472   0.          0.          0.9903923  -0.9778852
+  0.97753376] | Reward=+0.050 | Cum=+3.951 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 72] Action=[-1.         -0.62927026  0.          0.          0.9903442  -0.97779953
+  0.9774456 ] | Reward=+0.052 | Cum=+4.003 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 73] Action=[-1.         -0.5499848   0.          0.          0.98714805 -0.9661559
+  0.9684532 ] | Reward=+0.052 | Cum=+4.055 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 74] Action=[-1.         -0.5296082   0.          0.          0.98863584 -0.9668698
+  0.9767203 ] | Reward=+0.051 | Cum=+4.105 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 75] Action=[-1.         -0.5296526   0.          0.          0.9886639  -0.9669237
+  0.97676504] | Reward=+0.050 | Cum=+4.155 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 76] Action=[-1.         -0.5296969   0.          0.          0.98869187 -0.9669774
+  0.97680956] | Reward=+0.046 | Cum=+4.201 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 77] Action=[-1.         -0.5297411   0.          0.          0.98871964 -0.9670308
+  0.97685385] | Reward=+0.045 | Cum=+4.246 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 78] Action=[-1.         -0.52978426  0.          0.          0.9887473  -0.96708393
+  0.9768979 ] | Reward=+0.044 | Cum=+4.290 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 79] Action=[-1.         -0.52982736  0.          0.          0.9887748  -0.96713686
+  0.97694176] | Reward=+0.044 | Cum=+4.334 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 80] Action=[-1.         -0.52987057  0.          0.          0.98880213 -0.9671895
+  0.97698545] | Reward=+0.043 | Cum=+4.377 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 81] Action=[-1.         -0.5299122   0.          0.          0.9888294  -0.96724194
+  0.977029  ] | Reward=+0.042 | Cum=+4.419 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 82] Action=[-1.         -0.52995247  0.          0.          0.9888566  -0.9672943
+  0.97707295] | Reward=+0.041 | Cum=+4.460 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 83] Action=[-1.         -0.5299913   0.          0.          0.98888373 -0.9673463
+  0.9771165 ] | Reward=+0.041 | Cum=+4.500 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 84] Action=[-1.         -0.5300307   0.          0.          0.9889107  -0.96739817
+  0.97716   ] | Reward=+0.040 | Cum=+4.541 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 85] Action=[-1.         -0.5933656   0.          0.          0.9908965  -0.97599536
+  0.9782507 ] | Reward=+0.037 | Cum=+4.578 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 86] Action=[-1.         -0.6289382   0.          0.          0.990596   -0.97803724
+  0.9779302 ] | Reward=+0.038 | Cum=+4.616 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 87] Action=[-1.         -0.6286264   0.          0.          0.9905426  -0.97794086
+  0.9778312 ] | Reward=+0.038 | Cum=+4.654 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 88] Action=[-1.         -0.6283159   0.          0.          0.99048907 -0.9778444
+  0.977732  ] | Reward=+0.038 | Cum=+4.692 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 89] Action=[-1.         -0.62800866  0.          0.          0.9904356  -0.97774816
+  0.9776328 ] | Reward=+0.039 | Cum=+4.730 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 90] Action=[-1.         -0.62770116  0.          0.          0.9903819  -0.9776516
+  0.9775333 ] | Reward=+0.039 | Cum=+4.769 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 91] Action=[-1.         -0.6273938   0.          0.          0.99032795 -0.9775547
+  0.97743344] | Reward=+0.039 | Cum=+4.808 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 92] Action=[-1.         -0.62708485  0.          0.          0.9902739  -0.9774576
+  0.97733366] | Reward=+0.040 | Cum=+4.848 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 93] Action=[-1.         -0.6267764   0.          0.          0.99021953 -0.97736007
+  0.97723347] | Reward=+0.037 | Cum=+4.885 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 94] Action=[-1.         -0.626462    0.          0.          0.99016476 -0.97726166
+  0.9771328 ] | Reward=+0.037 | Cum=+4.922 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 95] Action=[-1.         -0.6261489   0.          0.          0.9901097  -0.97716266
+  0.97703195] | Reward=+0.038 | Cum=+4.960 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 96] Action=[-1.         -0.6258387   0.          0.          0.9900543  -0.9770632
+  0.97693086] | Reward=+0.038 | Cum=+4.998 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 97] Action=[-1.         -0.6255277   0.          0.          0.98999864 -0.9769633
+  0.97682947] | Reward=+0.039 | Cum=+5.037 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 98] Action=[-1.         -0.6252172   0.          0.          0.9899427  -0.97686315
+  0.9767277 ] | Reward=+0.039 | Cum=+5.076 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 99] Action=[-1.         -0.62490696  0.          0.          0.9898866  -0.9767626
+  0.97662556] | Reward=+0.040 | Cum=+5.116 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 100] Action=[-1.         -0.6245962   0.          0.          0.98983014 -0.9766617
+  0.9765231 ] | Reward=+0.040 | Cum=+5.156 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 101] Action=[-1.         -0.6242852   0.          0.          0.98977345 -0.9765605
+  0.9764202 ] | Reward=+0.040 | Cum=+5.195 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 102] Action=[-1.         -0.54481214  0.          0.          0.9861993  -0.96425045
+  0.9666935 ] | Reward=+0.038 | Cum=+5.234 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 103] Action=[-1.         -0.52537006  0.          0.          0.9876295  -0.96503633
+  0.975107  ] | Reward=+0.037 | Cum=+5.271 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 104] Action=[-1.         -0.52546877  0.          0.          0.98766786 -0.9651115
+  0.9751678 ] | Reward=+0.036 | Cum=+5.307 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 105] Action=[-1.         -0.5255675   0.          0.          0.98770607 -0.9651864
+  0.97522837] | Reward=+0.035 | Cum=+5.341 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 106] Action=[-1.         -0.52566487  0.          0.          0.98774403 -0.9652609
+  0.9752885 ] | Reward=+0.034 | Cum=+5.375 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 107] Action=[-1.         -0.5257628   0.          0.          0.98778176 -0.965335
+  0.9753484 ] | Reward=+0.033 | Cum=+5.408 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 108] Action=[-1.         -0.5258637   0.          0.          0.98782015 -0.9654104
+  0.975409  ] | Reward=+0.031 | Cum=+5.439 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 109] Action=[-1.         -0.52596635  0.          0.          0.98785853 -0.96548605
+  0.9754695 ] | Reward=+0.030 | Cum=+5.469 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 110] Action=[-1.         -0.5260679   0.          0.          0.98789674 -0.96556133
+  0.97552973] | Reward=+0.027 | Cum=+5.496 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 111] Action=[-1.         -0.52616984  0.          0.          0.9879347  -0.96563625
+  0.97558975] | Reward=+0.026 | Cum=+5.522 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 112] Action=[-1.         -0.52627087  0.          0.          0.98797244 -0.96571076
+  0.97564936] | Reward=+0.025 | Cum=+5.548 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 113] Action=[-1.         -0.52637166  0.          0.          0.98801    -0.96578497
+  0.9757087 ] | Reward=+0.024 | Cum=+5.572 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 114] Action=[-1.         -0.5264738   0.          0.          0.9880473  -0.96585864
+  0.9757679 ] | Reward=+0.023 | Cum=+5.595 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 115] Action=[-1.         -0.58946526  0.          0.          0.99038136 -0.9749489
+  0.97731686] | Reward=+0.023 | Cum=+5.618 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 116] Action=[-1.        -0.6244778  0.         0.         0.9901539 -0.9770265
+  0.9771361] | Reward=+0.024 | Cum=+5.642 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 117] Action=[-1.         -0.62412876  0.          0.          0.9900936  -0.97691673
+  0.97702533] | Reward=+0.024 | Cum=+5.666 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 118] Action=[-1.         -0.6237824   0.          0.          0.99003303 -0.9768064
+  0.97691476] | Reward=+0.025 | Cum=+5.691 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 119] Action=[-1.        -0.6234358  0.         0.         0.9899722 -0.9766957
+  0.9768037] | Reward=+0.022 | Cum=+5.713 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 120] Action=[-1.         -0.6230889   0.          0.          0.98991096 -0.9765845
+  0.9766922 ] | Reward=+0.023 | Cum=+5.736 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 121] Action=[-1.         -0.62274283  0.          0.          0.98984945 -0.9764729
+  0.9765803 ] | Reward=+0.023 | Cum=+5.759 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 122] Action=[-1.         -0.62239695  0.          0.          0.9897876  -0.97636086
+  0.97646797] | Reward=+0.024 | Cum=+5.782 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 123] Action=[-1.         -0.6220461   0.          0.          0.9897253  -0.97624797
+  0.976355  ] | Reward=+0.024 | Cum=+5.807 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 124] Action=[-1.         -0.6216917   0.          0.          0.9896626  -0.97613424
+  0.97624165] | Reward=+0.024 | Cum=+5.831 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 125] Action=[-1.         -0.6213375   0.          0.          0.9895995  -0.97602016
+  0.97612774] | Reward=+0.025 | Cum=+5.855 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 126] Action=[-1.         -0.6209835   0.          0.          0.98953617 -0.97590554
+  0.9760134 ] | Reward=+0.025 | Cum=+5.881 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 127] Action=[-1.         -0.6206293   0.          0.          0.98947245 -0.9757905
+  0.9758987 ] | Reward=+0.024 | Cum=+5.905 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 128] Action=[-1.         -0.6202766   0.          0.          0.98940855 -0.97567517
+  0.9757833 ] | Reward=+0.024 | Cum=+5.929 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 129] Action=[-1.        -0.6199263  0.         0.         0.9893445 -0.9755595
+  0.9756672] | Reward=+0.025 | Cum=+5.954 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 130] Action=[-1.         -0.6195757   0.          0.          0.98928005 -0.9754435
+  0.9755506 ] | Reward=+0.025 | Cum=+5.979 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 131] Action=[-1.         -0.61922425  0.          0.          0.98921525 -0.97532743
+  0.97543365] | Reward=+0.026 | Cum=+6.005 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 132] Action=[-1.         -0.6188728   0.          0.          0.98915017 -0.97521096
+  0.9753163 ] | Reward=+0.027 | Cum=+6.032 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 133] Action=[-1.         -0.6185213   0.          0.          0.9890847  -0.97509396
+  0.97519845] | Reward=+0.030 | Cum=+6.062 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 134] Action=[-1.         -0.539016    0.          0.          0.98507994 -0.96203476
+  0.96465737] | Reward=+0.028 | Cum=+6.090 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 135] Action=[-1.         -0.5207836   0.          0.          0.98649323 -0.9629699
+  0.9732981 ] | Reward=+0.025 | Cum=+6.115 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 136] Action=[-1.         -0.52092415  0.          0.          0.9865407  -0.9630623
+  0.97337186] | Reward=+0.023 | Cum=+6.139 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 137] Action=[-1.         -0.5210736   0.          0.          0.98658854 -0.9631567
+  0.97344667] | Reward=+0.022 | Cum=+6.161 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 138] Action=[-1.         -0.5212227   0.          0.          0.98663616 -0.9632507
+  0.97352105] | Reward=+0.021 | Cum=+6.181 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 139] Action=[-1.         -0.52137136  0.          0.          0.9866835  -0.9633442
+  0.973595  ] | Reward=+0.019 | Cum=+6.200 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 140] Action=[-1.         -0.52152306  0.          0.          0.98673046 -0.9634371
+  0.97366893] | Reward=+0.018 | Cum=+6.218 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 141] Action=[-1.         -0.52167696  0.          0.          0.9867772  -0.9635293
+  0.97374254] | Reward=+0.017 | Cum=+6.235 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 142] Action=[-1.         -0.5218304   0.          0.          0.9868236  -0.9636211
+  0.97381586] | Reward=+0.016 | Cum=+6.251 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 143] Action=[-1.         -0.5219837   0.          0.          0.9868698  -0.96371233
+  0.97388875] | Reward=+0.015 | Cum=+6.265 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 144] Action=[-1.         -0.52213585  0.          0.          0.98691565 -0.9638032
+  0.9739613 ] | Reward=+0.013 | Cum=+6.279 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 145] Action=[-1.         -0.5222871   0.          0.          0.98696125 -0.96389353
+  0.9740334 ] | Reward=+0.011 | Cum=+6.289 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 146] Action=[-1.         -0.5224382   0.          0.          0.9870066  -0.9639835
+  0.97410524] | Reward=+0.010 | Cum=+6.299 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 147] Action=[-1.         -0.5225893   0.          0.          0.98705167 -0.9640729
+  0.9741766 ] | Reward=+0.009 | Cum=+6.308 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 148] Action=[-1.         -0.522739    0.          0.          0.9870965  -0.96416193
+  0.9742476 ] | Reward=+0.008 | Cum=+6.316 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 149] Action=[-1.         -0.5850765   0.          0.          0.9897645  -0.973715
+  0.97621757] | Reward=+0.008 | Cum=+6.324 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 150] Action=[-1.         -0.6193577   0.          0.          0.98958623 -0.97579664
+  0.9761307 ] | Reward=+0.008 | Cum=+6.332 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 151] Action=[-1.         -0.61897385  0.          0.          0.9895185  -0.97567314
+  0.97600836] | Reward=+0.009 | Cum=+6.341 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 152] Action=[-1.         -0.61859226  0.          0.          0.98945063 -0.9755496
+  0.975886  ] | Reward=+0.009 | Cum=+6.350 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 153] Action=[-1.         -0.61820996  0.          0.          0.98938245 -0.9754256
+  0.97576314] | Reward=+0.008 | Cum=+6.358 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 154] Action=[-1.         -0.6178301   0.          0.          0.9893137  -0.9753005
+  0.97563994] | Reward=+0.008 | Cum=+6.366 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 155] Action=[-1.         -0.61744785  0.          0.          0.98924476 -0.9751746
+  0.9755162 ] | Reward=+0.009 | Cum=+6.375 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 156] Action=[-1.         -0.6170655   0.          0.          0.98917556 -0.97504824
+  0.97539175] | Reward=+0.009 | Cum=+6.384 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 157] Action=[-1.         -0.61668265  0.          0.          0.989106   -0.97492164
+  0.9752669 ] | Reward=+0.010 | Cum=+6.394 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 158] Action=[-1.         -0.6162999   0.          0.          0.98903596 -0.9747948
+  0.9751415 ] | Reward=+0.011 | Cum=+6.405 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 159] Action=[-1.         -0.61591583  0.          0.          0.9889656  -0.9746675
+  0.9750156 ] | Reward=+0.012 | Cum=+6.417 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 160] Action=[-1.         -0.6155327   0.          0.          0.98889476 -0.97453964
+  0.9748892 ] | Reward=+0.012 | Cum=+6.428 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 161] Action=[-1.         -0.6151493   0.          0.          0.9888236  -0.97441125
+  0.9747623 ] | Reward=+0.011 | Cum=+6.439 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 162] Action=[-1.         -0.61476594  0.          0.          0.98875207 -0.9742823
+  0.9746349 ] | Reward=+0.012 | Cum=+6.452 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 163] Action=[-1.         -0.61438227  0.          0.          0.9886801  -0.9741529
+  0.974507  ] | Reward=+0.013 | Cum=+6.465 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 164] Action=[-1.        -0.6139992  0.         0.         0.9886078 -0.974023
+  0.9743785] | Reward=+0.017 | Cum=+6.482 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 165] Action=[-1.         -0.6136156   0.          0.          0.98853505 -0.97389245
+  0.97424954] | Reward=+0.020 | Cum=+6.502 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 166] Action=[-1.        -0.6132323  0.         0.         0.988462  -0.9737615
+  0.97412  ] | Reward=+0.024 | Cum=+6.525 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 167] Action=[-1.         -0.6128493   0.          0.          0.9883885  -0.97362995
+  0.97399   ] | Reward=+0.027 | Cum=+6.552 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 168] Action=[-1.         -0.6124658   0.          0.          0.98831457 -0.97349787
+  0.9738594 ] | Reward=+0.031 | Cum=+6.584 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 169] Action=[-1.         -0.6120827   0.          0.          0.98824024 -0.9733653
+  0.97372836] | Reward=+0.035 | Cum=+6.618 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 170] Action=[-1.         -0.61169904  0.          0.          0.98816556 -0.97323215
+  0.9735968 ] | Reward=+0.021 | Cum=+6.640 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 171] Action=[-1.         -0.53219676  0.          0.          0.9836843  -0.9593208
+  0.9621773 ] | Reward=+0.038 | Cum=+6.678 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 172] Action=[-1.         -0.51558024  0.          0.          0.9851289  -0.96051276
+  0.9711609 ] | Reward=+0.034 | Cum=+6.712 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 173] Action=[-1.         -0.51575285  0.          0.          0.9851824  -0.9606136
+  0.97124404] | Reward=+0.030 | Cum=+6.742 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 174] Action=[-1.         -0.5159253   0.          0.          0.98523694 -0.96071637
+  0.9713286 ] | Reward=+0.026 | Cum=+6.768 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 175] Action=[-1.         -0.5161029   0.          0.          0.98529166 -0.9608202
+  0.97141355] | Reward=+0.020 | Cum=+6.788 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 176] Action=[-1.         -0.51627946  0.          0.          0.985346   -0.96092343
+  0.971498  ] | Reward=-0.005 | Cum=+6.782 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 177] Action=[-1.         -0.51645577  0.          0.          0.9854001  -0.9610262
+  0.97158206] | Reward=-0.009 | Cum=+6.773 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 178] Action=[-1.         -0.5166416   0.          0.          0.9854551  -0.9611327
+  0.97166735] | Reward=-0.010 | Cum=+6.763 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 179] Action=[-1.         -0.51683104  0.          0.          0.98551035 -0.9612407
+  0.97175294] | Reward=-0.011 | Cum=+6.752 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 180] Action=[-1.        -0.5170201  0.         0.         0.9855652 -0.9613481
+  0.9718382] | Reward=-0.012 | Cum=+6.741 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 181] Action=[-1.         -0.51720876  0.          0.          0.9856198  -0.961455
+  0.9719229 ] | Reward=-0.012 | Cum=+6.729 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 182] Action=[-1.         -0.5173955   0.          0.          0.985674   -0.96156126
+  0.9720071 ] | Reward=-0.012 | Cum=+6.717 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 183] Action=[-1.         -0.51758325  0.          0.          0.9857279  -0.96166706
+  0.9720909 ] | Reward=-0.012 | Cum=+6.706 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 184] Action=[-1.         -0.51776904  0.          0.          0.9857815  -0.96177226
+  0.9721742 ] | Reward=-0.012 | Cum=+6.694 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 185] Action=[-1.         -0.51795506  0.          0.          0.9858347  -0.96187687
+  0.9722572 ] | Reward=-0.012 | Cum=+6.682 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 186] Action=[-1.         -0.51814365  0.          0.          0.98588824 -0.9619822
+  0.9723405 ] | Reward=-0.012 | Cum=+6.670 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 187] Action=[-1.         -0.5183354   0.          0.          0.9859421  -0.9620884
+  0.97242457] | Reward=-0.012 | Cum=+6.657 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 188] Action=[-1.         -0.51852596  0.          0.          0.9859957  -0.9621941
+  0.9725081 ] | Reward=-0.013 | Cum=+6.644 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 189] Action=[-1.         -0.5798173   0.          0.          0.98898154 -0.9721718
+  0.9748446 ] | Reward=-0.013 | Cum=+6.631 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 190] Action=[-1.        -0.6136805  0.         0.         0.9888665 -0.974319
+  0.9748771] | Reward=-0.014 | Cum=+6.617 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 191] Action=[-1.         -0.61326957  0.          0.          0.98879164 -0.9741828
+  0.9747438 ] | Reward=-0.014 | Cum=+6.603 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 192] Action=[-1.         -0.6128527   0.          0.          0.98871624 -0.97404546
+  0.97460973] | Reward=-0.014 | Cum=+6.589 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 193] Action=[-1.         -0.6124361   0.          0.          0.98864037 -0.9739075
+  0.9744751 ] | Reward=-0.014 | Cum=+6.575 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 194] Action=[-1.         -0.61201966  0.          0.          0.9885641  -0.9737689
+  0.97433984] | Reward=-0.014 | Cum=+6.562 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 195] Action=[-1.         -0.6116031   0.          0.          0.98848736 -0.9736297
+  0.974204  ] | Reward=-0.014 | Cum=+6.547 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 196] Action=[-1.         -0.6111869   0.          0.          0.9884102  -0.97348994
+  0.9740676 ] | Reward=-0.015 | Cum=+6.532 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 197] Action=[-1.         -0.6107707   0.          0.          0.98833257 -0.9733496
+  0.97393066] | Reward=-0.015 | Cum=+6.516 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 198] Action=[-1.        -0.6103542  0.         0.         0.9882545 -0.9732086
+  0.9737931] | Reward=-0.015 | Cum=+6.501 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 199] Action=[-1.         -0.60993755  0.          0.          0.988176   -0.97306705
+  0.9736549 ] | Reward=-0.015 | Cum=+6.485 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 200] Action=[-1.         -0.6095214   0.          0.          0.9880971  -0.97292495
+  0.97351617] | Reward=-0.016 | Cum=+6.469 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 201] Action=[-1.         -0.6091052   0.          0.          0.9880177  -0.97278214
+  0.97337687] | Reward=-0.016 | Cum=+6.453 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 202] Action=[-1.        -0.6086887  0.         0.         0.9879378 -0.9726388
+  0.973237 ] | Reward=-0.016 | Cum=+6.438 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 203] Action=[-1.         -0.6082727   0.          0.          0.9878575  -0.97249484
+  0.9730965 ] | Reward=-0.016 | Cum=+6.422 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 204] Action=[-1.         -0.6078566   0.          0.          0.98777676 -0.97235024
+  0.9729554 ] | Reward=-0.017 | Cum=+6.405 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 205] Action=[-1.         -0.6074403   0.          0.          0.9876956  -0.97220504
+  0.9728137 ] | Reward=-0.017 | Cum=+6.388 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 206] Action=[-1.         -0.6070237   0.          0.          0.9876139  -0.9720592
+  0.97267145] | Reward=-0.017 | Cum=+6.370 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 207] Action=[-1.        -0.6066078  0.         0.         0.9875318 -0.9719128
+  0.9725286] | Reward=-0.017 | Cum=+6.353 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 208] Action=[-1.         -0.60619444  0.          0.          0.9874492  -0.97176594
+  0.9723848 ] | Reward=-0.017 | Cum=+6.335 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 209] Action=[-1.         -0.60578066  0.          0.          0.98736626 -0.9716184
+  0.97224045] | Reward=-0.017 | Cum=+6.318 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 210] Action=[-1.         -0.60536695  0.          0.          0.98728275 -0.9714703
+  0.9720955 ] | Reward=-0.017 | Cum=+6.301 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 211] Action=[-1.         -0.60495335  0.          0.          0.9871988  -0.9713215
+  0.9719499 ] | Reward=-0.018 | Cum=+6.283 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 212] Action=[-1.         -0.60454476  0.          0.          0.9871157  -0.97117364
+  0.97180474] | Reward=-0.018 | Cum=+6.265 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 213] Action=[-1.         -0.60413635  0.          0.          0.98703223 -0.9710252
+  0.9716591 ] | Reward=-0.018 | Cum=+6.247 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 214] Action=[-1.         -0.60372794  0.          0.          0.9869483  -0.97087616
+  0.97151285] | Reward=-0.017 | Cum=+6.230 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 215] Action=[-1.         -0.60331976  0.          0.          0.986864   -0.9707265
+  0.971366  ] | Reward=-0.019 | Cum=+6.212 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 216] Action=[-1.         -0.5238292   0.          0.          0.98182744 -0.9557869
+  0.9589538 ] | Reward=-0.016 | Cum=+6.196 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 217] Action=[-1.         -0.50922316  0.          0.          0.983372   -0.9573895
+  0.96846503] | Reward=-0.019 | Cum=+6.176 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 218] Action=[-1.         -0.50945026  0.          0.          0.9834371  -0.9575124
+  0.9685635 ] | Reward=-0.019 | Cum=+6.157 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 219] Action=[-1.         -0.5096757   0.          0.          0.98350185 -0.9576346
+  0.9686614 ] | Reward=-0.019 | Cum=+6.138 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 220] Action=[-1.         -0.5099006   0.          0.          0.98356616 -0.95775616
+  0.96875876] | Reward=-0.019 | Cum=+6.119 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 221] Action=[-1.         -0.5101249   0.          0.          0.98363006 -0.9578771
+  0.9688557 ] | Reward=-0.020 | Cum=+6.099 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 222] Action=[-1.         -0.510349    0.          0.          0.9836936  -0.95799744
+  0.968952  ] | Reward=-0.020 | Cum=+6.079 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 223] Action=[-1.         -0.5105719   0.          0.          0.9837567  -0.95811707
+  0.9690478 ] | Reward=-0.020 | Cum=+6.058 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 224] Action=[-1.         -0.5107879   0.          0.          0.9838191  -0.95823514
+  0.969143  ] | Reward=-0.020 | Cum=+6.038 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 225] Action=[-1.         -0.5110023   0.          0.          0.9838811  -0.95835227
+  0.9692376 ] | Reward=-0.020 | Cum=+6.017 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 226] Action=[-1.         -0.51121634  0.          0.          0.9839427  -0.9584688
+  0.96933174] | Reward=-0.021 | Cum=+5.996 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 227] Action=[-1.         -0.5114264   0.          0.          0.98400503 -0.95858634
+  0.9694267 ] | Reward=-0.021 | Cum=+5.975 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 228] Action=[-1.         -0.5116352   0.          0.          0.9840673  -0.95870364
+  0.96952146] | Reward=-0.021 | Cum=+5.954 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 229] Action=[-1.         -0.51184314  0.          0.          0.98412955 -0.95882064
+  0.96961665] | Reward=-0.021 | Cum=+5.933 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 230] Action=[-1.        -0.5120629  0.         0.         0.9841921 -0.9589395
+  0.9697126] | Reward=-0.021 | Cum=+5.913 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 231] Action=[-1.         -0.51228195  0.          0.          0.9842542  -0.9590578
+  0.9698081 ] | Reward=-0.022 | Cum=+5.890 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 232] Action=[-1.         -0.5125004   0.          0.          0.984316   -0.95917547
+  0.96990305] | Reward=-0.022 | Cum=+5.868 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 233] Action=[-1.         -0.51271945  0.          0.          0.98437744 -0.95929295
+  0.96999764] | Reward=-0.022 | Cum=+5.846 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 234] Action=[-1.         -0.5129512   0.          0.          0.98444045 -0.959416
+  0.97009426] | Reward=-0.022 | Cum=+5.824 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 235] Action=[-1.         -0.51318264  0.          0.          0.98450303 -0.9595383
+  0.9701903 ] | Reward=-0.022 | Cum=+5.802 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 236] Action=[-1.         -0.51343304  0.          0.          0.9845663  -0.95966345
+  0.97028804] | Reward=-0.022 | Cum=+5.780 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 237] Action=[-1.         -0.5136848   0.          0.          0.9846291  -0.9597881
+  0.97038543] | Reward=-0.022 | Cum=+5.757 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 238] Action=[-1.         -0.5732779   0.          0.          0.9879374  -0.97015136
+  0.9730492 ] | Reward=-0.022 | Cum=+5.735 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 239] Action=[-1.         -0.6069026   0.          0.          0.9878958  -0.97241133
+  0.97319704] | Reward=-0.022 | Cum=+5.712 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
+
+[Step 240] Action=[-1.         -0.6064574   0.          0.          0.9878114  -0.97225875
+  0.97304946] | Reward=-0.023 | Cum=+5.689 | Info={'tackle_success': False, 'fake_tackle': False, 'interception_success': False, 'shot_attempted': False, 'invalid_shot_attempt': False, 'invalid_shot_direction': False, 'fov_visible': True, 'shot_quality': None, 'shot_direction': None, 'shot_power': None, 'pass_attempted': False, 'goal_scored': False, 'goal_team': None, 'ball_out_by': None, 'has_ball': False, 'start_shot_bonus': False}
 

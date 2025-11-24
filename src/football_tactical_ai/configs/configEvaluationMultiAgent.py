@@ -16,7 +16,8 @@ COMMON = {
 MULTI_2V1 = {
 
     # Path to trained model
-    "model_path": "src/football_tactical_ai/training/models/multiAgent_2v1_Model.zip",
+    # You need to change this to your absolute path
+    "model_path": "/Users/manuelemustari/Desktop/Università/Politecnico di Torino/2° year/2° period/Football-Tactical-AI/src/football_tactical_ai/training/models/multiAgentModel",
 
     # Output directories
     "save_video_dir": "src/football_tactical_ai/evaluation/results/videos/multiAgent",
@@ -40,8 +41,8 @@ MULTI_2V1 = {
         {
             "name": "center",
             "attackers_start": [
-                (65, 40),   # A1 central 
-                (60, 50),   # A2 more inside on the left
+                (60, 30),  
+                (60, 50),  
             ],
             "defender_start": (100, 40),
         },
@@ -49,8 +50,8 @@ MULTI_2V1 = {
         {
             "name": "left",
             "attackers_start": [
-                (60, 30),   # A1 on the left channel
-                (70, 40),   # A2 more inside
+                (75, 15),   
+                (70, 25),   
             ],
             "defender_start": (100, 40),
         },
@@ -58,8 +59,8 @@ MULTI_2V1 = {
         {
             "name": "right",
             "attackers_start": [
-                (60, 55),   # A1 on the right channel
-                (70, 45),   # A2 more inside
+                (75, 65),   
+                (70, 55),   
             ],
             "defender_start": (100, 40),
         },
@@ -67,8 +68,8 @@ MULTI_2V1 = {
         {
             "name": "deepStart",
             "attackers_start": [
-                (50, 35),   # A1 very deep
-                (55, 45),   # A2 slightly more advanced
+                (45, 30),   
+                (45, 50),   
             ],
             "defender_start": (100, 40),
         },

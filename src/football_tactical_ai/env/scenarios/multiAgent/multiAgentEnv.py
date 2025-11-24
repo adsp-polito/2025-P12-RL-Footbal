@@ -265,14 +265,14 @@ class FootballMultiEnv(MultiAgentEnv):
         # Attacker positions (Team A)
         #
         # Randomization rule:
-        #   - If enabled, attackers are placed anywhere within a 40-meter band
-        #     centered on midfield: x ∈ [40, 80].
+        #   - If enabled, attackers are placed anywhere within a 20-meter band
+        #     centered on midfield: x ∈ [50, 70].
         #
         # Fixed positions are used only when randomization is disabled.
-        RANDOM_X_MIN = 40   # 20 meters before midfield
-        RANDOM_X_MAX = 80   # 20 meters after midfield
-        RANDOM_Y_MIN = 20   # vertical constraint
-        RANDOM_Y_MAX = 60   # vertical constraint
+        RANDOM_X_MIN = 50   # 10 meters before midfield
+        RANDOM_X_MAX = 70   # 10 meters after midfield
+        RANDOM_Y_MIN = 30   # 10 meters vertical constraint
+        RANDOM_Y_MAX = 50   # 10 meters vertical constraint
 
         if self.randomize_positions:
             # Randomized attacker placement for improved generalization
@@ -891,10 +891,6 @@ class FootballMultiEnv(MultiAgentEnv):
 
         # 3. FINALIZE PASS DIRECTION AND REGISTER CONTEXT
         direction = target_pos - passer_pos
-        if np.linalg.norm(direction) > 1e-6:
-            direction = direction / np.linalg.norm(direction)
-        else:
-            direction = np.array([1.0, 0.0])  # fallback: to the right
 
         # Save pass context for the physics engine and reward logic
         self.pass_context.update({
