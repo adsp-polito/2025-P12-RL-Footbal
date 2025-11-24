@@ -12,8 +12,8 @@ def is_out_of_play(pitch: Pitch, x: float, y: float) -> bool:
 def build_attacker_grid(pitch: Pitch,
                         role: str,
                         team: str = "A",
-                        min_reward: float = -0.04,
-                        max_reward: float = 0.07,
+                        min_reward: float = -0.03,
+                        max_reward: float = 0.05,
                         focus_sharpness: float = 2.5
                     ) -> np.ndarray:
     """

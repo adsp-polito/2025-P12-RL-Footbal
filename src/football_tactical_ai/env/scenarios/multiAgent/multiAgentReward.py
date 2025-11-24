@@ -75,15 +75,18 @@ def get_position_reward_from_grid(pitch: Pitch,
 
 def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, pitch):
     """
-    Attacker reward function (enhanced variability version).
-    Designed to:
-        - Encourage quick ball circulation (2-4 passes)
-        - Discourage early or chaotic shots
-        - Reward spatial occupation and forward progression
-        - Produce PPO-stable but expressive reward signals
+    Attacker reward function (balanced progression → build-up → shot).
+
+    TARGET BEHAVIOUR:
+        - Advance with the ball (strong incentive)
+        - Perform 2-3 quality passes before shooting
+        - Avoid early chaotic shots
+        - Shoot only when context is good
+        - Do not over-pass (no tiki-taka infinito)
+        - Mild penalty if never shooting
     """
 
-    # INTERNAL STATE PER AGENTE
+    # INTERNAL PER-AGENT MEMORY
     if not hasattr(attacker_reward, "consecutive_passes"):
         attacker_reward.consecutive_passes = {}
     if not hasattr(attacker_reward, "shot_started"):
@@ -91,6 +94,7 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
     if not hasattr(attacker_reward, "prev_ball_x"):
         attacker_reward.prev_ball_x = {}
 
+    # Init states
     if agent_id not in attacker_reward.consecutive_passes:
         attacker_reward.consecutive_passes[agent_id] = 0
     if agent_id not in attacker_reward.shot_started:
@@ -101,20 +105,20 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
 
     reward = 0.0
 
-    # 1. POSITIONAL SHAPING
+    # 1. POSITIONAL BASE REWARD
+    # If you are NOT the pass target → normal positional reward
     is_pass_target = (
         pass_pending is not None
         and pass_pending.get("active", False)
         and pass_pending.get("to") == agent_id
     )
-
     if not is_pass_target:
-        reward += pos_reward  # grid now has a wider range ([-0.03, +0.10])
+        reward += pos_reward
 
-    # Small time penalty
+    # Micro time penalty
     reward -= 0.01
 
-    # 2. BALL CHASING
+    # 2. BALL CHASING REWARD
     if ball.get_owner() is None:
         x_p, y_p = denormalize(*player.get_position())
         x_b, y_b = denormalize(*ball.get_position())
@@ -132,11 +136,12 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
 
     # 4. PASSING BEHAVIOR
 
-    # A. Pass attempt valid
+    # A. Pass attempt valid 
     if context.get("start_pass_bonus", False) and not context.get("invalid_pass_attempt", False):
-        reward += 2.5 * pos_reward # encourage passing from good positions
-        if context.get("pass_quality") is not None:
-            reward += 0.25 * context["pass_quality"]
+        reward += 1.0 * pos_reward  # smaller, tactical
+        pq = context.get("pass_quality")
+        if pq is not None:
+            reward += 0.10 * pq
 
     # B. Successful pass
     elif context.get("pass_completed", False):
@@ -144,34 +149,33 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
         attacker_reward.consecutive_passes[agent_id] += 1
         c = attacker_reward.consecutive_passes[agent_id]
 
-        # PASS COUNTER BONUSES — strengthened
+        # Balanced pass-window build-up (per agent)
         if c == 1:
             reward += 0.10
         elif c == 2:
             reward += 0.15
         elif c == 3:
-            reward += 0.30
+            reward += 0.05
         elif c == 4:
-            reward += 0
+            reward -= 0.05
         elif c >= 5:
-            reward -= 0.10 * (c - 4)
+            reward -= 0.10 * (c - 4)  # discourage overpassing
 
-        # Micro bonuses to passer and receiver
+        # Micro bonuses
         if context.get("pass_from") == agent_id:
-            reward += 0.15
-        if context.get("pass_to") == agent_id:
             reward += 0.10
+        if context.get("pass_to") == agent_id:
+            reward += 0.05
 
-        # Teamwork
-        reward += 0.05
+        reward += 0.025  # teamwork
 
-    # C. Failed pass penalties
+    # C. Failed pass
     if context.get("invalid_pass_attempt", False):
-        reward -= 0.12
+        reward -= 0.25
     if context.get("pass_failed", False):
-        reward -= 0.12
+        reward -= 0.25
 
-    # 5. BALL PROGRESSION (reinforced)
+    # 5. BALL PROGRESSION
     bx_norm, _ = ball.get_position()
     bx_m, _ = denormalize(bx_norm, 0.0)
     prev_bx = attacker_reward.prev_ball_x[agent_id]
@@ -180,79 +184,67 @@ def attacker_reward(agent_id, player, pos_reward, ball, context, pass_pending, p
     dx = (bx_m - prev_bx) * dir_sign
     attacker_reward.prev_ball_x[agent_id] = bx_m
 
-    # Reinforced, but NOT when shooting
-    if dx > 0 and not context.get("start_shot_bonus", False):
-        reward += 0.08 * dx
+    # strong progression incentive
+    if dx > 0 and not context.get("start_shot_bonus", False) and ball.get_owner() == agent_id:
+        reward += 0.10 * dx
 
-    # 6. SHOOTING BEHAVIOR — Improved pass window
+    # 6. SHOOTING BEHAVIOR
     pass_bonus = 0.0
+    c = attacker_reward.consecutive_passes[agent_id]
 
-    if context.get("start_shot_bonus", False) and not context.get("invalid_shot_attempt", False):
+    if (context.get("start_shot_bonus", False) 
+        and not context.get("invalid_shot_attempt", False) 
+        and not context.get("invalid_shot_direction", False)):
 
-        c = attacker_reward.consecutive_passes[agent_id]
-
-        # Shot rewarded only if some construction
-        if c >= 2:
-            reward += 0.02
-
-        # Enhanced PASS-WINDOW curve
+        # Pass window logic
         if c == 0:
-            pass_bonus = -0.15
+            pass_bonus = -0.15   # too early
         elif c == 1:
-            pass_bonus = -0.05
+            pass_bonus = 0.00    # ok but not ideal
         elif c == 2:
-            pass_bonus = 0.10
+            pass_bonus = 0.15    # good
         elif c == 3:
-            pass_bonus = 0.30
+            pass_bonus = 0.30    # optimal
         elif c == 4:
-            pass_bonus = 0.15
-        else:  # c >= 5
-            pass_bonus = -0.10 * (c - 4)
+            pass_bonus = 0.10    # still good
+        else:
+            pass_bonus = -0.10 * (c - 4) # too late, overpassing
 
-        # Apply base pass-window bonus
         reward += pass_bonus
 
-        # Extra quality bonuses — applied only if window positive
+        # Shot quality
         if pass_bonus > 0:
-            shot_pos_q = context.get("shot_positional_quality")
-            if shot_pos_q is not None:
-                reward += 0.35 * pass_bonus * shot_pos_q
+            if context.get("shot_quality") is not None:
+                reward += 0.40 * pass_bonus * context["shot_quality"]
+            if context.get("shot_positional_quality") is not None:
+                reward += 0.40 * pass_bonus * context["shot_positional_quality"]
 
-            shot_q = context.get("shot_quality")
-            if shot_q is not None:
-                reward += 0.35 * pass_bonus * shot_q
+        # Alignment
+        align = context.get("shot_alignment")
+        if align is not None and pass_bonus > 0:
+            reward += 0.20 * align
 
         # Reset after shot
         attacker_reward.consecutive_passes[agent_id] = 0
         attacker_reward.shot_started[agent_id] = True
 
-    # Invalid shot penalties
+    # Invalid shot attempt penalties
     if context.get("invalid_shot_attempt", False):
         reward -= 0.15
     if context.get("invalid_shot_direction", False):
         reward -= 0.15
 
-    # Alignment bonus linked to pass-window
-    alignment = context.get("shot_alignment")
-    if (
-        alignment is not None
-        and context.get("start_shot_bonus", False)
-        and not context.get("invalid_shot_attempt", False)
-        and pass_bonus > 0
-    ):
-        reward += 0.5 * pass_bonus * (alignment**2 - 0.25)
-
-    # 7. GOAL REWARD ONLY IF SHOT STARTED
+    # 7. GOAL BONUS
     if context.get("goal_scored", False) and attacker_reward.shot_started[agent_id]:
         reward += 10.0
     elif context.get("goal_team") == player.team:
-        reward += 7.5
+        reward += 6.0
 
-    # 9. DEFENSIVE POSSESSION
+    # 8. DEFENSIVE POSSESSION
     if ball.get_owner() is not None:
         owner_id = ball.get_owner()
         if owner_id.startswith("def") or owner_id.startswith("gk"):
-            reward -= 0.04  
+            reward -= 0.03  
 
     return reward
 
