@@ -81,13 +81,13 @@ pip install -e .
 Run a simple single-agent test episode (movement scenario):
 
 ```
-python src/football_tactical_ai/env/test/testMove_SA.py
+python Test/testMove_SA.py
 ```
 
 You should see a rendered animation of the agent moving on the pitch under:
 
 ```
-test/videotest/testMove_SA.mp4
+Test/videoTest/testMove_SA.mp4
 ```
 
 ### 2. Train a model (example: Move scenario)
@@ -95,13 +95,13 @@ test/videotest/testMove_SA.mp4
 Launch the PPO training script:
 
 ```
-python src/football_tactical_ai/env/training/trainingSingleAgent/trainingMoveSingleAgent.py
+python src/football_tactical_ai/training/trainingSingleAgent/trainingMoveSingleAgent.py
 ```
 
 Training outputs (videos, logs, models) will appear under:
 
 ```
-src/football_tactical_ai/env/training/
+src/football_tactical_ai/training/
 ```
 
 ### 3. Evaluate the trained agent
@@ -109,7 +109,7 @@ src/football_tactical_ai/env/training/
 After training, you can generate visualisations and metrics:
 
 ```
-python src/football_tactical_ai/env/evaluation/eval_single_agent.py
+python src/football_tactical_ai/evaluation/eval_single_agent.py
 ```
 
 This produces:
