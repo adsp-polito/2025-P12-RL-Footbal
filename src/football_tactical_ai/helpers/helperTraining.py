@@ -16,6 +16,7 @@ from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
 from football_tactical_ai.env.scenarios.multiAgent.multiAgentEnv import FootballMultiEnv
 from football_tactical_ai.configs import configTrainMultiAgent as CFG_MA
+from football_tactical_ai.configs import configTrainWhatIF as CFG_WI
 from football_tactical_ai.helpers.helperEvaluation import evaluate_and_render_multi
 
 
