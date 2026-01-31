@@ -95,7 +95,7 @@ Test/videoTest/testMove_SA.mp4
 Launch the PPO training script:
 
 ```
-python src/football_tactical_ai/training/trainingSingleAgent/trainingMoveSingleAgent.py
+python src/football_tactical_ai/training/trainingMultiAgent/trainingMultiAgent.py
 ```
 
 Training outputs (videos, logs, models) will appear under:

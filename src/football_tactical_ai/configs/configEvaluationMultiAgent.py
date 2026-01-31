@@ -76,8 +76,31 @@ MULTI_2V1 = {
     ],
 }
 
+# MULTI-AGENT WHAT IF SCENARIO
+WHAT_IF = {
+
+    # Path to trained model
+    # You need to change this to your absolute path
+    "model_path": "D:/PoliTo/Anno 5/DS project/footballAI-ads/src/football_tactical_ai/training/models/whatIFModel",
+
+    # Output directories
+    "save_video_dir": "D:/PoliTo/Anno 5/DS project/footballAI-ads/src/football_tactical_ai/evaluation/results/videos/WhatIF",
+    "save_logs_dir":  "D:/PoliTo/Anno 5/DS project/footballAI-ads/src/football_tactical_ai/evaluation/results/logs/WhatIF",
+
+    # Rendering settings
+    "render": {
+        "show_grid": False,
+        "show_heatmap": False,
+        "show_rewards": False,
+        "full_pitch": True,
+        "show_fov": False,
+        "show_names": True,
+    },
+}
+
 
 # GLOBAL DICT OF SCENARIOS
 SCENARIOS_MULTI = {
     "2v1": MULTI_2V1,
+    "what_if": WHAT_IF,
 }

@@ -26,7 +26,7 @@ multiagent_params = {
     "fps": 24,
 
     # Total number of training episodes
-    "episodes": 10000,
+    "episodes": 2000,
 
     # Frequency of evaluation in episodes
     "eval_every": 300,
