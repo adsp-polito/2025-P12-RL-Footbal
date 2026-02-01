@@ -215,7 +215,7 @@ def train_MultiAgent(scenario: str = "multiagent", role_based: bool = False):
     register_env("football_multi_env", env_creator)
 
     # Load scenario configuration
-    cfg = CFG_WI.SCENARIOS[scenario]
+    cfg = CFG_MA.SCENARIOS[scenario]
     ensure_dirs(cfg["paths"]["save_render_dir"])
     ensure_dirs(os.path.dirname(cfg["paths"]["save_model_path"]))
 

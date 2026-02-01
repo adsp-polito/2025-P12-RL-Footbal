@@ -1,22 +1,5 @@
 # A Reinforcement Learning-Based Simulated Environment for Tactical Modeling in Offensive Football Scenarios
 
-![Python](https://img.shields.io/badge/Python-3.10-blue.svg)
-![Status](https://img.shields.io/badge/Status-Active-success.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![PPO](https://img.shields.io/badge/RL-PPO-orange.svg)
-![Gymnasium](https://img.shields.io/badge/Gymnasium-API-green)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.x-red)
-![RLlib](https://img.shields.io/badge/RLlib-Supported-orange)
-![StableBaselines3](https://img.shields.io/badge/SB3-PPO-blue)
-![Thesis](https://img.shields.io/badge/Academic-Thesis_Project-6f42c1)
-![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-lightgrey)
-![Football](https://img.shields.io/badge/Domain-Football_Analytics-brightgreen)
-![RL](https://img.shields.io/badge/AI-Reinforcement_Learning-yellow)
-
-> **Master’s Thesis Project — Politecnico di Torino**
-> This repository contains the official implementation of my master’s thesis in *Data Science & Engineering*.
-> The work focuses on designing a Reinforcement Learning environment for tactical football analysis, with agents learning offensive behaviours in realistic match scenarios.
-
 ## Overview
 
 This repository contains a Reinforcement Learning framework developed to simulate tactical football scenarios on a two-dimensional 120×80 meter pitch. The system models attackers, defenders, and goalkeepers as autonomous agents that interact within a controlled environment, allowing the study of movement, decision-making, and spatial behaviour under realistic constraints.
@@ -140,7 +123,8 @@ FOOTBALL-Tactical-AI/
 ├── pyproject.toml
 ├── README.md
 ├── statsbomb360/             # StatsBomb analysis tools & role data
-└── test/                     # Test scripts & demos
+├── test/                     # Test scripts & demos
+│    └── whatif.ipynb         # Main interface of the what-if implementation 
 
 ```
 
@@ -148,15 +132,8 @@ FOOTBALL-Tactical-AI/
 
 ## Academic Context
 
-This work is part of my Master’s Thesis in *Data Science and Engineering* at the **Politecnico di Torino**, supervised by
-**Prof. Silvia Chiusano** and **MSc. Andrea Avignone**. The goal is to explore Reinforcement Learning techniques applied to football analytics and tactical modeling.
+This work is part of the course "Applied data science project" at the **Politecnico di Torino**, starting from the thesis work of **Manuele Mustari**, supervised by **Prof. Silvia Chiusano** and **MSc. Andrea Avignone**. The goal is to explore Reinforcement Learning techniques applied to football analytics and tactical modeling.
 
 ## License
 
 This project is released under the **MIT License**, which allows unrestricted use, modification, and distribution of the code, provided that proper attribution to the original author is maintained.
-
-## Contact
-
-**Manuele Mustari**
-manuele.mustari@studenti.polito.it
-GitHub: https://github.com/Manuele23
