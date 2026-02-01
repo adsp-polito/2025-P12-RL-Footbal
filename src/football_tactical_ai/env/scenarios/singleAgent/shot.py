@@ -74,6 +74,13 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         self.shot_power = None
         self.reward_components = None
 
+        # --- Static goalkeeper / save logic ---
+        # When the ball crosses the goal line inside the goal mouth, we mark it as:
+        # - "saved" if it is extremely central (within +/- save_half_width_m from center)
+        # - otherwise a normal goal.
+        self.shot_saved = False
+        self.save_half_width_m = 0.6  # meters (smaller => only super-central shots are saved)
+
 
 
     def reset(self, seed=None, options=None):
@@ -82,6 +89,20 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         # By doing this, we use the reset method from the parent class so 
         # the ball and players are initialized correctly
         super().reset(seed=seed)
+
+        
+
+        # --- STEP 1: Defender as static goalkeeper (slightly inside the pitch for render) ---
+        margin_m = 0.2  # 20 cm inside the pitch (only visual)
+
+        keeper_x_m = self.pitch.x_max - margin_m
+        keeper_y_m = self.pitch.center_y
+
+        self.defender.reset_position(normalize(keeper_x_m, keeper_y_m))
+
+
+        # Reset save flag every episode
+        self.shot_saved = False
 
         # Reset shooting state
         self.is_shooting = False
@@ -183,11 +204,16 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         # 3) DEFENDER AI
         self._apply_defender_ai()
 
-        # 4) REWARD
-        reward = self.compute_reward(shot_flag=shot_flag, shot_quality=shot_quality, movement=movement)
-
-        # 5) TERMINATION
+        # 4) TERMINATION 
         terminated = self._check_termination()
+
+        # 5) REWARD
+        reward = self.compute_reward(
+            shot_flag=shot_flag,
+            shot_quality=shot_quality,
+            movement=movement,
+            terminated=terminated,
+        )
         self._t += 1
         truncated = self._t >= self.max_steps
 
@@ -196,7 +222,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
     
 
         
-    def compute_reward(self, shot_flag=None, shot_quality=0.0, movement=None):
+    def compute_reward(self, shot_flag=None, shot_quality=0.0, movement=None, terminated: bool = False):
         """
         Compute the reward for the current step.
         Balances movement (advancement), decision-making (when to shoot),
@@ -246,8 +272,13 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             reward += readiness_weight * 0.05 * readiness
 
         # EVENT-BASED REWARDS ==> goals, possession loss, ball out
-        if self._is_goal(bx_m, by_m) and self.ball.get_owner() is not self.attacker:
+        # Goal bonus only if it was not saved
+        if self._is_goal(bx_m, by_m) and (not self.shot_saved) and self.ball.get_owner() is not self.attacker:
             reward += 10.0
+
+        # Central shot saved by goalkeeper => penalty
+        if self.shot_saved:
+            reward -= 2.0
 
         if self.possession_lost:
             reward -= 2.5
@@ -310,8 +341,7 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             self.shot_step = self._t
 
         # FINAL EPISODE BONUS ==> use ball landing and final shot angle
-        terminated_now = self._check_termination()
-        if self._t == self.max_steps - 1 or terminated_now:
+        if self._t == self.max_steps - 1 or terminated:
 
             if getattr(self, "shot_start_bonus", 0.0) > 0.0:
 
@@ -349,7 +379,8 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         self.reward_components = {
             "position": float(pos_reward),
             "shot_start_bonus": float(getattr(self, "shot_start_bonus", 0.0)),
-            "goal": 10.0 if self._is_goal(bx_m, by_m) else 0.0,
+            "goal": 10.0 if (self._is_goal(bx_m, by_m) and not self.shot_saved) else 0.0,
+            "saved": -2.0 if self.shot_saved else 0.0,                                          # the defender 'save' the central shot
             "possession_lost": -2.5 if self.possession_lost else 0.0,
             "time_penalty": -0.01,
         }
@@ -435,6 +466,17 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             # Ball is free: update position and velocity using physics with friction
             self.ball.update(self.time_per_step)
 
+
+    def _apply_defender_ai(self) -> None: # Static "keeper" defender: parked near goal line, centered.
+        margin_m = 0.2  # keep inside pitch bounds
+
+        keeper_x_m = self.pitch.x_max - margin_m
+        keeper_y_m = self.pitch.center_y
+
+        self.defender.position[:] = normalize(keeper_x_m, keeper_y_m)
+        self.possession_lost = False
+
+
     
     
     
@@ -451,8 +493,22 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
         bx = ball_x * pw + self.pitch.x_min
         by = ball_y * ph + self.pitch.y_min
 
-        # Base termination events
-        if self._is_goal(bx, by):
+        # Goal vs Save: only evaluate when ball is in a shot/free state
+        # (prevents weird terminations while dribbling near the line)
+        GOAL_MIN_Y = self.goal_y - self.pitch.goal_width / 2.0
+        GOAL_MAX_Y = self.goal_y + self.pitch.goal_width / 2.0
+
+        crossed_goal_line = (bx >= self.pitch.x_max)
+        within_goal_mouth = (GOAL_MIN_Y <= by <= GOAL_MAX_Y)
+
+        if crossed_goal_line and within_goal_mouth and (self.is_shooting or self.ball.owner is None):
+            # Central => saved (no goal)
+            if abs(by - self.goal_y) <= self.save_half_width_m:
+                self.shot_saved = True
+                return True
+
+            # Otherwise it's a goal
+            self.shot_saved = False
             return True
 
         if self._is_ball_completely_out(bx, by):
@@ -501,3 +557,17 @@ class OffensiveScenarioShotSingleAgent(BaseOffensiveScenario):
             # No specific resources to release in this environment
             # but this method is here for compatibility with gym's API
             pass
+    
+# New Classes
+class OffensiveScenarioShotWeakSingleAgent(OffensiveScenarioShotSingleAgent):
+    def __init__(self, pitch, max_steps=240, fps=24):
+        super().__init__(pitch=pitch, max_steps=max_steps, fps=fps)
+        self.attacker.max_power *= 0.8
+        self.attacker.precision = 0.70
+
+
+class OffensiveScenarioShotStrongSingleAgent(OffensiveScenarioShotSingleAgent):
+    def __init__(self, pitch, max_steps=240, fps=24):
+        super().__init__(pitch=pitch, max_steps=max_steps, fps=fps)
+        self.attacker.max_power *= 1.2
+        self.attacker.precision = 1.00

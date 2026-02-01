@@ -3,6 +3,8 @@ import json
 import numpy as np
 from stable_baselines3 import PPO
 from tqdm import tqdm
+import sys
+
 
 from football_tactical_ai.helpers.helperTraining import ensure_dirs
 from football_tactical_ai.helpers.helperFunctions import normalize
@@ -13,6 +15,11 @@ from football_tactical_ai.env.objects.pitch import Pitch
 from football_tactical_ai.env.scenarios.singleAgent.move import OffensiveScenarioMoveSingleAgent
 from football_tactical_ai.env.scenarios.singleAgent.shot import OffensiveScenarioShotSingleAgent
 from football_tactical_ai.env.scenarios.singleAgent.view import OffensiveScenarioViewSingleAgent
+from football_tactical_ai.env.scenarios.singleAgent.shot import (
+    OffensiveScenarioShotWeakSingleAgent,
+    OffensiveScenarioShotStrongSingleAgent,
+)
+
 
 # Evaluation configs
 from football_tactical_ai.configs.configEvaluationSingleAgent import SCENARIOS, COMMON
@@ -20,9 +27,9 @@ from football_tactical_ai.configs.configEvaluationSingleAgent import SCENARIOS, 
 
 # FIXED RESET WRAPPER
 # Creates an environment with fixed starting positions
-def fixed_env(env_class, pitch, attacker_m, defender_m, fps, max_steps):
+def fixed_env(env_class, pitch, attacker_m, defender_m, fps, max_steps, env_kwargs):
 
-    env = env_class(pitch=pitch, max_steps=max_steps, fps=fps)
+    env = env_class(pitch=pitch, max_steps=max_steps, fps=fps, **env_kwargs)
 
     # TRAJECTORY STORAGE
     env.attacker_traj = []
@@ -82,6 +89,7 @@ def evaluate_single(scenario="move"):
 
     print(f"\nRunning evaluation: {scenario.upper()}")
     cfg = SCENARIOS[scenario]
+    env_kwargs = cfg.get("env_kwargs", {})
 
     # Paths
     model_path      = cfg["model_path"]
@@ -97,11 +105,21 @@ def evaluate_single(scenario="move"):
     pitch = Pitch()
 
     # Environment class selection
-    env_class = {
-        "move": OffensiveScenarioMoveSingleAgent,
-        "shot": OffensiveScenarioShotSingleAgent,
-        "view": OffensiveScenarioViewSingleAgent,
-    }[scenario]
+    if scenario.startswith("move"):
+        env_class = OffensiveScenarioMoveSingleAgent
+    elif scenario.startswith("shot"):
+        # shot / shot_weak / shot_strong
+        env_class = {
+            "shot": OffensiveScenarioShotSingleAgent,
+            "shot_weak": OffensiveScenarioShotWeakSingleAgent,
+            "shot_strong": OffensiveScenarioShotStrongSingleAgent,
+        }[scenario]
+    elif scenario == "view":
+        env_class = OffensiveScenarioViewSingleAgent
+    else:
+        raise KeyError(f"Unknown scenario '{scenario}'. Available: {', '.join(SCENARIOS.keys())}")
+
+
 
     # Load model
     print(f"→ Loading model: {model_path}")
@@ -135,13 +153,13 @@ def evaluate_single(scenario="move"):
         N = 20
 
         rewards = []
-        extra_metrics = [] if scenario == "shot" or scenario == "view" else None
+        extra_metrics = [] if scenario.startswith("shot") or scenario == "view" else None
 
 
         # RUN THROUGH EPISODES
         for run in tqdm(range(N), desc="  Evaluation runs", unit="run"):
 
-            env = fixed_env(env_class, pitch, attacker_m, defender_m, fps, max_steps)
+            env = fixed_env(env_class, pitch, attacker_m, defender_m, fps, max_steps, env_kwargs)
 
             # Only FIRST run saves a video
             save_path = os.path.join(save_video_dir, f"{scenario}_eval_{idx+1}.mp4") if run == 0 else None
@@ -214,7 +232,7 @@ def evaluate_single(scenario="move"):
             "runs": rewards,
         }
 
-        if scenario == "shot":
+        if scenario.startswith("shot"):
             summary_eval[case["name"]]["shot_metrics"] = extra_metrics
         elif scenario == "view":
             summary_eval[case["name"]]["view_metrics"] = extra_metrics
@@ -249,6 +267,11 @@ def evaluate_single(scenario="move"):
 
 # RUN DIRECTLY
 if __name__ == "__main__":
-    #evaluate_single("move")
-    #evaluate_single("shot")
-    evaluate_single("view")
+
+    if len(sys.argv) != 2:
+        print("Example: python eval_single_agent.py shot_weak")
+        print("Available:", ", ".join(SCENARIOS.keys()))
+        raise SystemExit(1)
+
+    scenario = sys.argv[1].lower()
+    evaluate_single(scenario)

@@ -34,10 +34,14 @@ class OffensiveScenarioMoveSingleAgent(BaseOffensiveScenario):
     to handle the environment's dynamics, rewards, and observations.
     """
 
-    def __init__(self, pitch, max_steps=360, fps=24):
+    def __init__(self, pitch, max_steps=360, fps=24, attacker_speed=0.5):
 
         # Initialize the parent class
         super().__init__(pitch=pitch, max_steps=max_steps, fps=fps)
+
+        # Set attacker profile (strong/weak) 
+        self.attacker.speed = float(attacker_speed)
+
 
     def reset(self, seed=None, options=None):
         """
@@ -116,4 +120,3 @@ class OffensiveScenarioMoveSingleAgent(BaseOffensiveScenario):
         # No specific resources to release in this environment
         # but this method is here for compatibility with gym's API
         pass
-

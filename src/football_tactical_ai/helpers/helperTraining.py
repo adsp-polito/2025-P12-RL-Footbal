@@ -75,8 +75,10 @@ def train_SingleAgent(scenario="move"):
     pitch = Pitch()
 
     # Create environments
-    env = Monitor(env_class(pitch=pitch, max_steps=max_steps, fps=fps))
-    eval_env = env_class(pitch=pitch, max_steps=max_steps, fps=fps)
+    env_kwargs = cfg.get("env_kwargs", {})
+
+    env = Monitor(env_class(pitch=pitch, max_steps=max_steps, fps=fps, **env_kwargs))
+    eval_env = env_class(pitch=pitch, max_steps=max_steps, fps=fps, **env_kwargs)
 
     # SB3 PPO
     model = PPO("MlpPolicy", env, **cfg["ppo"])

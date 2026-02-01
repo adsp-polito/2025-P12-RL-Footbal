@@ -38,6 +38,34 @@ These components are implemented in a modular fashion to support systematic expe
 
 ---
 
+## Experimental Extensions
+
+### **What-If Tactical Analysis**
+
+This extension bridges the gap between historical match data and generative simulation. By parsing  **StatsBomb event data** , the environment is initialized using the exact coordinates of real-world professional matches.
+
+* **Counterfactual Replay:** Allows users to inject a specific historical event (e.g., a pass-shot assist) into the simulator to observe how RL agents resolve the scenario compared to the original professional outcome.
+* **Data-Driven Initialization:** Replaces random agent placement with realistic spatial distributions, ensuring that tactical evaluations are grounded in high-leverage match contexts.
+* **Performance Benchmarking:** Provides tools to calculate trajectory divergence and success rates across multiple deterministic rollouts of a single historical event.
+
+### **Adversarial Learning**
+
+To ensure the robustness of offensive policies, this module introduces a competitive "minimax" dynamic between teams.
+
+* **Dynamic Opposition:** Unlike static or rule-based defenders, adversarial agents learn to minimize the offensive team's reward signal, creating an evolving defensive pressure.
+* **Policy Stress-Testing:** Forces attackers to discover passing lanes and spatial solutions that are resilient to high-pressure interventions and interception attempts.
+* **Competitive Co-evolution:** Both offensive and defensive policies improve simultaneously, leading to the emergence of more sophisticated and realistic tactical behaviors.
+
+### **Realistic Player Customization**
+
+This extension recognizes that tactical success is contingent upon individual physical capacities. It transitions the environment from "identical agents" to a  **heterogeneous multi-agent system** .
+
+* **Attribute-Based Motion:** Introduces customizable parameters for individual agents, such as maximum speed and shot power.
+* **Technical Profiling:** Allows for the adjustment of player-specific skills, including passing accuracy and shooting power, which directly modify the environment's transition dynamics and physics engine.
+* **Scouting Simulation:** Enables "What-If" testing of specific player profiles within a team, evaluating how a change in a single agent's physical attributes affects the overall success of a collective tactical sequence.
+
+---
+
 ## Installation
 
 ### 1. Clone the repository
