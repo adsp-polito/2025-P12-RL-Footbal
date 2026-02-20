@@ -1,1 +1,0 @@
-# This module initializes the configuration settings for the football tactical AI project
